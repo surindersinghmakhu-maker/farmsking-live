@@ -1,0 +1,23 @@
+export declare const FARMSKING_CORPORATE_IDENTITY: {
+    readonly legalName: "FARMSKING TECHNOLOGIES PRIVATE LIMITED";
+    readonly brandName: "FarmsKing";
+    readonly tagline: "Farming Easy, Farming Smart | National Agritech & Smart Farming Platform";
+    readonly cin: "U62013PB2026PTC070389";
+    readonly pan: "AAHCF3566C";
+    readonly tan: "AMRF11527F";
+    readonly registeredOffice: "C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India";
+    readonly headquarters: "Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India";
+    readonly supportEmail: "support@farmsking.in";
+    readonly grievanceEmail: "grievance@farmsking.in";
+    readonly nodalEmail: "nodal@farmsking.in";
+    readonly helplinePhone: "+91 95776 22000";
+    readonly whatsappHelpline: "+91 95776 22000";
+    readonly grievanceOfficerName: "Surinder Singh";
+    readonly workingHours: "Monday - Saturday: 9:00 AM - 7:00 PM IST";
+    readonly officialDomain: "https://farmsking.in";
+    readonly brandLogoUrl: "https://farmsking.in/brand_logo.png";
+    readonly brandFaviconUrl: "https://farmsking.in/favicon.png";
+    readonly isoCertifications: readonly ["ISO 9001:2015", "ISO 27001:2022"];
+    readonly statutoryFooterText: "FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389 | PAN: AAHCF3566C | TAN: AMRF11527F";
+};
+export default FARMSKING_CORPORATE_IDENTITY;

@@ -1,0 +1,1070 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Modal,
+  useWindowDimensions,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { RoleThemes } from '@/constants/Colors';
+import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useFarmerPlan, useFarmerPlanPricing, useRedeemFarmerPlanCoupon, useActivateTrial } from '@/src/hooks/useFarmerPlan';
+import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
+import { useInitiateFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
+import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
+import { useCrops } from '@/src/store/crops-context';
+import { useAuth } from '@/src/store/auth-context';
+import { useRole } from '@/src/store/role-context';
+import { CopyButton } from '@/src/components/CopyButton';
+import { DoctorChangeDisclaimerModal } from '@/src/components/DoctorChangeDisclaimerModal';
+import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
+import { CropSelectionModal } from '@/src/components/CropSelectionModal';
+import { useMyCrops } from '@/src/hooks/useCrops';
+import { useCreateCallRequest } from '@/src/hooks/useCallRequests';
+import { useExecutiveTheme } from '@/src/store/theme-context';
+
+const theme = RoleThemes.FARMER;
+
+const PLAN_TIER_RANK: Record<string, number> = {
+  FREE: 0,
+  BASIC: 0,
+  PRO: 1,
+  SILVER: 1,
+  SMART: 2,
+  GOLD: 2,
+  SUPER: 3,
+  PLATINUM: 3,
+  VIP: 3,
+  DIAMOND: 4,
+  ROYAL: 5,
+};
+
+const tap = () => {
+  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
+
+export interface UniversalMembershipPassProps {
+  portalMode?: 'FARMER' | 'PARTNER' | 'ADMIN';
+  extraContent?: React.ReactNode;
+}
+
+export default function UniversalMembershipPass({
+  portalMode = 'FARMER',
+  extraContent,
+}: UniversalMembershipPassProps) {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 860;
+  const { user } = useAuth();
+  const { role } = useRole();
+  const { colors, isDark } = useExecutiveTheme();
+
+  const isAdminRole =
+    portalMode === 'ADMIN' ||
+    role === 'ADMIN' ||
+    role === 'SUPER_ADMIN' ||
+    user?.role === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN';
+
+  const isPartnerPortal = portalMode === 'PARTNER';
+
+  const hasFarmerRole =
+    isPartnerPortal ||
+    role === 'FARMER' ||
+    user?.role === 'FARMER' ||
+    (Array.isArray(user?.roles) && user.roles.includes('FARMER')) ||
+    isAdminRole;
+
+  const isGardener =
+    !isPartnerPortal &&
+    (role === 'GARDENER' ||
+      user?.role === 'GARDENER' ||
+      (Array.isArray(user?.roles) && user.roles.includes('GARDENER')));
+
+  const { plan, limits, endDate, isExpired, hasUsedTrial } = useFarmerPlan();
+  const { data: settings } = useAppSettings();
+  const activateTrialMutation = useActivateTrial();
+  const { data: allPricing = [], isLoading: isLoadingPricing } = useFarmerPlanPricing();
+  const { data: myAdvisorData } = useMyAdvisor();
+  const { data: availableAdvisors = [] } = useAvailableAdvisors();
+  const { data: pendingRequest } = useMyPendingRequest();
+  const chooseAdvisor = useChooseAdvisor();
+  const redeemCouponMutation = useRedeemFarmerPlanCoupon();
+  const initiatePlanPayment = useInitiateFarmerPlanPayment();
+  const { cropFields } = useCrops();
+
+  const [activeTab, setActiveTab] = useState<'FARMER_SOFTWARE' | 'CROP_CARE'>('FARMER_SOFTWARE');
+  const [couponCodeInput, setCouponCodeInput] = useState('');
+  const [appliedCouponNotice, setAppliedCouponNotice] = useState<string | null>(null);
+  const [isChoosingAdvisor, setIsChoosingAdvisor] = useState(false);
+  const [isCropCareModalOpen, setIsCropCareModalOpen] = useState(false);
+  const [disclaimerModalVisible, setDisclaimerModalVisible] = useState(false);
+  const [targetAdvisorToRequest, setTargetAdvisorToRequest] = useState<{ id: string; name: string } | null>(null);
+  const { data: myRealCrops = [] } = useMyCrops();
+  const createCallRequest = useCreateCallRequest();
+  const [cropModalVisible, setCropModalVisible] = useState(false);
+  const [isInstantCallMode, setIsInstantCallMode] = useState(false);
+
+  const activeAdvisor = myAdvisorData?.advisor;
+  const activeCropsCount = cropFields.filter((c) => c.status === 'ACTIVE').length;
+
+  const freeTrialEnabled = settings?.freeTrialEnabled ?? true;
+  const freeTrialDays = settings?.freeTrialDays ?? 14;
+
+  const handleActivateFreeTrial = async () => {
+    tap();
+    try {
+      await activateTrialMutation.mutateAsync();
+      const msg = `🎉 Trial Activated! You have received trial access for ${freeTrialDays} days.`;
+      setAppliedCouponNotice(msg);
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Trial Activated', msg);
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || 'Could not activate free trial.';
+      setAppliedCouponNotice(`❌ ${errMsg}`);
+      if (Platform.OS === 'web') alert(errMsg);
+      else Alert.alert('Error', errMsg);
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCodeInput.trim()) {
+      setAppliedCouponNotice('⚠️ Please enter a coupon code.');
+      return;
+    }
+    tap();
+    const code = couponCodeInput.trim().toUpperCase();
+    try {
+      await redeemCouponMutation.mutateAsync({ code });
+      setAppliedCouponNotice(`🎉 Coupon "${code}" Redeemed Successfully! Your plan / doctor care has been updated.`);
+      setCouponCodeInput('');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || `Invalid or expired coupon code "${code}".`;
+      setAppliedCouponNotice(`❌ ${msg}`);
+    }
+  };
+
+  const handleInitiateAdvisorRequest = (adv: { id: string; name: string }) => {
+    tap();
+    setTargetAdvisorToRequest(adv);
+    setIsChoosingAdvisor(false);
+    setIsInstantCallMode(false);
+    setCropModalVisible(true);
+  };
+
+  const handleInitiateInstantCall = (adv?: { id: string; name: string }) => {
+    tap();
+    const target = adv || activeAdvisor || (availableAdvisors[0] ? { id: availableAdvisors[0].id, name: availableAdvisors[0].name } : null);
+    if (!target) {
+      setIsChoosingAdvisor(true);
+      return;
+    }
+    setTargetAdvisorToRequest(target);
+    setIsInstantCallMode(true);
+    setCropModalVisible(true);
+  };
+
+  const handleConfirmCropPermission = async (cropId: string, cropName: string, notes?: string) => {
+    if (!targetAdvisorToRequest) return;
+    try {
+      if (isInstantCallMode) {
+        await createCallRequest.mutateAsync({
+          advisorId: targetAdvisorToRequest.id,
+          cropId: cropId !== 'GENERAL' ? cropId : undefined,
+          notes,
+        });
+        setCropModalVisible(false);
+        const msg = `✅ Instant consultation requested with Dr. ${targetAdvisorToRequest.name}! Crop details for "${cropName}" have been shared.`;
+        if (Platform.OS === 'web') alert(msg);
+        else Alert.alert('Call Requested ⚡', msg);
+      } else {
+        await executeAdvisorRequest(targetAdvisorToRequest.id, cropId !== 'GENERAL' ? cropId : undefined, cropName);
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Could not process consultation request.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
+    }
+  };
+
+  const handlePurchasePlan = async (targetPlan: any, billingPeriodDays: number) => {
+    tap();
+    try {
+      const res = await initiatePlanPayment.mutateAsync({
+        targetPlan,
+        billingPeriodDays,
+      });
+
+      if (res.cashfreeSessionId) {
+        if (Platform.OS === 'web') {
+          window.location.href = `https://payments.cashfree.com/order/#${res.cashfreeSessionId}`;
+        } else {
+          import('react-native').then(({ Linking }) => {
+            Linking.openURL(`https://payments.cashfree.com/order/#${res.cashfreeSessionId}`);
+          });
+        }
+      } else {
+        Alert.alert('Payment Error', 'Could not get Cashfree payment session.');
+      }
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || 'Could not initiate payment.';
+      if (Platform.OS === 'web') alert(errMsg);
+      else Alert.alert('Payment Error', errMsg);
+    }
+  };
+
+  const executeAdvisorRequest = async (advisorId: string, cropId?: string, cropName?: string) => {
+    try {
+      await chooseAdvisor.mutateAsync({ advisorId, cropId });
+      setIsChoosingAdvisor(false);
+      setDisclaimerModalVisible(false);
+      setCropModalVisible(false);
+      setTargetAdvisorToRequest(null);
+      const msg = cropName && cropName !== 'General Farm Advisory'
+        ? `✅ Permission granted for "${cropName}"! Dr. ${targetAdvisorToRequest?.name || 'Advisor'} will review your crop and prepare your custom care plan.`
+        : '✅ Request submitted! Your advisor has been notified.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Success', msg);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Could not request doctor.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
+    }
+  };
+
+  if (!hasFarmerRole) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
+        <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.hero}>
+          <View style={styles.heroHeaderRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={20} color="#ffffff" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroTitle}>{isGardener ? '🌿 Garden Advisor Support' : '👑 Farmer Plans'}</Text>
+              <Text style={styles.heroSubtitle}>
+                {isGardener ? 'Personalized Plant & Lawn Care Advisory' : 'FarmsKing Platform Membership'}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center', flex: 1, gap: 16 }}>
+          {isGardener ? (
+            <View style={[styles.planCard, { width: '100%', maxWidth: 440, alignItems: 'center', padding: 24, gap: 12 }, premiumShadow('#15803d', 'sm')]}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="school" size={32} color="#16a34a" />
+              </View>
+              <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center' }}>
+                🌿 Dedicated Garden Advisor Support
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', lineHeight: 20 }}>
+                FarmsKing VIP software plans are designed for farm crop management. For your garden and plants, certified Garden Advisors are available to assist you with customized care schedules, plant health, and pest management.
+              </Text>
+              <TouchableOpacity
+                style={[styles.upgradeBtn, { backgroundColor: '#16a34a', width: '100%', marginTop: 8 }]}
+                onPress={() => router.push('/garden/advisors' as never)}
+              >
+                <Text style={styles.upgradeBtnText}>Connect with Garden Advisor 🌿</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={[styles.planCard, { width: '100%', maxWidth: 440, alignItems: 'center', padding: 24, gap: 12 }, premiumShadow('#0f172a', 'sm')]}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="information-circle" size={32} color="#64748b" />
+              </View>
+              <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center' }}>
+                👑 Farmer Exclusive Plans
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', lineHeight: 20 }}>
+                VIP pass plans and crop doctor advisory packages are currently exclusive to Farmers. Member offers for the store and other services will be introduced in future platform releases.
+              </Text>
+              <TouchableOpacity
+                style={[styles.upgradeBtn, { backgroundColor: '#0f172a', width: '100%', marginTop: 8 }]}
+                onPress={() => router.back()}
+              >
+                <Text style={styles.upgradeBtnText}>Go Back</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Hero Header */}
+      <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.hero}>
+        <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center' }}>
+          <View style={styles.heroHeaderRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={20} color="#ffffff" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroTitle}>👑 FarmsKing VIP Pass Scheme & Crop Care</Text>
+              <Text style={styles.heroSubtitle}>Farmer App Access & Doctor Advisory Care Plans</Text>
+            </View>
+          </View>
+
+          {/* Section Tabs Switcher */}
+          <View style={styles.tabBar}>
+            <TouchableOpacity
+              style={[styles.tabItem, activeTab === 'FARMER_SOFTWARE' && styles.tabItemActive]}
+              onPress={() => { tap(); setActiveTab('FARMER_SOFTWARE'); }}
+            >
+              <Ionicons name="book-outline" size={15} color={activeTab === 'FARMER_SOFTWARE' ? '#ffffff' : '#94a3b8'} />
+              <Text style={[styles.tabText, activeTab === 'FARMER_SOFTWARE' && styles.tabTextActive]}>
+                Farmer Plan (Records & Accounts)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabItem, activeTab === 'CROP_CARE' && styles.tabItemActive]}
+              onPress={() => { tap(); setActiveTab('CROP_CARE'); }}
+            >
+              <Ionicons name="medkit-outline" size={15} color={activeTab === 'CROP_CARE' ? '#ffffff' : '#94a3b8'} />
+              <Text style={[styles.tabText, activeTab === 'CROP_CARE' && styles.tabTextActive]}>
+                Crop Care (Doctor Consultation)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </LinearGradient>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {extraContent ? <View style={{ marginBottom: 14 }}>{extraContent}</View> : null}
+
+        {/* 1. FARMER MEMBERSHIPS PART */}
+        {activeTab === 'FARMER_SOFTWARE' ? (
+          <View style={{ gap: 14 }}>
+            {/* Top Row: Current Active Plan Status & Quick Coupon Card */}
+            <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 14 }}>
+              {/* Current Active Plan Status */}
+              <View style={[styles.statusCard, { flex: 1.2, backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1 }, premiumShadow(isDark ? 'transparent' : '#0f172a', 'sm')]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={styles.statusBadgeIcon}>
+                      <Ionicons name="ribbon" size={20} color="#16a34a" />
+                    </View>
+                    <View>
+                      <Text style={styles.statusLabel}>CURRENT VIP PASS</Text>
+                      <Text style={[styles.statusPlanName, { color: isDark ? '#ffffff' : '#0f172a' }]}>
+                        {!isExpired && plan !== 'FREE'
+                          ? (plan === 'VIP' || plan === 'SUPER'
+                              ? 'Farmer VIP Card 👑'
+                              : plan === 'SMART'
+                              ? 'Pro VIP Plan 👑'
+                              : plan === 'PRO'
+                              ? 'Lite VIP Plan 👑'
+                              : `${plan} VIP Card 👑`)
+                          : 'Free Starter Plan'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={[styles.activePill, { backgroundColor: isExpired ? '#fef2f2' : '#ecfdf5' }]}>
+                    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={[styles.activePillText, { color: isExpired ? '#dc2626' : '#059669' }]}>
+                      {isExpired ? 'EXPIRED' : plan !== 'FREE' ? '✨ VIP Active' : 'ACTIVE'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.statusMetricsRow}>
+                  <View style={styles.metricItem}>
+                    <Text style={[styles.metricValue, { color: isDark ? '#ffffff' : '#0f172a' }]}>{activeCropsCount} / {limits?.maxActiveCrops ?? '∞'}</Text>
+                    <Text style={[styles.metricLabel, { color: isDark ? colors.textMuted : '#334155' }]}>Active Crop Slots</Text>
+                  </View>
+                  <View style={styles.metricDivider} />
+                  <View style={styles.metricItem}>
+                    <Text style={[styles.metricValue, { color: isDark ? '#ffffff' : '#0f172a' }]}>{limits?.maxTotalCrops ?? 'Unlimited'}</Text>
+                    <Text style={[styles.metricLabel, { color: isDark ? colors.textMuted : '#334155' }]}>Total Crops Limit</Text>
+                  </View>
+                  <View style={styles.metricDivider} />
+                  <View style={styles.metricItem}>
+                    <Text style={[styles.metricValue, { color: isDark ? '#ffffff' : '#0f172a' }]}>{endDate ? new Date(endDate).toLocaleDateString('en-IN') : 'Lifetime'}</Text>
+                    <Text style={[styles.metricLabel, { color: isDark ? colors.textMuted : '#334155' }]}>Plan Expiry Date</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Quick Coupon Code Redeemer Card — Controlled via Feature Flag */}
+              {ENABLE_COUPON_SYSTEM ? (
+                <View style={[styles.couponCard, { flex: 1, backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1 }, premiumShadow(isDark ? 'transparent' : '#0f172a', 'sm')]}>
+                  <Text style={[styles.cardHeaderTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🎟️ Have a Discount Coupon?</Text>
+                  <Text style={[styles.cardHeaderSub, { color: isDark ? colors.textMuted : '#334155' }]}>Redeem promo keys or coupon cards for instant discount</Text>
+                  <View style={styles.couponInputRow}>
+                    <TextInput
+                      style={[styles.couponInput, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', color: isDark ? '#ffffff' : '#0f172a', borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1', borderWidth: 1 }]}
+                      placeholder="Enter Coupon Code (e.g. FARMS2026)"
+                      placeholderTextColor="#94a3b8"
+                      value={couponCodeInput}
+                      onChangeText={setCouponCodeInput}
+                      autoCapitalize="characters"
+                    />
+                    <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCoupon}>
+                      <Text style={styles.applyBtnText}>Apply</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {appliedCouponNotice ? <Text style={styles.noticeText}>{appliedCouponNotice}</Text> : null}
+                </View>
+              ) : null}
+            </View>
+
+            {/* Software Plan Pricing Cards Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 30, height: 30, borderRadius: 10, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}>
+                  <Ionicons name="ribbon" size={16} color="#15803d" />
+                </View>
+                <View>
+                  <Text style={[styles.sectionHeaderTitle, { color: isDark ? '#ffffff' : '#0f172a', marginTop: 0 }]}>
+                    SELECT FARMSKING VIP PASS SCHEME
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                    Choose your agricultural management tier & unlock precision farming tools
+                  </Text>
+                </View>
+              </View>
+              <View style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                  👑 3 VIP TIERS
+                </Text>
+              </View>
+            </View>
+
+            {/* 3-COLUMN RESPONSIVE VIP PASS SCHEME GRID */}
+            <View
+              style={{
+                flexDirection: isDesktop ? 'row' : 'column',
+                gap: 16,
+                alignItems: isDesktop ? 'stretch' : 'center',
+                width: '100%',
+                marginTop: 6,
+              }}
+            >
+              {/* Plan 1: Free Plan */}
+              <View
+                style={[
+                  styles.planCard,
+                  isDesktop ? { flex: 1, minWidth: 260, justifyContent: 'space-between' } : { width: '100%' },
+                  { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1 },
+                  premiumShadow(isDark ? 'transparent' : '#000000', 'sm'),
+                ]}
+              >
+                <View>
+                  <View style={styles.planHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.planTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🌱 Free Starter Plan</Text>
+                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹0 <Text style={styles.planPeriod}>/ forever</Text></Text>
+                    </View>
+                    {plan === 'FREE' && <View style={styles.currentBadge}><Text style={styles.currentBadgeText}>Current</Text></View>}
+                  </View>
+                  <View style={styles.featureList}>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Register up to 1 Active Crop Field 🌾</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Share up to 50 Sale Invoices / Bills 🧾</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Basic AI Crop Disease Scanner 🔬</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✕ No Satellite NDVI Field Heatmaps 🛰️</Text>
+                  </View>
+                </View>
+
+                {/* Free Trial Button / Status */}
+                <View style={{ marginTop: 'auto', paddingTop: 10 }}>
+                  {freeTrialEnabled && !hasUsedTrial && plan === 'FREE' ? (
+                    <TouchableOpacity
+                      style={[styles.upgradeBtn, { backgroundColor: '#166534' }]}
+                      disabled={activateTrialMutation.isPending}
+                      onPress={handleActivateFreeTrial}
+                    >
+                      <Text style={styles.upgradeBtnText}>
+                        {activateTrialMutation.isPending ? 'Activating Demo...' : `Get Free Demo 10 Days 🎁`}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={{ paddingVertical: 10, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                        {plan === 'FREE' ? 'Active Default Starter Plan' : 'Free Tier Included'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {/* Plan 2: Lite Plan */}
+              {(() => {
+                const currentRank = PLAN_TIER_RANK[plan] ?? 0;
+                const isLiteDowngrade = !isExpired && currentRank > 1;
+                const isLiteCurrent = plan === 'PRO' && !isExpired;
+                const isLiteUpgrade = !isExpired && currentRank < 1 && plan !== 'FREE';
+
+                return (
+                  <View
+                    style={[
+                      styles.planCard,
+                      isDesktop ? { flex: 1, minWidth: 260, justifyContent: 'space-between' } : { width: '100%' },
+                      { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: '#38bdf8', borderWidth: 1.5 },
+                      premiumShadow(isDark ? 'transparent' : '#0284c7', 'sm'),
+                    ]}
+                  >
+                    <View>
+                      <View style={styles.planHeader}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.planTitle, { color: '#0284c7' }]}>🌾 Kisan Platform Card</Text>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#0284c7', marginBottom: 2 }}>Tier 1: Annual Membership</Text>
+                          <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹199 <Text style={styles.planPeriod}>+ 18% GST / 1 Year</Text></Text>
+                        </View>
+                        {isLiteCurrent && <View style={styles.currentBadge}><Text style={styles.currentBadgeText}>Current Plan</Text></View>}
+                      </View>
+                      <View style={styles.featureList}>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ GPS Field Mapping & Polygon Boundary 📍</Text>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Live Mandi Rates Index & Price Telemetry 📊</Text>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ ISRO Satellite Weather & NDVI Heatmaps 🛰️</Text>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Certified Agri-Doctor Directory & Listing 🩺</Text>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Complete Farm Bookkeeping & Ledger 🧾</Text>
+                      </View>
+                      <View style={{ backgroundColor: isDark ? 'rgba(56, 189, 248, 0.1)' : '#f0f9ff', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: isDark ? 'rgba(56, 189, 248, 0.2)' : '#bae6fd', marginVertical: 4 }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? '#38bdf8' : '#0369a1' }}>
+                          ⚡ 100% Platform Revenue · Auto-Debit & Recharge
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={{ marginTop: 'auto', paddingTop: 10 }}>
+                      {isLiteDowngrade ? (
+                        <View style={{ backgroundColor: '#f1f5f9', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#64748b', textAlign: 'center' }}>
+                            🔒 Higher VIP Tier Active · Downgrades are not permitted
+                          </Text>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          style={[styles.upgradeBtn, { backgroundColor: isLiteCurrent ? '#047857' : '#0284c7' }]}
+                          disabled={initiatePlanPayment.isPending}
+                          onPress={() => handlePurchasePlan('PRO', 180)}
+                        >
+                          <Text style={styles.upgradeBtnText}>
+                            {isLiteCurrent ? 'Renew Lite Plan (+180 Days) ⚡' : isLiteUpgrade ? 'Upgrade to Lite Plan ⚡' : 'Get Lite Plan ⚡'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                );
+              })()}
+
+              {/* Plan 3: Pro VIP Plan */}
+              {(() => {
+                const currentRank = PLAN_TIER_RANK[plan] ?? 0;
+                const isVipDowngrade = !isExpired && currentRank > 2;
+                const isVipCurrent = (plan === 'SMART' || plan === 'SUPER' || plan === 'VIP') && !isExpired;
+                const isVipUpgrade = !isExpired && currentRank < 2 && plan !== 'FREE';
+
+                return (
+                  <View
+                    style={[
+                      styles.planCard,
+                      isDesktop ? { flex: 1, minWidth: 260, justifyContent: 'space-between' } : { width: '100%' },
+                      { borderColor: '#10b981', borderWidth: 2, backgroundColor: isDark ? colors.cardBg : '#ffffff' },
+                      premiumShadow('#10b981', 'sm'),
+                    ]}
+                  >
+                    <View style={styles.vipTag}>
+                      <Text style={styles.vipTagText}>👑 MOST POPULAR VIP PLAN 🏆</Text>
+                    </View>
+                    <View>
+                      <View style={styles.planHeader}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.planTitle, { color: '#059669' }]}>👑 Pro VIP Plan 💎</Text>
+                          <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹699 <Text style={styles.planPeriod}>/ 365 Days (1 Year)</Text></Text>
+                        </View>
+                        {isVipCurrent ? (
+                          <View style={styles.currentBadge}><Text style={styles.currentBadgeText}>Current Plan</Text></View>
+                        ) : null}
+                      </View>
+                      <View style={styles.featureList}>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Unlimited Active Crops & Farm Plots 🌾</Text>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Priority AI Disease First-Aid Treatment 💊</Text>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Full ISRO Satellite Health Heatmap Sync 🛰️</Text>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Multi-Worker Labour & Expense Tracker 👥</Text>
+                        <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✅ Priority VIP Support & Free Cloud Backup 🛡️</Text>
+                      </View>
+                      {isVipUpgrade && (
+                        <View style={{ backgroundColor: '#ecfdf5', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#a7f3d0', marginBottom: 4 }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#047857', textAlign: 'center' }}>
+                            ⚡ Prorated Credit: Unused days from your active {plan} plan will be deducted!
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={{ marginTop: 'auto', paddingTop: 10 }}>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        {freeTrialEnabled && !hasUsedTrial && plan === 'FREE' ? (
+                          <TouchableOpacity
+                            style={[styles.upgradeBtn, { backgroundColor: '#166534', flex: 1 }]}
+                            disabled={activateTrialMutation.isPending}
+                            onPress={handleActivateFreeTrial}
+                          >
+                            <Text style={styles.upgradeBtnText}>Get Free Demo 10 Days 🎁</Text>
+                          </TouchableOpacity>
+                        ) : null}
+                        {isVipDowngrade ? (
+                          <View style={{ backgroundColor: '#f1f5f9', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flex: 1 }}>
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#64748b', textAlign: 'center' }}>
+                              🔒 Higher Tier Active
+                            </Text>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={[styles.upgradeBtn, { backgroundColor: isVipCurrent ? '#047857' : '#10b981', flex: 1 }]}
+                            disabled={initiatePlanPayment.isPending}
+                            onPress={() => handlePurchasePlan('SMART', 365)}
+                          >
+                            <Text style={styles.upgradeBtnText}>
+                              {isVipCurrent ? 'Renew VIP Plan (+365 Days) 👑' : isVipUpgrade ? 'Upgrade VIP (Prorated) 👑' : 'Upgrade VIP 👑'}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                );
+              })()}
+            </View>
+          </View>
+        ) : (
+          /* 2. DOCTOR CROP CARE MEMBERSHIPS PART */
+          <View style={{ gap: 14 }}>
+            {/* Pending Doctor Change Request Status Banner */}
+            {pendingRequest ? (
+              pendingRequest.status === 'PENDING' ? (
+                <View style={[styles.statusCard, { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="time" size={22} color="#d97706" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#92400e' }}>⏳ Doctor Change Under Admin Review</Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#b45309', marginTop: 2 }}>
+                        Your request to switch doctor to Dr. {pendingRequest.advisor?.name} is submitted to Super Admin. Admin will inform your previous doctor before approving.
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={[styles.statusCard, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="checkmark-circle" size={24} color="#0284c7" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0369a1' }}>🎉 Doctor Approved Your Request!</Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#0284c7', marginTop: 2 }}>
+                        Dr. {pendingRequest.advisor?.name} has approved your request! Enter the coupon code provided by your doctor, OR share your King ID with your doctor/admin to assign coupon directly.
+                      </Text>
+                    </View>
+                  </View>
+                  {user?.kingId ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, padding: 10, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bae6fd' }}>
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>King ID: {user.kingId}</Text>
+                      <CopyButton value={user.kingId} />
+                    </View>
+                  ) : null}
+                </View>
+              )
+            ) : null}
+
+            {/* ⚡ Instant 1-on-1 Doctor Consultation (Pay-Per-Consultation / Single Appointment) */}
+            <View style={[styles.planCard, { borderColor: '#f59e0b', borderWidth: 1.5, backgroundColor: isDark ? 'rgba(245, 158, 11, 0.05)' : '#fffbeb' }, premiumShadow('#f59e0b', 'sm')]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>⚡ PARALLEL SERVICE · ANYTIME ACCESS</Text>
+                </View>
+                <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#b45309' }}>₹100 - ₹200 <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#92400e' }}>/ Call</Text></Text>
+              </View>
+
+              <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 6 }}>
+                ⚡ Instant 1-on-1 Doctor Consultation
+              </Text>
+              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#475569', lineHeight: 17, marginTop: 2 }}>
+                Need emergency crop diagnosis or a second opinion? Connect directly with any Agri-Doctor anytime — runs in parallel whether you already have a regular advisor or not.
+              </Text>
+
+              <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ 100% In-App Private VOIP Call</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Crop-Specific Permission</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Multiple Specialists</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.upgradeBtn, { backgroundColor: '#f59e0b', marginTop: 8 }]}
+                onPress={() => handleInitiateInstantCall()}
+              >
+                <Text style={styles.upgradeBtnText}>Book Instant Consultation ⚡</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Active Doctor Status Card */}
+            <View style={[styles.doctorCard, { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1 }, premiumShadow(isDark ? 'transparent' : '#0f172a', 'sm')]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={styles.doctorAvatarCircle}>
+                  <Ionicons name="medical" size={28} color="#0284c7" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.doctorCardSub}>ASSIGNED CROP DOCTOR</Text>
+                  <Text style={[styles.doctorCardName, { color: isDark ? '#ffffff' : '#0f172a' }]}>
+                    {activeAdvisor ? activeAdvisor.name : 'No Doctor Assigned Yet'}
+                  </Text>
+                  <Text style={[styles.doctorCardSpec, { color: isDark ? colors.textMuted : '#334155' }]}>
+                    {activeAdvisor?.specialization || 'Specialized Farm & Crop Care Doctor'} · ⭐ {activeAdvisor?.ratingLabel || (activeAdvisor?.rating ? `${activeAdvisor.rating} ★ (${activeAdvisor.ratingCount || 1})` : 'No rating till now')}
+                  </Text>
+                </View>
+              </View>
+
+              {activeAdvisor ? (
+                <View style={{ gap: 8, marginTop: 12 }}>
+                  <View style={styles.doctorActionsRow}>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#e0f2fe' }]}
+                      onPress={() => router.push('/(tabs)/chat' as never)}
+                    >
+                      <Ionicons name="chatbubble-ellipses" size={16} color="#0284c7" />
+                      <Text style={[styles.doctorActionText, { color: '#0284c7' }]}>Chat Doctor</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#dcfce7' }]}
+                      onPress={() => router.push('/(tabs)/market' as never)}
+                    >
+                      <Ionicons name="call" size={16} color="#16a34a" />
+                      <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Call Doctor</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.doctorActionsRow}>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }]}
+                      onPress={() => setIsCropCareModalOpen(true)}
+                    >
+                      <Ionicons name="medical" size={16} color="#16a34a" />
+                      <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Crops Care Plan 🩺</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fde68a' }]}
+                      onPress={() => setIsChoosingAdvisor(true)}
+                    >
+                      <Ionicons name="swap-horizontal" size={16} color="#d97706" />
+                      <Text style={[styles.doctorActionText, { color: '#d97706' }]}>Change Doctor 🩺</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={{ gap: 8, marginTop: 12 }}>
+                  <TouchableOpacity
+                    style={[styles.upgradeBtn, { backgroundColor: '#16a34a' }]}
+                    onPress={() => setIsCropCareModalOpen(true)}
+                  >
+                    <Text style={styles.upgradeBtnText}>Crops Care Plan 🩺</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}
+                    onPress={() => setIsChoosingAdvisor(true)}
+                  >
+                    <Text style={styles.upgradeBtnText}>+ Choose & Assign Crop Doctor 🩺</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {/* Doctor Crop Care Advisory Packages Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 2 }}>
+              <View style={{ width: 30, height: 30, borderRadius: 10, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bae6fd' }}>
+                <Ionicons name="medkit" size={16} color="#0284c7" />
+              </View>
+              <Text style={[styles.sectionHeaderTitle, { color: isDark ? '#ffffff' : '#0f172a', marginTop: 0 }]}>
+                SPECIALIST DOCTOR ADVISORY PACKAGES
+              </Text>
+            </View>
+
+            {/* 3-COLUMN RESPONSIVE ADVISORY PACKAGES GRID */}
+            <View
+              style={{
+                flexDirection: isDesktop ? 'row' : 'column',
+                gap: 12,
+                alignItems: isDesktop ? 'stretch' : 'center',
+                width: '100%',
+                marginTop: 6,
+              }}
+            >
+              {/* Advisory Package 1: Pay Per Prescription */}
+              <View
+                style={[
+                  styles.planCard,
+                  isDesktop ? { flex: 1, minWidth: 220, justifyContent: 'space-between' } : { width: '100%' },
+                  { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: '#0284c7', borderWidth: 1.5 },
+                  premiumShadow(isDark ? 'transparent' : '#000000', 'sm'),
+                ]}
+              >
+                <View>
+                  <View style={styles.planHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.planTitle, { color: '#0284c7' }]}>🩺 Pay Per Prescription</Text>
+                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹99 <Text style={styles.planPeriod}>/ Single Consultation</Text></Text>
+                    </View>
+                  </View>
+                  <View style={styles.featureList}>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Emergency Leaf Scan Diagnosis</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Direct Doctor Call Verification</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Digital E-Prescription with Dosage</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Permanent Passbook Record</Text>
+                  </View>
+                </View>
+                <View style={{ marginTop: 'auto', paddingTop: 10 }}>
+                  <TouchableOpacity
+                    style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}
+                    onPress={() => setIsCropCareModalOpen(true)}
+                  >
+                    <Text style={styles.upgradeBtnText}>Book SOS Consultation 📞</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Advisory Package 2: Full Crop Season */}
+              <View
+                style={[
+                  styles.planCard,
+                  isDesktop ? { flex: 1, minWidth: 220, justifyContent: 'space-between' } : { width: '100%' },
+                  { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: '#16a34a', borderWidth: 1.5 },
+                  premiumShadow(isDark ? 'transparent' : '#000000', 'sm'),
+                ]}
+              >
+                <View style={[styles.vipTag, { backgroundColor: '#16a34a' }]}>
+                  <Text style={styles.vipTagText}>🌟 MOST POPULAR</Text>
+                </View>
+                <View>
+                  <View style={styles.planHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.planTitle, { color: '#16a34a' }]}>🌾 Per Crop Season</Text>
+                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹499 <Text style={styles.planPeriod}>/ Full Season (120 Days)</Text></Text>
+                    </View>
+                  </View>
+                  <View style={styles.featureList}>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ 120-Day Sowing to Harvest Plan</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Stage-wise Spray & Fertilizer Calendar</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Weather Alert & Disease Warnings</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Unlimited Crop Chat & Q&A</Text>
+                  </View>
+                </View>
+                <View style={{ marginTop: 'auto', paddingTop: 10 }}>
+                  <TouchableOpacity
+                    style={[styles.upgradeBtn, { backgroundColor: '#16a34a' }]}
+                    onPress={() => setIsCropCareModalOpen(true)}
+                  >
+                    <Text style={styles.upgradeBtnText}>Subscribe Season Plan 🌾</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Advisory Package 3: VIP Farm Care */}
+              <View
+                style={[
+                  styles.planCard,
+                  isDesktop ? { flex: 1, minWidth: 220, justifyContent: 'space-between' } : { width: '100%' },
+                  { borderColor: '#7c3aed', borderWidth: 2, backgroundColor: isDark ? colors.cardBg : '#ffffff' },
+                  premiumShadow('#7c3aed', 'sm'),
+                ]}
+              >
+                <View style={[styles.vipTag, { backgroundColor: '#7c3aed' }]}>
+                  <Text style={styles.vipTagText}>👑 VIP FULL FARM CARE</Text>
+                </View>
+                <View>
+                  <View style={styles.planHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.planTitle, { color: '#7c3aed' }]}>👑 VIP Farm Care</Text>
+                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹1,999 <Text style={styles.planPeriod}>/ Month Retainer</Text></Text>
+                    </View>
+                  </View>
+                  <View style={styles.featureList}>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Multi-Crop Field & Plot Monitoring</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Physical Farm Inspection & Visit</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Soil & Water Lab Report Audits</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Priority 24/7 Agronomist Hotline</Text>
+                  </View>
+                </View>
+                <View style={{ marginTop: 'auto', paddingTop: 10 }}>
+                  <TouchableOpacity
+                    style={[styles.upgradeBtn, { backgroundColor: '#7c3aed' }]}
+                    onPress={() => setIsCropCareModalOpen(true)}
+                  >
+                    <Text style={styles.upgradeBtnText}>Subscribe VIP Farm Care 👑</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Choose Doctor Modal */}
+      <Modal visible={isChoosingAdvisor} transparent animationType="slide" onRequestClose={() => setIsChoosingAdvisor(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: isDark ? '#061a0e' : '#ffffff', borderColor: isDark ? 'rgba(0, 255, 135, 0.25)' : '#cbd5e1', borderWidth: 1 }]}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🩺 Certified Crop Doctors & Agronomists</Text>
+              <TouchableOpacity onPress={() => setIsChoosingAdvisor(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 8 }}>
+              {availableAdvisors.length === 0 ? (
+                <Text style={styles.emptyText}>No crop care doctors available right now.</Text>
+              ) : (
+                availableAdvisors.map((adv: any) => (
+                  <View key={adv.id} style={styles.advisorItemRow}>
+                    <View style={styles.doctorAvatarCircleSmall}>
+                      <Ionicons name="person" size={18} color="#0284c7" />
+                    </View>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={[styles.advisorName, { color: isDark ? '#ffffff' : '#0f172a' }]}>{adv.name}</Text>
+                        {adv.qualification ? (
+                          <View style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>{adv.qualification}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={[styles.advisorSub, { color: isDark ? colors.textMuted : '#334155' }]}>
+                        {adv.specialization || 'Crop Protection Specialist'} · ⭐ {adv.ratingLabel || (adv.rating ? `${adv.rating} ★ (${adv.ratingCount || 1})` : 'Certified')} · 📍 {adv.district || 'Pan-India'}
+                      </Text>
+                      {adv.specializedCrops && adv.specializedCrops.length > 0 ? (
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#16a34a' }}>
+                          Crops: {adv.specializedCrops.slice(0, 4).join(', ')}{adv.specializedCrops.length > 4 ? '...' : ''}
+                        </Text>
+                      ) : null}
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0284c7' }}>
+                        Fee: ₹{Number(adv.feePerConsultation) || 99} SOS · ₹{Number(adv.feePerCropSeason) || 499} Season
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.chooseBtn}
+                      disabled={chooseAdvisor.isPending}
+                      onPress={() => handleInitiateAdvisorRequest(adv)}
+                    >
+                      <Text style={styles.chooseBtnText}>Consult 🩺</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Doctor Change Disclaimer & Terms Modal */}
+      <DoctorChangeDisclaimerModal
+        visible={disclaimerModalVisible}
+        onClose={() => setDisclaimerModalVisible(false)}
+        onConfirm={() => targetAdvisorToRequest && executeAdvisorRequest(targetAdvisorToRequest.id)}
+        currentDoctorName={activeAdvisor?.name}
+        newDoctorName={targetAdvisorToRequest?.name}
+        isLoading={chooseAdvisor.isPending}
+      />
+
+      {/* Crops Care Plan & Coupon Modal */}
+      <CropCarePlanModal
+        visible={isCropCareModalOpen}
+        onClose={() => setIsCropCareModalOpen(false)}
+      />
+
+      {/* Crop Selection & Farmer Permission Modal */}
+      <CropSelectionModal
+        visible={cropModalVisible}
+        onClose={() => setCropModalVisible(false)}
+        onConfirm={handleConfirmCropPermission}
+        doctorName={targetAdvisorToRequest?.name}
+        crops={myRealCrops.map((c) => ({
+          id: c.id,
+          cropName: c.cropName,
+          variety: c.variety,
+          cropId: c.cropId,
+          plot: c.plot,
+          area: c.area,
+          stage: c.stage,
+        }))}
+        isInstantCall={isInstantCallMode}
+        isLoading={chooseAdvisor.isPending || createCallRequest.isPending}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  hero: { paddingTop: 40, paddingBottom: 16, paddingHorizontal: 16 },
+  heroHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+  heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#ffffff' },
+  heroSubtitle: { fontSize: 11.5, fontFamily: FONT.medium, color: '#cbd5e1', marginTop: 1 },
+  tabBar: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', padding: 3, borderRadius: RADIUS.pill },
+  tabItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: RADIUS.pill },
+  tabItemActive: { backgroundColor: theme.primary },
+  tabText: { fontSize: 12, fontFamily: FONT.bold, color: '#94a3b8' },
+  tabTextActive: { color: '#ffffff' },
+  scrollContent: { padding: 14, paddingBottom: 160, maxWidth: 1200, width: '100%', alignSelf: 'center' },
+  statusCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14 },
+  statusBadgeIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
+  statusLabel: { fontSize: 10, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.5 },
+  statusPlanName: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
+  activePill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: RADIUS.pill, maxWidth: 95 },
+  activePillText: { fontSize: 9, fontFamily: FONT.extraBold },
+  statusMetricsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  metricItem: { flex: 1, alignItems: 'center' },
+  metricValue: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  metricLabel: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
+  metricDivider: { width: 1, height: 24, backgroundColor: '#e2e8f0' },
+  couponCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14 },
+  cardHeaderTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  cardHeaderSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  couponInputRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  couponInput: { flex: 1, height: 42, backgroundColor: '#f1f5f9', borderRadius: RADIUS.md, paddingHorizontal: 12, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  applyBtn: { backgroundColor: '#0f172a', paddingHorizontal: 16, height: 42, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
+  applyBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
+  noticeText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#059669', marginTop: 8 },
+  sectionHeaderTitle: { fontSize: 11.5, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.5, marginTop: 6 },
+  planCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: 16 },
+  vipTag: { position: 'absolute', top: -10, right: 16, backgroundColor: '#10b981', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill },
+  vipTagText: { fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.5 },
+  planHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  planTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
+  planPrice: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 2 },
+  planPeriod: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
+  currentBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm },
+  currentBadgeText: { fontSize: 11, fontFamily: FONT.bold, color: '#475569' },
+  featureList: { gap: 6, marginBottom: 14 },
+  featureItem: { fontSize: 12.5, fontFamily: FONT.medium, color: '#334155' },
+  upgradeBtn: { height: 44, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
+  upgradeBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13.5 },
+  doctorCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14 },
+  doctorAvatarCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' },
+  doctorCardSub: { fontSize: 9.5, fontFamily: FONT.bold, color: '#0284c7', letterSpacing: 0.5 },
+  doctorCardName: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
+  doctorCardSpec: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
+  doctorActionsRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  doctorActionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: RADIUS.md },
+  doctorActionText: { fontSize: 12, fontFamily: FONT.bold },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.55)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  modalCard: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: 16, maxHeight: '80%' },
+  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
+  emptyText: { textAlign: 'center', color: '#94a3b8', fontSize: 12.5, fontFamily: FONT.medium, marginVertical: 20 },
+  advisorItemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  doctorAvatarCircleSmall: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' },
+  advisorName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  advisorSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
+  chooseBtn: { backgroundColor: '#0284c7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.md },
+  chooseBtnText: { color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold },
+});

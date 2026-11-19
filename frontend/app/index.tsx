@@ -1299,13 +1299,9 @@ export default function PublicLandingPage() {
             max-width: 100vw !important;
             width: 100% !important;
           }
-          /* ── Completely hide reCAPTCHA badge - legal disclosure is in auth screen footer ── */
+          /* ── Completely hide reCAPTCHA badge - Google standard compliant (visibility: hidden) ── */
           .grecaptcha-badge {
             visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-            display: none !important;
-            z-index: -1 !important;
           }
           /* ── Premium Continuous FarmsKing Ticker Flow ── */
           @keyframes farmskingTickerFlow {

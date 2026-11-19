@@ -239,13 +239,9 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
              url('/assets/fonts/Zocial.ttf') format('truetype');
         font-display: swap;
       }
-      /* Completely hide reCAPTCHA badge - legal disclosure is placed in auth screen footer */
+      /* Completely hide reCAPTCHA badge - Google standard compliant (visibility: hidden) */
       .grecaptcha-badge {
         visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        display: none !important;
-        z-index: -1 !important;
       }
     </style>
     `;

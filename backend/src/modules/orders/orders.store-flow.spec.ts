@@ -60,7 +60,7 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
       });
 
       expect(html).toContain('FARMSKING TECHNOLOGIES PRIVATE LIMITED');
-      expect(html).toContain('VPO Goindwal Sahib');
+      expect(html).toContain('VILLAGE BOOH');
       expect(html).toContain('@page { size: A4; margin: 12mm 15mm; }');
     });
   });

@@ -13,6 +13,7 @@ exports.BillingService = exports.InvoiceTypeEnum = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const tax_compliance_util_1 = require("../../common/utils/tax-compliance.util");
+const corporate_identity_constant_1 = require("../../common/constants/corporate-identity.constant");
 var InvoiceTypeEnum;
 (function (InvoiceTypeEnum) {
     InvoiceTypeEnum["CUSTOMER_INVOICE"] = "CUSTOMER_INVOICE";
@@ -260,7 +261,7 @@ let BillingService = class BillingService {
                     invoiceType: 'COMMISSION_INVOICE',
                     customerName: store?.legalName || store?.storeName || 'Seller',
                     customerGstin: sellerGstin,
-                    sellerName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
+                    sellerName: corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.legalName,
                     sellerGstin: companyGstinLabel,
                     sacCode: '998599',
                     placeOfSupply: store?.pickupState || 'Punjab',
@@ -326,8 +327,9 @@ let BillingService = class BillingService {
 <body>
   <div class="header">
     <div>
-      <div class="title">FARMSKING TECHNOLOGIES PRIVATE LIMITED</div>
-      <div style="font-size: 11px; color: #475569; margin-top: 2px;">Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422</div>
+      <div class="title">${corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.legalName}</div>
+      <div style="font-size: 11px; color: #475569; margin-top: 2px;">CIN: ${corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.cin} | PAN: ${corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.pan} | TAN: ${corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.tan}</div>
+      <div style="font-size: 11px; color: #475569; margin-top: 2px;">Regd. Office: ${corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.registeredOffice}</div>
       <div style="font-size: 11px; color: #475569;">E-Commerce Operator (ECO) - Section 52 CGST Act</div>
     </div>
     <div class="meta">

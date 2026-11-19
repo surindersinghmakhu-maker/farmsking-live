@@ -1,3 +1,5 @@
+import { FARMSKING_CORPORATE_IDENTITY } from '../constants/corporate-identity.constant';
+
 export interface PolicyPermissionModule {
   id: string;
   titleEn: string;
@@ -222,13 +224,13 @@ export function generateDynamicPrivacyPolicyHtml(baseUrl: string = 'https://farm
   <div class="container">
     <div class="hero-banner">
       <h1>👑 FarmsKing Privacy Policy</h1>
-      <h2>FARMSKING TECHNOLOGIES PRIVATE LIMITED — Official Privacy & Data Governance Policy</h2>
+      <h2>${FARMSKING_CORPORATE_IDENTITY.legalName} — Official Privacy & Data Governance Policy</h2>
       <div class="update-badge">⚡ DPDPA 2023 & IT Rules 2021 Compliant • Last Synchronized: ${lastUpdated}</div>
     </div>
 
     <div class="intro-card">
       <h3>🔒 Commitment to Data Privacy & Regulatory Compliance</h3>
-      <p>Welcome to FarmsKing, operated by <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong> (CIN: <code>U62013PB2026PTC070389</code>, PAN: <code>AAHCF3566C</code>, TAN: <code>AMRF11527F</code>). We are committed to protecting the personal, location, financial, KYC, and agricultural records of our Farmers, Gardeners, Customers, Advisors, Agents, Traders, Sellers, and Platform Staff in compliance with the Digital Personal Data Protection Act, 2023 (DPDPA) and Information Technology Rules, 2021.</p>
+      <p>Welcome to FarmsKing, operated by <strong>${FARMSKING_CORPORATE_IDENTITY.legalName}</strong> (CIN: <code>${FARMSKING_CORPORATE_IDENTITY.cin}</code>, PAN: <code>${FARMSKING_CORPORATE_IDENTITY.pan}</code>, TAN: <code>${FARMSKING_CORPORATE_IDENTITY.tan}</code>). We are committed to protecting the personal, location, financial, KYC, and agricultural records of our Farmers, Gardeners, Customers, Advisors, Agents, Traders, Sellers, and Platform Staff in compliance with the Digital Personal Data Protection Act, 2023 (DPDPA) and Information Technology Rules, 2021.</p>
 
       <div class="auto-sync-box">
         <span>🔄</span>
@@ -255,18 +257,18 @@ export function generateDynamicPrivacyPolicyHtml(baseUrl: string = 'https://farm
       <h3>📞 Data Protection & Grievance Redressal Officer</h3>
       <p>Pursuant to IT Rules, 2021 and Consumer Protection (E-Commerce) Rules, 2020, contact our designated Grievance Officer for privacy, consent withdrawal, or data grievances:</p>
       <ul style="margin-left: 20px; font-size: 14px; color: #D1D5DB;">
-        <li><strong>Grievance Officer:</strong> Surinder Singh (Designated Nodal & Compliance Officer)</li>
-        <li><strong>Legal Entity:</strong> FARMSKING TECHNOLOGIES PRIVATE LIMITED (CIN: U62013PB2026PTC070389, PAN: AAHCF3566C)</li>
-        <li><strong>Registered Office:</strong> C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India</li>
-        <li><strong>Operational HQ:</strong> Near Grain Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India</li>
-        <li><strong>Official Email:</strong> support@farmsking.in / grievance@farmsking.in</li>
-        <li><strong>Helpline Number:</strong> +91 95776-22000 (Mon–Sat, 10:00 AM – 6:00 PM IST)</li>
+        <li><strong>Grievance Officer:</strong> ${FARMSKING_CORPORATE_IDENTITY.grievanceOfficerName} (Designated Nodal & Compliance Officer)</li>
+        <li><strong>Legal Entity:</strong> ${FARMSKING_CORPORATE_IDENTITY.legalName} (CIN: ${FARMSKING_CORPORATE_IDENTITY.cin}, PAN: ${FARMSKING_CORPORATE_IDENTITY.pan})</li>
+        <li><strong>Registered Office:</strong> ${FARMSKING_CORPORATE_IDENTITY.registeredOffice}</li>
+        <li><strong>Operational HQ:</strong> ${FARMSKING_CORPORATE_IDENTITY.headquarters}</li>
+        <li><strong>Official Email:</strong> ${FARMSKING_CORPORATE_IDENTITY.supportEmail} / ${FARMSKING_CORPORATE_IDENTITY.grievanceEmail}</li>
+        <li><strong>Helpline Number:</strong> ${FARMSKING_CORPORATE_IDENTITY.helplinePhone} (${FARMSKING_CORPORATE_IDENTITY.workingHours})</li>
         <li><strong>Official Website:</strong> <a href="${baseUrl}" style="color: var(--primary);">${baseUrl}</a></li>
       </ul>
     </div>
 
     <div class="footer">
-      <p>© ${new Date().getFullYear()} FARMSKING TECHNOLOGIES PRIVATE LIMITED. All Rights Reserved.</p>
+      <p>© ${new Date().getFullYear()} ${FARMSKING_CORPORATE_IDENTITY.legalName}. All Rights Reserved.</p>
     </div>
   </div>
 </body>

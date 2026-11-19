@@ -48,10 +48,20 @@ exports.formatMaskedMobile = formatMaskedMobile;
 const common_1 = require("@nestjs/common");
 const nodemailer = __importStar(require("nodemailer"));
 const app_settings_service_1 = require("../app-settings/app-settings.service");
+const corporate_identity_constant_1 = require("../../common/constants/corporate-identity.constant");
+const phone_util_1 = require("../../common/utils/phone.util");
+const EMAIL_FOOTER_HTML = `
+  <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
+    ${corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.legalName} | CIN: ${corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.cin}
+  </p>
+  <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
+    Regd. Office: ${corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.registeredOffice}
+  </p>
+`;
 function formatMaskedMobile(rawMobile) {
     if (!rawMobile)
         return 'xx*****xxx';
-    const clean = rawMobile.replace(/\D/g, '').slice(-10);
+    const clean = (0, phone_util_1.normalizeIndianPhone)(rawMobile);
     if (clean.length === 10) {
         return `${clean.slice(0, 2)}xxxxx${clean.slice(-3)}`;
     }
@@ -146,7 +156,7 @@ let EmailService = EmailService_1 = class EmailService {
           </div>
           <p style="font-size: 12px; color: #9CA3AF;">This OTP code is valid for 10 minutes. Please do not share this OTP code with anyone.</p>
           <hr style="border-color: #065F46; margin-top: 20px;" />
-          <p style="font-size: 11px; color: #6EE7B7; text-align: center;">FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389</p>
+          ${EMAIL_FOOTER_HTML}
         </div>
       `,
         };
@@ -187,12 +197,7 @@ let EmailService = EmailService_1 = class EmailService {
             You can now access certified agri inputs, live APMC mandi prices, satellite crop health maps, and 5-second AI crop doctor diagnostics.
           </p>
           <hr style="border-color: #065F46; margin-top: 24px;" />
-          <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
-          </p>
-          <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
-          </p>
+          ${EMAIL_FOOTER_HTML}
         </div>
       `,
         };
@@ -237,9 +242,7 @@ let EmailService = EmailService_1 = class EmailService {
             ⚠️ If you did not perform or authorize this action, please contact our support desk immediately at support@farmsking.com.
           </p>
           <hr style="border-color: #065F46; margin-top: 22px;" />
-          <p style="font-size: 11px; color: #9CA3AF; text-align: center;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
-          </p>
+          ${EMAIL_FOOTER_HTML}
         </div>
       `,
         };
@@ -285,9 +288,7 @@ let EmailService = EmailService_1 = class EmailService {
             🚨 <b>Did not authorize this change?</b> Please contact our security helpline immediately at <b>support@farmsking.com</b> to protect your account.
           </div>
           <hr style="border-color: #312e81; margin-top: 22px;" />
-          <p style="font-size: 11px; color: #9CA3AF; text-align: center;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
-          </p>
+          ${EMAIL_FOOTER_HTML}
         </div>
       `,
         };
@@ -336,12 +337,7 @@ let EmailService = EmailService_1 = class EmailService {
             </p>
           </div>
           <hr style="border-color: #065F46; margin-top: 24px;" />
-          <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
-          </p>
-          <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
-          </p>
+          ${EMAIL_FOOTER_HTML}
         </div>
       `,
         };
@@ -390,12 +386,7 @@ let EmailService = EmailService_1 = class EmailService {
             ⚠️ <b>Did you not make this change?</b> Contact our support desk immediately at <b>support@farmsking.com</b> to lock your account and protect your data.
           </div>
           <hr style="border-color: #065F46; margin-top: 22px;" />
-          <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
-          </p>
-          <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
-          </p>
+          ${EMAIL_FOOTER_HTML}
         </div>
       `,
         };
@@ -457,12 +448,7 @@ let EmailService = EmailService_1 = class EmailService {
           </p>
 
           <hr style="border-color: #065F46; margin-top: 20px;" />
-          <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
-          </p>
-          <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
-          </p>
+          ${EMAIL_FOOTER_HTML}
         </div>
       `,
         };
@@ -557,12 +543,7 @@ let EmailService = EmailService_1 = class EmailService {
           </p>
 
           <hr style="border-color: #065F46; margin: 20px 0 12px;" />
-          <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
-          </p>
-          <p style="font-size: 10.5px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
-          </p>
+          ${EMAIL_FOOTER_HTML}
         </div>
       `,
         };

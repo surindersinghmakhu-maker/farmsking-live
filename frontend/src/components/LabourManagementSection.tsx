@@ -2237,7 +2237,7 @@ function generateWorkerStatementPdfHtml({
         <meta charset="utf-8">
         <title>Worker Statement - ${workerName}</title>
         <style>
-          @page { size: A4 portrait; margin: 6mm; }
+          @page { size: A4 portrait; margin: 12mm 15mm; }
           * { box-sizing: border-box; }
           body { margin: 0; padding: 0; background: #ffffff; }
         </style>

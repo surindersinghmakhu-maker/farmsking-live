@@ -1804,7 +1804,7 @@ export class FarmerPlansService implements OnModuleInit {
         <meta charset="UTF-8">
         <title>${docMeta?.title || docKey} (${langSuffix})</title>
         <style>
-          @page { margin: 12mm; size: A4; }
+          @page { size: A4; margin: 12mm 15mm; }
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             padding: 24px 16px;

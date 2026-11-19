@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { FARMSKING_CORPORATE_IDENTITY } from '@/src/constants/corporateIdentity';
 
 export type PolicyType = 'TERMS_OF_SERVICE' | 'PRIVACY_POLICY' | 'REFUND_POLICY' | 'SHIPPING_POLICY';
 
@@ -89,7 +90,7 @@ export function LegalPoliciesModal({
                   {getHeaderTitle()}
                 </Text>
                 <Text style={styles.updatedSub} numberOfLines={1}>
-                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U62013PB2026PTC070389
+                  {FARMSKING_CORPORATE_IDENTITY.legalName} · CIN: {FARMSKING_CORPORATE_IDENTITY.cin}
                 </Text>
               </View>
             </View>
@@ -182,7 +183,7 @@ export function LegalPoliciesModal({
                 <View style={styles.sectionBlock}>
                   <Text style={styles.head}>1. Acceptance of Terms & Platform Scope</Text>
                   <Text style={styles.bodyText}>
-                    By accessing, registering, browsing, or using the FarmsKing platform (Web & Mobile applications), you agree to be legally bound by these Terms of Service. FarmsKing is an agricultural technology platform operated by <Text style={styles.boldText}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text> (CIN: U62013PB2026PTC070389), providing digital farm management records, live mandi rates, AI crop diagnostic recommendations, AgriStore e-commerce marketplace, and verified agronomy consultations.
+                    By accessing, registering, browsing, or using the FarmsKing platform (Web & Mobile applications), you agree to be legally bound by these Terms of Service. FarmsKing is an agricultural technology platform operated by <Text style={styles.boldText}>{FARMSKING_CORPORATE_IDENTITY.legalName}</Text> (CIN: {FARMSKING_CORPORATE_IDENTITY.cin}), providing digital farm management records, live mandi rates, AI crop diagnostic recommendations, AgriStore e-commerce marketplace, and verified agronomy consultations.
                   </Text>
                 </View>
 
@@ -216,7 +217,7 @@ export function LegalPoliciesModal({
                   <Text style={styles.head}>5. Non-NBFC Digital Record-Keeping Disclaimer</Text>
                   <Text style={styles.bodyText}>
                     • FarmsKing Bahi-Khata, Khatavani logs, and commission agent (Arhtiya) interest calculators are purely digital arithmetic record-keeping utilities designed for personal farm accounting.{'\n'}
-                    • <Text style={styles.boldText}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text> is an agricultural technology software company and is NOT a bank, Non-Banking Financial Company (NBFC), moneylender, or deposit-taking entity under the Reserve Bank of India (RBI) Act.
+                    • <Text style={styles.boldText}>{FARMSKING_CORPORATE_IDENTITY.legalName}</Text> is an agricultural technology software company and is NOT a bank, Non-Banking Financial Company (NBFC), moneylender, or deposit-taking entity under the Reserve Bank of India (RBI) Act.
                   </Text>
                 </View>
 
@@ -225,9 +226,9 @@ export function LegalPoliciesModal({
                   <Text style={styles.bodyText}>
                     • These terms are governed by the laws of India and subject to intermediary protections under Section 79 of the Information Technology Act, 2000.{'\n'}
                     • <Text style={styles.boldText}>Statutory Grievance Officer (IT Rules 2021 &amp; E-Commerce Rules 2020):</Text>{'\n'}
-                    Name: Grievance Redressal Officer, FARMSKING TECHNOLOGIES PRIVATE LIMITED{'\n'}
-                    Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India{'\n'}
-                    Email: <Text style={styles.boldText}>grievance@farmsking.in</Text> · Helpline: <Text style={styles.boldText}>+91 95776-22000</Text>{'\n'}
+                    Name: Grievance Redressal Officer, {FARMSKING_CORPORATE_IDENTITY.legalName}{'\n'}
+                    Registered Office: {FARMSKING_CORPORATE_IDENTITY.registeredOffice}{'\n'}
+                    Email: <Text style={styles.boldText}>{FARMSKING_CORPORATE_IDENTITY.grievanceEmail}</Text> · Helpline: <Text style={styles.boldText}>{FARMSKING_CORPORATE_IDENTITY.helplinePhone}</Text>{'\n'}
                     Response SLA: Acknowledgment within 24 business hours; resolution within 15 days. All legal matters subject to exclusive jurisdiction of courts in Punjab, India.
                   </Text>
                 </View>

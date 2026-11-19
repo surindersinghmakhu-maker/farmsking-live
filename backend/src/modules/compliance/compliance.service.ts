@@ -18,6 +18,7 @@ import {
 } from '../../common/utils/tax-compliance.util';
 import { convertGstr8ToCsv, Gstr8Record } from '../seller/gstr8-export.util';
 import { CreateComplianceRecordDto, UpdateComplianceRecordDto } from './dto/compliance-record.dto';
+import { FARMSKING_CORPORATE_IDENTITY } from '../../common/constants/corporate-identity.constant';
 
 const DEFAULT_STATUTORY_SEED = [
   {
@@ -471,21 +472,21 @@ export class ComplianceService {
     const rawCompanyTan = pm?.companyTan;
 
     const companyRegistryReadiness = {
-      companyLegalName: pm?.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
-      cin: pm?.cinNumber || 'U62013PB2026PTC070389',
+      companyLegalName: pm?.companyLegalName || FARMSKING_CORPORATE_IDENTITY.legalName,
+      cin: pm?.cinNumber || FARMSKING_CORPORATE_IDENTITY.cin,
       rocJurisdiction: pm?.rocJurisdiction || 'ROC Punjab and Chandigarh',
-      registeredAddress: pm?.registeredAddress || 'C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India',
-      operationalHq: pm?.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India',
+      registeredAddress: pm?.registeredAddress || FARMSKING_CORPORATE_IDENTITY.registeredOffice,
+      operationalHq: pm?.operationalHq || FARMSKING_CORPORATE_IDENTITY.headquarters,
       gstinConfigured: isRealStatutoryId(rawCompanyGstin),
       gstin: isRealStatutoryId(rawCompanyGstin) ? rawCompanyGstin : null,
       panConfigured: isRealStatutoryId(rawCompanyPan),
       pan: isRealStatutoryId(rawCompanyPan) ? maskPan(rawCompanyPan) : null,
       tanConfigured: isRealStatutoryId(rawCompanyTan),
       tan: isRealStatutoryId(rawCompanyTan) ? rawCompanyTan : null,
-      grievanceOfficerName: pm?.grievanceOfficerName || 'Surinder Singh',
-      grievanceOfficerEmail: pm?.grievanceOfficerEmail || 'grievance@farmsking.in',
-      supportPhone: pm?.primaryMobile || '+91 95776 22000',
-      supportEmail: pm?.supportEmail || 'support@farmsking.in',
+      grievanceOfficerName: pm?.grievanceOfficerName || FARMSKING_CORPORATE_IDENTITY.grievanceOfficerName,
+      grievanceOfficerEmail: pm?.grievanceOfficerEmail || FARMSKING_CORPORATE_IDENTITY.grievanceEmail,
+      supportPhone: pm?.primaryMobile || FARMSKING_CORPORATE_IDENTITY.helplinePhone,
+      supportEmail: pm?.supportEmail || FARMSKING_CORPORATE_IDENTITY.supportEmail,
       paymentGateways: {
         activeGateway: integrations.gateway?.activeGateway || 'PHONEPE',
         isSandbox: integrations.gateway?.isSandbox ?? true,

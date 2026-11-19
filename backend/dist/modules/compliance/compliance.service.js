@@ -51,6 +51,7 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const app_settings_service_1 = require("../app-settings/app-settings.service");
 const tax_compliance_util_1 = require("../../common/utils/tax-compliance.util");
 const gstr8_export_util_1 = require("../seller/gstr8-export.util");
+const corporate_identity_constant_1 = require("../../common/constants/corporate-identity.constant");
 const DEFAULT_STATUTORY_SEED = [
     {
         category: 'MCA_ROC',
@@ -457,21 +458,21 @@ let ComplianceService = class ComplianceService {
         const rawCompanyPan = pm?.taxGst?.panNumber || pm?.companyPan || integrations.about?.pan;
         const rawCompanyTan = pm?.companyTan;
         const companyRegistryReadiness = {
-            companyLegalName: pm?.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
-            cin: pm?.cinNumber || 'U62013PB2026PTC070389',
+            companyLegalName: pm?.companyLegalName || corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.legalName,
+            cin: pm?.cinNumber || corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.cin,
             rocJurisdiction: pm?.rocJurisdiction || 'ROC Punjab and Chandigarh',
-            registeredAddress: pm?.registeredAddress || 'C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India',
-            operationalHq: pm?.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India',
+            registeredAddress: pm?.registeredAddress || corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.registeredOffice,
+            operationalHq: pm?.operationalHq || corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.headquarters,
             gstinConfigured: (0, tax_compliance_util_1.isRealStatutoryId)(rawCompanyGstin),
             gstin: (0, tax_compliance_util_1.isRealStatutoryId)(rawCompanyGstin) ? rawCompanyGstin : null,
             panConfigured: (0, tax_compliance_util_1.isRealStatutoryId)(rawCompanyPan),
             pan: (0, tax_compliance_util_1.isRealStatutoryId)(rawCompanyPan) ? (0, tax_compliance_util_1.maskPan)(rawCompanyPan) : null,
             tanConfigured: (0, tax_compliance_util_1.isRealStatutoryId)(rawCompanyTan),
             tan: (0, tax_compliance_util_1.isRealStatutoryId)(rawCompanyTan) ? rawCompanyTan : null,
-            grievanceOfficerName: pm?.grievanceOfficerName || 'Surinder Singh',
-            grievanceOfficerEmail: pm?.grievanceOfficerEmail || 'grievance@farmsking.in',
-            supportPhone: pm?.primaryMobile || '+91 95776 22000',
-            supportEmail: pm?.supportEmail || 'support@farmsking.in',
+            grievanceOfficerName: pm?.grievanceOfficerName || corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.grievanceOfficerName,
+            grievanceOfficerEmail: pm?.grievanceOfficerEmail || corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.grievanceEmail,
+            supportPhone: pm?.primaryMobile || corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.helplinePhone,
+            supportEmail: pm?.supportEmail || corporate_identity_constant_1.FARMSKING_CORPORATE_IDENTITY.supportEmail,
             paymentGateways: {
                 activeGateway: integrations.gateway?.activeGateway || 'PHONEPE',
                 isSandbox: integrations.gateway?.isSandbox ?? true,

@@ -11,16 +11,6 @@ export function getOrCreateDetachedRecaptchaHost(hostId: string): HTMLElement {
     existing.id = hostId;
     document.body.appendChild(existing);
   }
-  // Keep completely off-screen and invisible to prevent unwanted badge display
-  existing.style.position = 'fixed';
-  existing.style.bottom = '-9999px';
-  existing.style.right = '-9999px';
-  existing.style.width = '1px';
-  existing.style.height = '1px';
-  existing.style.opacity = '0';
-  existing.style.pointerEvents = 'none';
-  existing.style.overflow = 'hidden';
-  existing.style.zIndex = '-1';
   return existing;
 }
 

@@ -672,7 +672,7 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
         <style>
           @page {
             size: A4 portrait;
-            margin: 15mm;
+            margin: 12mm 15mm;
           }
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

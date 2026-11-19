@@ -1163,7 +1163,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
             <meta charset="utf-8" />
             <title>FARMSKING PARTY ACCOUNT STATEMENT</title>
             <style>
-              @page { size: A4 portrait; margin: 8mm; }
+              @page { size: A4 portrait; margin: 12mm 15mm; }
               * { box-sizing: border-box; }
               body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 12px; background: #ffffff; color: #0f172a; font-size: 11px; }
               .card { max-width: 100%; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; }

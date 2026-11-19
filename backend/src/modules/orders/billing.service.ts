@@ -7,6 +7,7 @@ import {
   isRealStatutoryId,
   isValidGstin,
 } from '../../common/utils/tax-compliance.util';
+import { FARMSKING_CORPORATE_IDENTITY } from '../../common/constants/corporate-identity.constant';
 
 export enum InvoiceTypeEnum {
   CUSTOMER_INVOICE = 'CUSTOMER_INVOICE',
@@ -361,7 +362,7 @@ export class BillingService {
           invoiceType: 'COMMISSION_INVOICE',
           customerName: store?.legalName || store?.storeName || 'Seller',
           customerGstin: sellerGstin,
-          sellerName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
+          sellerName: FARMSKING_CORPORATE_IDENTITY.legalName,
           sellerGstin: companyGstinLabel,
           sacCode: '998599',
           placeOfSupply: store?.pickupState || 'Punjab',
@@ -439,8 +440,9 @@ export class BillingService {
 <body>
   <div class="header">
     <div>
-      <div class="title">FARMSKING TECHNOLOGIES PRIVATE LIMITED</div>
-      <div style="font-size: 11px; color: #475569; margin-top: 2px;">Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422</div>
+      <div class="title">${FARMSKING_CORPORATE_IDENTITY.legalName}</div>
+      <div style="font-size: 11px; color: #475569; margin-top: 2px;">CIN: ${FARMSKING_CORPORATE_IDENTITY.cin} | PAN: ${FARMSKING_CORPORATE_IDENTITY.pan} | TAN: ${FARMSKING_CORPORATE_IDENTITY.tan}</div>
+      <div style="font-size: 11px; color: #475569; margin-top: 2px;">Regd. Office: ${FARMSKING_CORPORATE_IDENTITY.registeredOffice}</div>
       <div style="font-size: 11px; color: #475569;">E-Commerce Operator (ECO) - Section 52 CGST Act</div>
     </div>
     <div class="meta">

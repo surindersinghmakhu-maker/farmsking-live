@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 // Farm & Crop Advisory Dashboard — Vercel Deploy Sync v2.0
 import {
   FlatList,
@@ -13,7 +13,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -104,7 +104,29 @@ export default function FarmListScreen() {
     return <UnderMaintenanceView moduleName="Farmer & Agri Experts Module" />;
   }
 
-  const [activeSubTab, setActiveSubTab] = useState<'CROPS' | 'MEDIA_RECORDS' | 'CROP_CARE'>('CROPS');
+  const { tab, subtab } = useLocalSearchParams<{ tab?: string; subtab?: string }>();
+
+  const [activeSubTab, setActiveSubTab] = useState<'CROPS' | 'MEDIA_RECORDS' | 'CROP_CARE'>(() => {
+    const raw = (tab || subtab || '').toUpperCase();
+    if (raw === 'CROP_CARE' || raw === 'CROPCARE' || raw === 'DOCTOR' || raw === 'CARE') {
+      return 'CROP_CARE';
+    }
+    if (raw === 'MEDIA_RECORDS' || raw === 'MEDIA' || raw === 'GALLERY') {
+      return 'MEDIA_RECORDS';
+    }
+    return 'CROPS';
+  });
+
+  useEffect(() => {
+    const raw = (tab || subtab || '').toUpperCase();
+    if (raw === 'CROP_CARE' || raw === 'CROPCARE' || raw === 'DOCTOR' || raw === 'CARE') {
+      setActiveSubTab('CROP_CARE');
+    } else if (raw === 'MEDIA_RECORDS' || raw === 'MEDIA' || raw === 'GALLERY') {
+      setActiveSubTab('MEDIA_RECORDS');
+    } else if (raw === 'CROPS') {
+      setActiveSubTab('CROPS');
+    }
+  }, [tab, subtab]);
   const getStageLabel = (st: CropStage) => {
     switch (st) {
       case 'PLANTATION':

@@ -39,9 +39,10 @@ interface FarmerDashboardViewProps {
 const SMART_AGRONOMY_TOOLS = [
   {
     id: 'copilot',
-    titleKey: 'aiCopilot',
-    title: 'AI Copilot',
-    icon: 'sparkles' as const,
+    titleKey: 'aiScanner',
+    title: 'AI Scanner',
+    disabled: true,
+    icon: 'scan' as const,
     accent: '#059669',
     iconGradient: ['#10b981', '#047857'] as [string, string],
     lightBg: ['#ffffff', '#ecfdf5'] as [string, string],
@@ -426,18 +427,25 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             {SMART_AGRONOMY_TOOLS.map((tool) => {
               const bgColors = colors.isDark ? tool.darkBg : tool.lightBg;
               const borderColor = colors.isDark ? tool.borderDark : tool.borderLight;
+              const isDisabled = Boolean((tool as any).disabled);
               return (
                 <TouchableOpacity
                   key={tool.id}
+                  disabled={isDisabled}
                   style={[
                     styles.actionCard4DWrapper,
                     { width: isDesktop ? '31.8%' : '48.4%' },
+                    isDisabled && ({
+                      opacity: 0.55,
+                      cursor: 'not-allowed',
+                      pointerEvents: 'none',
+                    } as any),
                   ]}
-                  activeOpacity={0.84}
+                  activeOpacity={isDisabled ? 1 : 0.84}
                   onPress={() => {
+                    if (isDisabled) return;
                     tap();
-                    if (tool.id === 'copilot') router.push('/crop-intelligence' as any);
-                    else if (tool.id === 'doctor') router.push('/crop-disease-scanner' as any);
+                    if (tool.id === 'doctor') router.push('/(user)/(tabs)/farm?tab=CROP_CARE' as any);
                     else if (tool.id === 'gps') setShowLocationProfileModal(true);
                     else if (tool.id === 'crops') router.push('/(user)/(tabs)/farm' as any);
                     else if (tool.id === 'chat') onOpenAdminChat?.();
@@ -455,9 +463,11 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                         shadowColor: tool.shadow,
                       },
                       Platform.OS === 'web' ? ({
-                        boxShadow: colors.isDark
-                          ? `0 8px 20px -4px ${tool.shadow}45, inset 0 1px 1px rgba(255, 255, 255, 0.25)`
-                          : `0 4px 14px -2px ${tool.shadow}35, inset 0 1px 1px rgba(255, 255, 255, 0.9)`,
+                        boxShadow: isDisabled
+                          ? 'none'
+                          : colors.isDark
+                            ? `0 8px 20px -4px ${tool.shadow}45, inset 0 1px 1px rgba(255, 255, 255, 0.25)`
+                            : `0 4px 14px -2px ${tool.shadow}35, inset 0 1px 1px rgba(255, 255, 255, 0.9)`,
                         transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                       } as any) : {},
                     ]}
@@ -470,7 +480,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                       style={[
                         styles.actionIcon4D,
                         Platform.OS === 'web' ? ({
-                          boxShadow: `0 3px 10px -1px ${tool.shadow}80, inset 0 1px 1px rgba(255, 255, 255, 0.7)`,
+                          boxShadow: isDisabled
+                            ? 'none'
+                            : `0 3px 10px -1px ${tool.shadow}80, inset 0 1px 1px rgba(255, 255, 255, 0.7)`,
                         } as any) : {},
                       ]}
                     >
@@ -483,6 +495,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                         style={[
                           styles.actionCardTitle4D,
                           { color: colors.isDark ? '#ffffff' : '#0f172a' },
+                          isDisabled && { opacity: 0.8 },
                         ]}
                         numberOfLines={1}
                       >
@@ -500,7 +513,11 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                         },
                       ]}
                     >
-                      <Ionicons name="chevron-forward" size={9} color={tool.accent} />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={9}
+                        color={isDisabled ? (colors.isDark ? '#64748b' : '#94a3b8') : tool.accent}
+                      />
                     </View>
                   </LinearGradient>
                 </TouchableOpacity>

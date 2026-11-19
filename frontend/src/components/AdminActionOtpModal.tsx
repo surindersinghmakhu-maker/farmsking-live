@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -24,15 +24,20 @@ interface AdminActionOtpModalProps {
 export function AdminActionOtpModal({
   visible,
   title = 'Admin Authorization Required',
-  description = 'Confirming changes to critical APIs and master configurations requires a one-time security authorization code.',
+  description = 'Confirming changes to critical APIs, payment gateways, and master configurations requires a 6-digit security authorization code.',
   onConfirm,
   onCancel,
 }: AdminActionOtpModalProps) {
-  const [otp, setOtp] = useState('');
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [requestingOtp, setRequestingOtp] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [deliveredVia, setDeliveredVia] = useState<string[]>([]);
+  const [countdown, setCountdown] = useState(60);
   const [error, setError] = useState<string | null>(null);
+
+  const cellRefs = useRef<(TextInput | null)[]>([]);
 
   const isLocalhost =
     Platform.OS === 'web' &&
@@ -41,11 +46,28 @@ export function AdminActionOtpModal({
       window.location.hostname === '127.0.0.1' ||
       window.location.hostname.includes('192.168.'));
 
+  // Countdown timer for resend OTP
+  useEffect(() => {
+    let timer: any;
+    if (visible && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [visible, countdown]);
+
   useEffect(() => {
     if (visible) {
-      setOtp('');
+      setOtpDigits(['', '', '', '', '', '']);
       setError(null);
+      setCountdown(60);
       handleRequestOtp();
+      setTimeout(() => {
+        cellRefs.current[0]?.focus();
+      }, 350);
     }
   }, [visible]);
 
@@ -53,10 +75,14 @@ export function AdminActionOtpModal({
     setRequestingOtp(true);
     setDevOtp(null);
     setError(null);
+    setCountdown(60);
     try {
       const res = await apiClient.post('/app-settings/request-admin-action-otp');
       if (res.data?.devOtp) {
         setDevOtp(String(res.data.devOtp));
+      }
+      if (Array.isArray(res.data?.deliveredVia)) {
+        setDeliveredVia(res.data.deliveredVia);
       }
     } catch (e: any) {
       console.warn('[AdminActionOtp] Request OTP error:', e?.message);
@@ -66,16 +92,16 @@ export function AdminActionOtpModal({
     }
   };
 
-  const handleSubmit = async () => {
-    const cleanOtp = otp.trim();
-    if (!cleanOtp || cleanOtp.length < 6) {
-      setError('Please enter the 6-digit confirmation code.');
+  const executeSubmit = async (codeOverride?: string) => {
+    const rawOtp = (codeOverride || otpDigits.join('')).trim();
+    if (!rawOtp || rawOtp.length < 6) {
+      setError('Please enter the full 6-digit confirmation code.');
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      await onConfirm(cleanOtp);
+      await onConfirm(rawOtp);
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || 'Authorization failed.');
     } finally {
@@ -83,17 +109,79 @@ export function AdminActionOtpModal({
     }
   };
 
-  const autoFillCode = () => {
-    if (devOtp) {
-      setOtp(devOtp);
+  const handleDigitChange = (val: string, index: number) => {
+    const clean = val.replace(/\D/g, '');
+
+    // Multi-digit paste support (e.g. pasted all 6 digits into first or active cell)
+    if (clean.length > 1) {
+      const pasted = clean.slice(0, 6).split('');
+      const newDigits = ['', '', '', '', '', ''];
+      pasted.forEach((d, i) => {
+        newDigits[i] = d;
+      });
+      setOtpDigits(newDigits);
+      const nextIndex = Math.min(pasted.length, 5);
+      cellRefs.current[nextIndex]?.focus();
+      if (newDigits.every((d) => d.length > 0)) {
+        executeSubmit(newDigits.join(''));
+      }
+      return;
+    }
+
+    const newDigits = [...otpDigits];
+    newDigits[index] = clean;
+    setOtpDigits(newDigits);
+
+    // Auto-advance cursor to next input box
+    if (clean && index < 5) {
+      cellRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit on 6th digit entered
+    if (clean && index === 5) {
+      const fullCode = newDigits.join('');
+      if (fullCode.length === 6) {
+        executeSubmit(fullCode);
+      }
     }
   };
+
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace') {
+      if (!otpDigits[index] && index > 0) {
+        const newDigits = [...otpDigits];
+        newDigits[index - 1] = '';
+        setOtpDigits(newDigits);
+        cellRefs.current[index - 1]?.focus();
+      }
+    } else if (e.nativeEvent.key === 'Enter') {
+      const fullCode = otpDigits.join('');
+      if (fullCode.length === 6) {
+        executeSubmit(fullCode);
+      }
+    }
+  };
+
+  const autoFillCode = () => {
+    if (devOtp) {
+      const clean = String(devOtp).replace(/\D/g, '').slice(0, 6);
+      const digits = clean.split('');
+      while (digits.length < 6) digits.push('');
+      setOtpDigits(digits);
+      cellRefs.current[5]?.focus();
+      if (clean.length === 6) {
+        executeSubmit(clean);
+      }
+    }
+  };
+
+  const isFilled = otpDigits.every((d) => d.trim().length > 0);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          
+          {/* Header */}
           <View style={styles.headerRow}>
             <View style={styles.iconCircle}>
               <Ionicons name="shield-checkmark" size={24} color="#10b981" />
@@ -107,10 +195,11 @@ export function AdminActionOtpModal({
             </TouchableOpacity>
           </View>
 
+          {/* Localhost / Dev Auto-fill Pill */}
           {isLocalhost && devOtp ? (
             <View style={styles.devPill}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.devPillTitle}>Local Development Code</Text>
+                <Text style={styles.devPillTitle}>Local Development Bypass Code</Text>
                 <Text style={styles.devPillSub}>
                   Server OTP: <Text style={{ fontWeight: 'bold', color: '#10b981' }}>{devOtp}</Text>
                 </Text>
@@ -121,21 +210,88 @@ export function AdminActionOtpModal({
             </View>
           ) : null}
 
-          <Text style={styles.label}>Enter 6-Digit Authorization Code</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="keypad-outline" size={18} color="#94a3b8" style={{ marginRight: 10 }} />
-            <TextInput
-              style={styles.input}
-              value={otp}
-              onChangeText={setOtp}
-              placeholder="● ● ● ● ● ●"
-              placeholderTextColor="#64748b"
-              maxLength={6}
-              keyboardType="number-pad"
-              autoFocus
-            />
+          {/* Dispatch Channel Badges */}
+          <View style={styles.deliveryStatusRow}>
+            <Text style={styles.deliveryLabel}>Dispatched via:</Text>
+            <View style={styles.badgesWrap}>
+              {deliveredVia.length > 0 ? (
+                deliveredVia.map((channel) => (
+                  <View key={channel} style={styles.channelChip}>
+                    <Ionicons
+                      name={
+                        channel.toLowerCase().includes('whatsapp')
+                          ? 'logo-whatsapp'
+                          : channel.toLowerCase().includes('sms')
+                          ? 'chatbubble-ellipses-outline'
+                          : 'mail-outline'
+                      }
+                      size={12}
+                      color="#10b981"
+                    />
+                    <Text style={styles.channelChipText}>{channel}</Text>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.channelChip}>
+                  <Ionicons name="shield-checkmark-outline" size={12} color="#10b981" />
+                  <Text style={styles.channelChipText}>Admin 2FA Security Channel</Text>
+                </View>
+              )}
+            </View>
           </View>
 
+          {/* 6 Individual Segmented OTP Boxes */}
+          <Text style={styles.label}>Enter 6-Digit Authorization Code</Text>
+          <View style={styles.segmentedRow}>
+            {otpDigits.map((digit, idx) => (
+              <TextInput
+                key={idx}
+                ref={(el) => {
+                  cellRefs.current[idx] = el;
+                }}
+                style={[
+                  styles.otpCell,
+                  digit ? styles.otpCellFilled : null,
+                  focusedIndex === idx ? styles.otpCellActive : null,
+                ]}
+                keyboardType="number-pad"
+                maxLength={idx === 0 ? 6 : 1}
+                value={digit}
+                onChangeText={(val) => handleDigitChange(val, idx)}
+                onKeyPress={(e) => handleKeyPress(e, idx)}
+                onFocus={() => setFocusedIndex(idx)}
+                onBlur={() => setFocusedIndex(null)}
+                selectTextOnFocus
+                textAlign="center"
+              />
+            ))}
+          </View>
+
+          {/* 60-Second Resend Countdown */}
+          <View style={styles.resendRow}>
+            {countdown > 0 ? (
+              <Text style={styles.resendTimerText}>
+                Resend code in <Text style={{ color: '#10b981', fontWeight: 'bold' }}>{countdown}s</Text>
+              </Text>
+            ) : (
+              <TouchableOpacity
+                onPress={handleRequestOtp}
+                disabled={requestingOtp}
+                style={styles.resendActionBtn}
+              >
+                {requestingOtp ? (
+                  <ActivityIndicator size="small" color="#10b981" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Ionicons name="refresh" size={13} color="#10b981" />
+                    <Text style={styles.resendActiveText}>Resend Authorization Code</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Error Message */}
           {error && (
             <View style={styles.errorBox}>
               <Ionicons name="alert-circle" size={16} color="#ef4444" />
@@ -143,20 +299,24 @@ export function AdminActionOtpModal({
             </View>
           )}
 
+          {/* Action Buttons */}
           <View style={styles.btnRow}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} disabled={loading}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.saveBtn, (!otp || otp.length < 6 || loading) && { opacity: 0.6 }]}
-              onPress={handleSubmit}
-              disabled={!otp || otp.length < 6 || loading}
+              style={[styles.saveBtn, (!isFilled || loading) && { opacity: 0.5 }]}
+              onPress={() => executeSubmit()}
+              disabled={!isFilled || loading}
             >
               <LinearGradient colors={['#10b981', '#059669']} style={styles.gradient}>
                 {loading ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={styles.saveText}>Authorize & Save</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="lock-open-outline" size={16} color="#ffffff" />
+                    <Text style={styles.saveText}>Authorize & Confirm</Text>
+                  </View>
                 )}
               </LinearGradient>
             </TouchableOpacity>
@@ -171,7 +331,7 @@ export function AdminActionOtpModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.82)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -185,6 +345,10 @@ const styles = StyleSheet.create({
     padding: 24,
     maxWidth: 440,
     width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
   },
   headerRow: {
     flexDirection: 'row',
@@ -221,7 +385,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   devPillTitle: {
     fontSize: 11,
@@ -245,29 +409,101 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#064e3b',
   },
+  deliveryStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  deliveryLabel: {
+    fontSize: 11.5,
+    color: '#94a3b8',
+    fontWeight: '500',
+  },
+  badgesWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  channelChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    borderColor: 'rgba(16,185,129,0.3)',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  channelChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#a7f3d0',
+  },
   label: {
     fontSize: 12,
     fontWeight: '600',
     color: '#cbd5e1',
     marginBottom: 6,
-  },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 48,
-  },
-  input: {
-    flex: 1,
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    letterSpacing: 6,
     textAlign: 'center',
+  },
+  segmentedRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginVertical: 10,
+  },
+  otpCell: {
+    flex: 1,
+    maxWidth: 50,
+    height: 52,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 10,
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    padding: 0,
+  },
+  otpCellFilled: {
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    color: '#10b981',
+  },
+  otpCellActive: {
+    borderColor: '#34d399',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  resendRow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    marginBottom: 6,
+    minHeight: 24,
+  },
+  resendTimerText: {
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  resendActionBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  resendActiveText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#10b981',
+    textDecorationLine: 'underline',
   },
   errorBox: {
     flexDirection: 'row',
@@ -277,7 +513,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 8,
-    marginTop: 10,
+    marginTop: 8,
     gap: 6,
   },
   errorText: {
@@ -288,7 +524,7 @@ const styles = StyleSheet.create({
   btnRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 20,
+    marginTop: 18,
   },
   cancelBtn: {
     flex: 1,
@@ -305,7 +541,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveBtn: {
-    flex: 1.4,
+    flex: 1.5,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -320,4 +556,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

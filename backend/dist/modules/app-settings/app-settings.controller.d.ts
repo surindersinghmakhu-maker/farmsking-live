@@ -24,10 +24,13 @@ export declare class AppSettingsController {
     getFeatureFlags(): Promise<import("../../common/constants/feature-flags.constant").FeatureFlagsMap>;
     updateFeatureFlags(user: AuthUser, flags: any): Promise<{
         id: string;
+        whatsappGroupJid: string | null;
+        upiId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
-        upiId: string | null;
         upiPayeeName: string | null;
         adminName: string | null;
         adminMobile: string | null;
@@ -36,7 +39,6 @@ export declare class AppSettingsController {
         whatsappGroupSyncEnabled: boolean;
         whatsappAutoAddEnabled: boolean;
         whatsappAutoRemoveEnabled: boolean;
-        whatsappGroupJid: string | null;
         otpDeliveryChannel: string;
         referralSignupBonusAmount: number;
         newUserSignupBonusAmount: number;
@@ -48,24 +50,22 @@ export declare class AppSettingsController {
         gardenMaintenanceMode: boolean;
         walletMaintenanceMode: boolean;
         trainerMaintenanceMode: boolean;
-        allowDirectPlatformSales: boolean;
         freeTrialEnabled: boolean;
         freeTrialDays: number;
         freeTrialPlan: string;
-        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
-        updatedAt: Date;
-        updatedById: string | null;
         gardenExpertPlatformFeePercent: number;
-        gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
-        gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
         advisorPlatformFeePercent: number;
         advisorAdminFeePercent: number;
+        gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
+        gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
+        allowDirectPlatformSales: boolean;
         withdrawalPlatformFeePercent: number;
         withdrawalGstPercent: number;
         walletUsagePlatformFeePercent: number;
         walletUsageGstPercent: number;
         walletTaxEnabled: boolean;
-        createdAt: Date;
+        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
+        updatedById: string | null;
     }>;
     getSeo(): Promise<{
         seoTitle: any;
@@ -76,10 +76,13 @@ export declare class AppSettingsController {
     }>;
     updateSeo(dto: any): Promise<{
         id: string;
+        whatsappGroupJid: string | null;
+        upiId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
-        upiId: string | null;
         upiPayeeName: string | null;
         adminName: string | null;
         adminMobile: string | null;
@@ -88,7 +91,6 @@ export declare class AppSettingsController {
         whatsappGroupSyncEnabled: boolean;
         whatsappAutoAddEnabled: boolean;
         whatsappAutoRemoveEnabled: boolean;
-        whatsappGroupJid: string | null;
         otpDeliveryChannel: string;
         referralSignupBonusAmount: number;
         newUserSignupBonusAmount: number;
@@ -100,24 +102,22 @@ export declare class AppSettingsController {
         gardenMaintenanceMode: boolean;
         walletMaintenanceMode: boolean;
         trainerMaintenanceMode: boolean;
-        allowDirectPlatformSales: boolean;
         freeTrialEnabled: boolean;
         freeTrialDays: number;
         freeTrialPlan: string;
-        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
-        updatedAt: Date;
-        updatedById: string | null;
         gardenExpertPlatformFeePercent: number;
-        gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
-        gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
         advisorPlatformFeePercent: number;
         advisorAdminFeePercent: number;
+        gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
+        gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
+        allowDirectPlatformSales: boolean;
         withdrawalPlatformFeePercent: number;
         withdrawalGstPercent: number;
         walletUsagePlatformFeePercent: number;
         walletUsageGstPercent: number;
         walletTaxEnabled: boolean;
-        createdAt: Date;
+        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
+        updatedById: string | null;
     }>;
     getIntegrations(): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
     requestAdminActionOtp(user: AuthUser): Promise<{

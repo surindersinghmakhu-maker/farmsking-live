@@ -19,30 +19,30 @@ export declare class ReferralsService {
     checkAndRewardMilestoneFreeCoupon(referrerId: string, planTier?: FarmerSubscriptionPlan): Promise<{
         id: string;
         createdAt: Date;
-        category: import(".prisma/client").$Enums.PlanCouponCategory;
-        createdById: string;
         code: string;
         expiresAt: Date | null;
-        daysGranted: number;
+        createdById: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
-        doctorKingId: string | null;
-        advisorKingId: string | null;
-        isUsed: boolean;
-        usedAt: Date | null;
-        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        daysGranted: number;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.PlanCouponCategory;
+        assignedFarmerId: string | null;
+        assignedBusinessPartnerId: string | null;
         doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         includeMembership: boolean;
         includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
         includedMembershipDays: number | null;
+        advisorKingId: string | null;
+        isUsed: boolean;
+        usedAt: Date | null;
+        usedByFarmerId: string | null;
+        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         createdByRole: import(".prisma/client").$Enums.Role | null;
         payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
         payoutRecipientId: string | null;
-        assignedFarmerId: string | null;
-        assignedAdvisorId: string | null;
-        assignedBusinessPartnerId: string | null;
-        usedByFarmerId: string | null;
+        doctorKingId: string | null;
     } | undefined>;
     getMyReferralNetwork(user: AuthUser): Promise<{
         kingId: string;
@@ -54,10 +54,10 @@ export declare class ReferralsService {
         directReferrals: ({
             referredUser: {
                 id: string;
-                createdAt: Date;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
+                createdAt: Date;
             };
         } & {
             id: string;
@@ -71,9 +71,9 @@ export declare class ReferralsService {
         extendedReferrals: ({
             referredUser: {
                 id: string;
-                createdAt: Date;
-                name: string;
                 kingId: string | null;
+                name: string;
+                createdAt: Date;
             };
         } & {
             id: string;
@@ -87,14 +87,14 @@ export declare class ReferralsService {
         royaltiesHistory: ({
             sourceUser: {
                 id: string;
-                name: string;
                 kingId: string | null;
+                name: string;
             };
         } & {
             id: string;
             createdAt: Date;
-            userId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
+            userId: string;
             sourceUserId: string;
             royaltyType: string;
             referenceCode: string | null;

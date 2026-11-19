@@ -25,20 +25,22 @@ export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
     getMe(user: AuthUser): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -47,6 +49,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -55,6 +58,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -74,31 +78,27 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     requestDeleteMeOtp(user: AuthUser, body?: {
         mobile?: string;
@@ -133,26 +133,28 @@ export declare class UsersController {
     getMyReferrals(user: AuthUser): Promise<{
         commissionEarned: number;
         id: string;
-        createdAt: Date;
-        name: string;
         kingId: string | null;
         mobile: string;
+        name: string;
+        createdAt: Date;
     }[]>;
     becomeFarmer(user: AuthUser, dto?: UpdateFarmerProfileDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -161,6 +163,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -169,6 +172,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -188,47 +192,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     becomeGardener(user: AuthUser): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -237,6 +239,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -245,6 +248,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -264,47 +268,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     updateMyAddress(user: AuthUser, dto: UpdateMyAddressDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -313,6 +315,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -321,6 +324,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -340,31 +344,27 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     getMyProfileStatus(user: AuthUser): Promise<{
         profileComplete: boolean;
@@ -377,20 +377,22 @@ export declare class UsersController {
         };
     }>;
     updateMyProfile(user: AuthUser, dto: UpdateFarmerProfileDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -399,6 +401,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -407,6 +410,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -426,47 +430,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
+    }>;
+    updateMyAdvisorProfile(user: AuthUser, dto: UpdateAdvisorProfileDto): Promise<{
         sellerStore: {
             id: string;
             storeName: string;
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
-    }>;
-    updateMyAdvisorProfile(user: AuthUser, dto: UpdateAdvisorProfileDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -475,6 +477,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -495,6 +498,7 @@ export declare class UsersController {
         feeAdditionalCropMonthly: import("@prisma/client/runtime/library").Decimal | null;
         specializedCategories: import(".prisma/client").$Enums.CropCategory[];
         specializedCrops: string[];
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -519,39 +523,35 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     getMyAdvisorProfileStatus(user: AuthUser): Promise<{
         profile: {
             email: string | null;
-            upiId: string | null;
             photoUrl: string | null;
             qualification: string | null;
             profileTitle: string | null;
+            upiId: string | null;
             panNumber: string | null;
             alternativeMobile: string | null;
             bankAccountNumber: string | null;
@@ -559,23 +559,25 @@ export declare class UsersController {
             bankAccountHolderName: string | null;
         };
         profileComplete: boolean;
-        missingFields: ("email" | "upiId" | "photoUrl" | "qualification" | "profileTitle" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
+        missingFields: ("email" | "photoUrl" | "qualification" | "profileTitle" | "upiId" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
     }>;
     updateMyPartnerProfile(user: AuthUser, dto: UpdatePartnerProfileDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -584,6 +586,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -592,6 +595,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -616,31 +620,27 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     getMyPartnerProfileStatus(user: AuthUser): Promise<{
         profile: {
@@ -665,20 +665,22 @@ export declare class UsersController {
             canRestore: boolean;
             isOnline: boolean;
             lastSeenAt: string | null;
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -687,6 +689,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -695,6 +698,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -714,31 +718,27 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         }[];
         total: number;
         page: number;
@@ -746,12 +746,12 @@ export declare class UsersController {
     }>;
     lookupByKingId(kingId: string): Promise<{
         currentEmployerName: string | null;
+        roles: import(".prisma/client").$Enums.Role[];
         id: string;
-        name: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
+        name: string;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -759,25 +759,27 @@ export declare class UsersController {
     }>;
     searchBusinessPartners(q?: string): Promise<{
         id: string;
-        name: string;
         kingId: string | null;
         mobile: string;
+        name: string;
     }[]>;
     setReferrer(id: string, dto: SetReferrerDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -786,6 +788,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -794,6 +797,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -813,47 +817,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
+    }>;
+    adminUpdateUser(user: AuthUser, id: string, dto: AdminUpdateUserDto): Promise<{
         sellerStore: {
             id: string;
             storeName: string;
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
-    }>;
-    adminUpdateUser(user: AuthUser, id: string, dto: AdminUpdateUserDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -862,6 +864,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -875,6 +878,7 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         qualification: string | null;
         profileTitle: string | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -899,50 +903,48 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     resetPassword(user: AuthUser, id: string, dto: ResetUserPasswordDto): Promise<{
         tempPassword: string;
     }>;
     updateOperatorPermissions(id: string, dto: UpdateOperatorPermissionsDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -951,6 +953,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -959,6 +962,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -978,31 +982,27 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     sendAdminCreateOtp(user: AuthUser, dto: AdminCreateSendOtpDto): Promise<{
         success: boolean;
@@ -1061,20 +1061,22 @@ export declare class UsersController {
     }>;
     createAdvisor(dto: CreateAdvisorDto): Promise<{
         user: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1083,6 +1085,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1091,6 +1094,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1110,50 +1114,48 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createAssistantDoctor(user: AuthUser, dto: CreateAssistantDoctorDto): Promise<{
         user: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1162,6 +1164,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1170,6 +1173,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1189,49 +1193,47 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     getMyAssistantDoctors(user: AuthUser): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -1240,6 +1242,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1248,6 +1251,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1267,48 +1271,46 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }[]>;
     createTrainer(dto: CreateStaffDto): Promise<{
         user: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1317,6 +1319,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1325,6 +1328,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1344,50 +1348,48 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createOperator(dto: CreateStaffDto): Promise<{
         user: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1396,6 +1398,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1404,6 +1407,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1423,50 +1427,48 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createAdmin(dto: CreateStaffDto): Promise<{
         user: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1475,6 +1477,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1483,6 +1486,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1502,50 +1506,48 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createManager(dto: CreateStaffDto): Promise<{
         user: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1554,6 +1556,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1562,6 +1565,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1581,50 +1585,48 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createAccountant(dto: CreateStaffDto): Promise<{
         user: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1633,6 +1635,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1641,6 +1644,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1660,49 +1664,47 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     updateAdminStaffPermissions(id: string, dto: UpdateAdminStaffPermissionsDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -1711,6 +1713,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1719,6 +1722,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1738,48 +1742,46 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     createSupervisor(user: AuthUser, dto: CreateSupervisorDto): Promise<{
         supervisor: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1788,6 +1790,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1796,6 +1799,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1815,31 +1819,27 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
@@ -1870,9 +1870,9 @@ export declare class UsersController {
         message: string;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             village: string | null;
             farmName: string | null;
         } | null;
@@ -1887,9 +1887,9 @@ export declare class UsersController {
         isAssigned: boolean;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1899,20 +1899,22 @@ export declare class UsersController {
         featuresConfig: {};
     }>;
     getMySupervisors(user: AuthUser): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -1921,6 +1923,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1929,6 +1932,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1948,31 +1952,27 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }[]>;
     updateSupervisorFeatures(user: AuthUser, id: string, featuresConfig: any): Promise<{
         success: boolean;
@@ -1981,20 +1981,22 @@ export declare class UsersController {
         featuresConfig: any;
     }>;
     updateSupervisorPermissions(user: AuthUser, id: string, dto: UpdateSupervisorPermissionsDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -2003,6 +2005,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2011,6 +2014,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2030,50 +2034,48 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     resignSupervisor(user: AuthUser, id: string): Promise<{
         success: boolean;
         message: string;
         supervisor: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -2082,6 +2084,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -2090,6 +2093,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -2109,48 +2113,46 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
     }>;
     assignSupervisorEmployer(user: AuthUser, id: string, employerFarmerId: string | null): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -2159,6 +2161,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2167,6 +2170,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2186,31 +2190,27 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     deleteSupervisor(user: AuthUser, id: string): Promise<{
         success: boolean;
@@ -2219,25 +2219,22 @@ export declare class UsersController {
     listPartnerApplications(status?: string): Promise<{
         hasPassword: boolean;
         applicantUser: {
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            name: string;
         } | null;
         reviewedBy: {
             id: string;
             name: string;
         } | null;
-        email: string | null;
         id: string;
-        upiId: string | null;
-        updatedAt: Date;
-        createdAt: Date;
-        name: string;
         mobile: string;
+        name: string;
+        email: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -2249,6 +2246,7 @@ export declare class UsersController {
         yearsExperience: number | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         qualification: string | null;
+        upiId: string | null;
         panNumber: string | null;
         panDocUrl: string | null;
         aadhaarLast4: string | null;
@@ -2262,30 +2260,29 @@ export declare class UsersController {
         bankIfsc: string | null;
         bankAccountHolderName: string | null;
         isPhoneVerified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        requestedRole: import(".prisma/client").$Enums.Role;
+        storeName: string | null;
+        legalName: string | null;
+        sellerType: import(".prisma/client").$Enums.SellerType | null;
+        pickupAddress: string | null;
         status: import(".prisma/client").$Enums.PartnerApplicationStatus;
         rejectionReason: string | null;
-        storeName: string | null;
-        sellerType: import(".prisma/client").$Enums.SellerType | null;
-        legalName: string | null;
-        pickupAddress: string | null;
-        reviewedById: string | null;
-        reviewedAt: Date | null;
-        requestedRole: import(".prisma/client").$Enums.Role;
         resubmissionCount: number;
         applicantUserId: string | null;
+        reviewedById: string | null;
+        reviewedAt: Date | null;
     }[]>;
     approvePartnerApplication(user: AuthUser, id: string, body?: {
         adminConfirmationOtp?: string;
     }, queryOtp?: string, headerOtp?: string): Promise<{
         success: boolean;
         application: {
-            email: string | null;
             id: string;
-            upiId: string | null;
-            updatedAt: Date;
-            createdAt: Date;
-            name: string;
             mobile: string;
+            name: string;
+            email: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -2297,6 +2294,7 @@ export declare class UsersController {
             yearsExperience: number | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             qualification: string | null;
+            upiId: string | null;
             panNumber: string | null;
             panDocUrl: string | null;
             aadhaarLast4: string | null;
@@ -2310,17 +2308,19 @@ export declare class UsersController {
             bankIfsc: string | null;
             bankAccountHolderName: string | null;
             isPhoneVerified: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            requestedRole: import(".prisma/client").$Enums.Role;
+            storeName: string | null;
+            legalName: string | null;
+            sellerType: import(".prisma/client").$Enums.SellerType | null;
+            pickupAddress: string | null;
             status: import(".prisma/client").$Enums.PartnerApplicationStatus;
             rejectionReason: string | null;
-            storeName: string | null;
-            sellerType: import(".prisma/client").$Enums.SellerType | null;
-            legalName: string | null;
-            pickupAddress: string | null;
-            reviewedById: string | null;
-            reviewedAt: Date | null;
-            requestedRole: import(".prisma/client").$Enums.Role;
             resubmissionCount: number;
             applicantUserId: string | null;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
         };
         user: any;
         message: string;
@@ -2328,13 +2328,10 @@ export declare class UsersController {
     rejectPartnerApplication(user: AuthUser, id: string, reason: string): Promise<{
         success: boolean;
         application: {
-            email: string | null;
             id: string;
-            upiId: string | null;
-            updatedAt: Date;
-            createdAt: Date;
-            name: string;
             mobile: string;
+            name: string;
+            email: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -2346,6 +2343,7 @@ export declare class UsersController {
             yearsExperience: number | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             qualification: string | null;
+            upiId: string | null;
             panNumber: string | null;
             panDocUrl: string | null;
             aadhaarLast4: string | null;
@@ -2359,58 +2357,60 @@ export declare class UsersController {
             bankIfsc: string | null;
             bankAccountHolderName: string | null;
             isPhoneVerified: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            requestedRole: import(".prisma/client").$Enums.Role;
+            storeName: string | null;
+            legalName: string | null;
+            sellerType: import(".prisma/client").$Enums.SellerType | null;
+            pickupAddress: string | null;
             status: import(".prisma/client").$Enums.PartnerApplicationStatus;
             rejectionReason: string | null;
-            storeName: string | null;
-            sellerType: import(".prisma/client").$Enums.SellerType | null;
-            legalName: string | null;
-            pickupAddress: string | null;
-            reviewedById: string | null;
-            reviewedAt: Date | null;
-            requestedRole: import(".prisma/client").$Enums.Role;
             resubmissionCount: number;
             applicantUserId: string | null;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
         };
         message: string;
     }>;
     listVerifiedSignupLeads(status?: string, search?: string): Promise<{
         items: ({
             convertedUser: {
+                roles: import(".prisma/client").$Enums.Role[];
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                roles: import(".prisma/client").$Enums.Role[];
+                name: string;
             } | null;
             convertedBy: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
             } | null;
         } & {
             id: string;
-            updatedAt: Date;
-            createdAt: Date;
             mobile: string;
             village: string | null;
             district: string | null;
             state: string | null;
             pincode: string | null;
-            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
-            adminNotes: string | null;
-            sourceChannel: string;
+            createdAt: Date;
+            updatedAt: Date;
+            referralCode: string | null;
             portal: string | null;
+            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
+            sourceChannel: string;
             otpVerifiedAt: Date;
             lastAttemptAt: Date;
             attemptCount: number;
             ipAddress: string | null;
             userAgent: string | null;
-            referralCode: string | null;
             capturedName: string | null;
             capturedEmail: string | null;
             intendedRole: import(".prisma/client").$Enums.Role | null;
+            adminNotes: string | null;
             convertedUserId: string | null;
             convertedById: string | null;
             convertedAt: Date | null;
@@ -2427,41 +2427,41 @@ export declare class UsersController {
         success: boolean;
         lead: {
             convertedUser: {
+                roles: import(".prisma/client").$Enums.Role[];
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                roles: import(".prisma/client").$Enums.Role[];
+                name: string;
             } | null;
             convertedBy: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
             } | null;
         } & {
             id: string;
-            updatedAt: Date;
-            createdAt: Date;
             mobile: string;
             village: string | null;
             district: string | null;
             state: string | null;
             pincode: string | null;
-            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
-            adminNotes: string | null;
-            sourceChannel: string;
+            createdAt: Date;
+            updatedAt: Date;
+            referralCode: string | null;
             portal: string | null;
+            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
+            sourceChannel: string;
             otpVerifiedAt: Date;
             lastAttemptAt: Date;
             attemptCount: number;
             ipAddress: string | null;
             userAgent: string | null;
-            referralCode: string | null;
             capturedName: string | null;
             capturedEmail: string | null;
             intendedRole: import(".prisma/client").$Enums.Role | null;
+            adminNotes: string | null;
             convertedUserId: string | null;
             convertedById: string | null;
             convertedAt: Date | null;
@@ -2471,20 +2471,22 @@ export declare class UsersController {
     convertVerifiedLeadToUser(user: AuthUser, id: string, dto: ConvertVerifiedLeadDto): Promise<{
         success: boolean;
         user: {
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -2493,6 +2495,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -2501,6 +2504,7 @@ export declare class UsersController {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -2520,69 +2524,65 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
                 id: string;
                 name: string;
+                farmerId: string;
                 farmer: {
                     id: string;
-                    name: string;
                     kingId: string | null;
                     mobile: string;
+                    name: string;
                     farmName: string | null;
                 };
-                farmerId: string;
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         lead: {
             convertedUser: {
+                roles: import(".prisma/client").$Enums.Role[];
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                roles: import(".prisma/client").$Enums.Role[];
+                name: string;
             } | null;
             convertedBy: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
             } | null;
         } & {
             id: string;
-            updatedAt: Date;
-            createdAt: Date;
             mobile: string;
             village: string | null;
             district: string | null;
             state: string | null;
             pincode: string | null;
-            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
-            adminNotes: string | null;
-            sourceChannel: string;
+            createdAt: Date;
+            updatedAt: Date;
+            referralCode: string | null;
             portal: string | null;
+            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
+            sourceChannel: string;
             otpVerifiedAt: Date;
             lastAttemptAt: Date;
             attemptCount: number;
             ipAddress: string | null;
             userAgent: string | null;
-            referralCode: string | null;
             capturedName: string | null;
             capturedEmail: string | null;
             intendedRole: import(".prisma/client").$Enums.Role | null;
+            adminNotes: string | null;
             convertedUserId: string | null;
             convertedById: string | null;
             convertedAt: Date | null;
@@ -2594,23 +2594,19 @@ export declare class UsersController {
             isPermanentlyDeleted: boolean;
             isOnline: boolean;
             lastSeenAt: string | null;
-            email: string | null;
-            id: string;
-            upiId: string | null;
-            whatsappGroupJid: string | null;
-            updatedAt: Date;
-            createdAt: Date;
-            name: string;
-            kingId: string | null;
-            mobile: string;
-            googleId: string | null;
-            role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
             emailVerifyToken: string | null;
             emailVerifyExpires: Date | null;
+            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -2620,6 +2616,7 @@ export declare class UsersController {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -2644,6 +2641,7 @@ export declare class UsersController {
             feeAdditionalCropMonthly: import("@prisma/client/runtime/library").Decimal | null;
             specializedCategories: import(".prisma/client").$Enums.CropCategory[];
             specializedCrops: string[];
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -2693,6 +2691,8 @@ export declare class UsersController {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
+            createdAt: Date;
+            updatedAt: Date;
             deletedAt: Date | null;
         };
         farmCount: number;
@@ -2700,51 +2700,53 @@ export declare class UsersController {
         couponsUsed: {
             id: string;
             code: string;
-            daysGranted: number;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+            daysGranted: number;
             usedAt: Date | null;
         }[];
         orderCount: number;
         farmerPlan: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
             startDate: Date;
             endDate: Date | null;
-            id: string;
-            updatedAt: Date;
-            createdAt: Date;
-            couponId: string | null;
             farmerId: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
+            couponId: string | null;
         } | null;
         gardenerPlan: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
             startDate: Date;
             endDate: Date | null;
-            id: string;
-            updatedAt: Date;
-            createdAt: Date;
-            couponId: string | null;
             plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             expiredAt: Date | null;
+            couponId: string | null;
             gardenerId: string;
             hasUsedVipTrial: boolean;
             trialStartedAt: Date | null;
         } | null;
     }>;
     updateRole(user: AuthUser, id: string, dto: UpdateRoleDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -2753,6 +2755,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2761,6 +2764,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2780,47 +2784,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     updateActiveRoles(user: AuthUser, id: string, dto: UpdateActiveRolesDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -2829,6 +2831,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2837,6 +2840,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2856,55 +2860,47 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     deactivate(user: AuthUser, id: string): Promise<{
         deletedAt: Date;
         isPermanentlyBlocked: boolean;
         wasHardDeleted: boolean;
         message: string;
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        updatedAt: Date;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        passwordHash: string;
-        role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        passwordHash: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
         emailVerifyToken: string | null;
         emailVerifyExpires: Date | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -2915,6 +2911,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2939,6 +2936,7 @@ export declare class UsersController {
         feeAdditionalCropMonthly: import("@prisma/client/runtime/library").Decimal | null;
         specializedCategories: import(".prisma/client").$Enums.CropCategory[];
         specializedCrops: string[];
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2987,23 +2985,27 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     } | {
         wasHardDeleted: boolean;
         message: string;
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -3012,6 +3014,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -3020,6 +3023,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -3039,50 +3043,48 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     reactivate(user: AuthUser, id: string, body?: {
         newMobile?: string;
         newName?: string;
     }): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -3091,6 +3093,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -3099,6 +3102,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -3118,50 +3122,48 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     reactivatePost(user: AuthUser, id: string, body?: {
         newMobile?: string;
         newName?: string;
     }): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -3170,6 +3172,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -3178,6 +3181,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -3197,31 +3201,27 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     deleteUserByAdmin(user: AuthUser, id: string, body?: {
         adminConfirmationOtp?: string;
@@ -3235,20 +3235,22 @@ export declare class UsersController {
         wasHardDeleted?: undefined;
     }>;
     assignStaffRole(user: AuthUser, dto: AssignStaffRoleDto): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -3257,6 +3259,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -3265,6 +3268,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -3284,47 +3288,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     submitProfileCompletion(user: AuthUser, body: any): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -3333,6 +3335,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -3341,6 +3344,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -3360,47 +3364,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     getPendingApprovals(): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -3409,6 +3411,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -3417,6 +3420,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -3436,47 +3440,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }[]>;
     approveProfile(user: AuthUser, id: string): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -3485,6 +3487,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -3493,6 +3496,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -3512,47 +3516,45 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     rejectProfile(user: AuthUser, id: string, reason: string): Promise<{
-        email: string | null;
-        id: string;
-        upiId: string | null;
-        whatsappGroupJid: string | null;
-        createdAt: Date;
-        name: string;
-        kingId: string | null;
-        mobile: string;
-        googleId: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        id: string;
+        kingId: string | null;
+        mobile: string;
+        role: import(".prisma/client").$Enums.Role;
+        name: string;
+        email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
+        googleId: string | null;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -3561,6 +3563,7 @@ export declare class UsersController {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
+        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -3569,6 +3572,7 @@ export declare class UsersController {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -3588,30 +3592,26 @@ export declare class UsersController {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
+        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
             id: string;
             name: string;
+            farmerId: string;
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 farmName: string | null;
             };
-            farmerId: string;
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
 }

@@ -7,16 +7,16 @@ export declare class SprayScheduleController {
     constructor(sprayScheduleService: SprayScheduleService);
     create(user: AuthUser, dto: CreateSprayScheduleDto): Promise<{
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
-        dosageInstructions: string | null;
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         scheduledDate: Date;
+        dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
         createdByAdvisorId: string;
@@ -24,23 +24,23 @@ export declare class SprayScheduleController {
     }>;
     searchCatalog(q?: string): Promise<{
         id: string;
-        createdAt: Date;
         name: string;
+        createdAt: Date;
         deletedAt: Date | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
     }[]>;
     listForCrop(user: AuthUser, cropCycleId: string): Promise<{
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
-        dosageInstructions: string | null;
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         scheduledDate: Date;
+        dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
         createdByAdvisorId: string;
@@ -48,16 +48,16 @@ export declare class SprayScheduleController {
     }[]>;
     update(user: AuthUser, id: string, dto: UpdateSprayScheduleDto): Promise<{
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
-        dosageInstructions: string | null;
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         scheduledDate: Date;
+        dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
         createdByAdvisorId: string;
@@ -65,16 +65,16 @@ export declare class SprayScheduleController {
     }>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
-        dosageInstructions: string | null;
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         scheduledDate: Date;
+        dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
         createdByAdvisorId: string;

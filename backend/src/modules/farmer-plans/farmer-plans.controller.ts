@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { OperatorPermissionGuard } from '../../common/guards/operator-permission.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { RequireOperatorPermission } from '../../common/decorators/operator-permission.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
@@ -130,17 +131,8 @@ export class FarmerPlansController {
     return this.farmerPlansService.listMineForBusinessPartner(user);
   }
 
-  /** Any authenticated role: view the current plan prices/commission splits, e.g. for the plan comparison chart */
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-  )
+  /** Public: view the current plan prices/commission splits for visitors and plan comparison chart */
+  @Public()
   @Get('pricing')
   getPricing() {
     return this.farmerPlansService.getPricing();

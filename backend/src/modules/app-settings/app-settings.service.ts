@@ -16,7 +16,7 @@ export class AppSettingsService {
   private readonly logger = new Logger(AppSettingsService.name);
   private cache: { data: any; timestamp: number } | null = null;
   private rawCache: { data: any; timestamp: number } | null = null;
-  private readonly CACHE_TTL_MS = 15000;
+  private readonly CACHE_TTL_MS = 60000; // 60s in-memory RAM cache (auto-cleared immediately on any update)
   private readonly adminActionOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
 
   private sanitizePublicFlags(flags: Record<string, any> | null | undefined): Record<string, any> {

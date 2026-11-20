@@ -168,7 +168,7 @@ let AppSettingsService = AppSettingsService_1 = class AppSettingsService {
         this.logger = new common_1.Logger(AppSettingsService_1.name);
         this.cache = null;
         this.rawCache = null;
-        this.CACHE_TTL_MS = 15000;
+        this.CACHE_TTL_MS = 60000;
         this.adminActionOtpStore = new Map();
     }
     clearCache() {

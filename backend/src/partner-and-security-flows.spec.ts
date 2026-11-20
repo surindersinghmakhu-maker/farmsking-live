@@ -124,6 +124,7 @@ describe('Partner Self-Signup, Server OTP & Mandatory Step-Up 2FA Security Suite
           findUnique: jest.fn().mockResolvedValue({ ...dbUser, deletedAt: new Date() }),
           update: jest.fn().mockResolvedValue({}),
           updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          delete: jest.fn().mockResolvedValue({}),
         },
       };
       const settingsService = new AppSettingsService(prismaMock);
@@ -866,6 +867,11 @@ describe('Partner Self-Signup, Server OTP & Mandatory Step-Up 2FA Security Suite
             if (where?.id === targetUser.id) {
               Object.assign(targetUser, data);
             }
+            return { ...targetUser };
+          }),
+          delete: jest.fn(async ({ where }: any) => {
+            targetUser.deletedAt = new Date();
+            targetUser.isPermanentlyBlocked = true;
             return { ...targetUser };
           }),
         },

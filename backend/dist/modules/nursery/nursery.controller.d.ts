@@ -70,6 +70,7 @@ export declare class NurseryController {
             kycVerified: boolean;
         };
         reviews: {
+            isPublic: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -82,7 +83,6 @@ export declare class NurseryController {
             growthRating: number | null;
             compositeRating: import("@prisma/client/runtime/library").Decimal;
             reviewPhotos: string[];
-            isPublic: boolean;
         }[];
     } & {
         id: string;
@@ -319,6 +319,7 @@ export declare class NurseryController {
             name: string;
         } | null;
         review: {
+            isPublic: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
@@ -331,7 +332,6 @@ export declare class NurseryController {
             growthRating: number | null;
             compositeRating: import("@prisma/client/runtime/library").Decimal;
             reviewPhotos: string[];
-            isPublic: boolean;
         } | null;
     } & {
         id: string;

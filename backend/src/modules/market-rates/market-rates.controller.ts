@@ -22,5 +22,14 @@ export class MarketRatesController {
   ) {
     return this.marketRatesService.getCropWidgetSummary(cropName || 'Marigold', state || 'Punjab', unit || 'KG');
   }
+
+  @Get('summary')
+  getSummary(
+    @Query('crop') cropName?: string,
+    @Query('state') state?: string,
+    @Query('unit') unit?: string,
+  ) {
+    return this.marketRatesService.getCropWidgetSummary(cropName || 'Wheat', state || 'Punjab', unit || 'QUINTAL');
+  }
 }
 

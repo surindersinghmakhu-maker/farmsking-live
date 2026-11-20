@@ -438,7 +438,7 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
         return advisors[0].id;
     }
     roleToAdvisorType(user) {
-        if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.GARDENER))
+        if (user && (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.GARDENER))
             return client_1.AdvisorType.GARDEN;
         return client_1.AdvisorType.FARM;
     }

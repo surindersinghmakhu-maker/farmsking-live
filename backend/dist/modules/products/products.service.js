@@ -17,6 +17,11 @@ const client_1 = require("@prisma/client");
 let ProductsService = class ProductsService {
     constructor(prisma) {
         this.prisma = prisma;
+        this.publicCatalogCache = null;
+        this.CATALOG_CACHE_TTL_MS = 25000;
+    }
+    clearCatalogCache() {
+        this.publicCatalogCache = null;
     }
     async create(creator, dto) {
         const isAdmin = (0, auth_user_util_1.hasActiveRole)(creator, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(creator, client_1.Role.SUPER_ADMIN);
@@ -99,7 +104,7 @@ let ProductsService = class ProductsService {
         if (isAdmin || sellerStore?.catalogApprovalMode === client_1.CatalogApprovalMode.AUTO) {
             moderationStatus = client_1.ProductModerationStatus.ACTIVE;
         }
-        return this.prisma.product.create({
+        const created = await this.prisma.product.create({
             data: {
                 name: dto.name,
                 title: dto.title || dto.name,
@@ -145,10 +150,16 @@ let ProductsService = class ProductsService {
                 createdById: creator.id,
             },
         });
+        this.clearCatalogCache();
+        return created;
     }
     async listAll(user, includeInactiveRequested = false, sellerStoreId, slug, categorySlug) {
         const isAdmin = Boolean(user && ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN)));
         const isSeller = Boolean(user && (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SELLER));
+        const isPublicCatalog = !includeInactiveRequested && !sellerStoreId && !slug && !categorySlug && (!user || (!isAdmin && !isSeller));
+        if (isPublicCatalog && this.publicCatalogCache && Date.now() - this.publicCatalogCache.timestamp < this.CATALOG_CACHE_TTL_MS) {
+            return this.publicCatalogCache.data;
+        }
         let where = { isActive: true, moderationStatus: client_1.ProductModerationStatus.ACTIVE };
         if (includeInactiveRequested && isAdmin) {
             where = {};
@@ -184,7 +195,7 @@ let ProductsService = class ProductsService {
             },
             orderBy: { createdAt: 'desc' },
         });
-        return list.map((p) => {
+        const sanitized = list.map((p) => {
             let desc = p.description || '';
             if (desc.includes('data:image')) {
                 const idx = desc.search(/\n\nGallery:\n|\nGallery:\n|Gallery:\s*data:/i);
@@ -197,6 +208,10 @@ let ProductsService = class ProductsService {
                 description: desc,
             };
         });
+        if (isPublicCatalog) {
+            this.publicCatalogCache = { timestamp: Date.now(), data: sanitized };
+        }
+        return sanitized;
     }
     async findOne(id) {
         return this.findOneOrThrow(id);
@@ -236,6 +251,7 @@ let ProductsService = class ProductsService {
         if (!isAdmin) {
             delete updateData.commissionOverridePercentage;
         }
+        this.clearCatalogCache();
         return this.prisma.product.update({ where: { id }, data: updateData });
     }
     async remove(user, id) {
@@ -244,6 +260,7 @@ let ProductsService = class ProductsService {
         if (!isAdmin && product.sellerStore?.sellerId !== user.id) {
             throw new common_1.ForbiddenException('You can only deactivate products belonging to your own seller store.');
         }
+        this.clearCatalogCache();
         return this.prisma.product.update({ where: { id }, data: { isActive: false } });
     }
     async addReview(user, productId, rating, title, comment, photoUrls) {
@@ -387,6 +404,7 @@ let ProductsService = class ProductsService {
     }
     async approveProductByAdmin(id) {
         await this.findOneOrThrow(id);
+        this.clearCatalogCache();
         return this.prisma.product.update({
             where: { id },
             data: { isActive: true, moderationStatus: client_1.ProductModerationStatus.ACTIVE, rejectionReason: null },
@@ -397,6 +415,7 @@ let ProductsService = class ProductsService {
             throw new common_1.BadRequestException('A reason is required when rejecting a product.');
         }
         await this.findOneOrThrow(id);
+        this.clearCatalogCache();
         return this.prisma.product.update({
             where: { id },
             data: { isActive: false, moderationStatus: client_1.ProductModerationStatus.REJECTED, rejectionReason: reason.trim() },

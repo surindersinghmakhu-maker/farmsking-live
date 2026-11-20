@@ -225,7 +225,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
   }
 
   /** Farmer/Gardener: every advisor of the matching type they could choose (STANDARD/PREMIUM only — enforced in FarmerPlansService.chooseAdvisor). */
-  async listAvailableAdvisors(user: AuthUser) {
+  async listAvailableAdvisors(user?: AuthUser | null) {
     const requiredType = this.roleToAdvisorType(user);
     const advisors = await this.prisma.user.findMany({
       where: {
@@ -503,8 +503,8 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
   }
 
   /** FARMER needs a FARM advisor, GARDENER needs a GARDEN advisor — anything else can't be assigned. */
-  private roleToAdvisorType(user: { role: Role; roles: Role[]; deactivatedRoles: Role[] }): AdvisorType {
-    if (hasActiveRole(user, Role.GARDENER)) return AdvisorType.GARDEN;
+  private roleToAdvisorType(user?: { role: Role; roles: Role[]; deactivatedRoles: Role[] } | null): AdvisorType {
+    if (user && hasActiveRole(user, Role.GARDENER)) return AdvisorType.GARDEN;
     return AdvisorType.FARM;
   }
 

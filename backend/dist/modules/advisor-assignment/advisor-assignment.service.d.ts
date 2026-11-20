@@ -201,7 +201,7 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         subscriptionId: string | null;
         assignedById: string | null;
     }) | null>;
-    listAvailableAdvisors(user: AuthUser): Promise<{
+    listAvailableAdvisors(user?: AuthUser | null): Promise<{
         rating: number | null;
         ratingCount: number;
         ratingLabel: string;

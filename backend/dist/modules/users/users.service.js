@@ -2046,7 +2046,7 @@ let UsersService = class UsersService {
             throw new common_1.ConflictException('This user account is already permanently deleted.');
         }
         if (this.appSettingsService) {
-            this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
+            await this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
         }
         const relatedCount = await this.countUserRelatedRecords(id);
         if (relatedCount === 0) {
@@ -2288,7 +2288,7 @@ let UsersService = class UsersService {
     }
     async approvePartnerApplication(caller, applicationId, adminConfirmationOtp) {
         if (this.appSettingsService) {
-            this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
+            await this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
         }
         const existingApp = await this.prisma.partnerApplication.findUnique({
             where: { id: applicationId },

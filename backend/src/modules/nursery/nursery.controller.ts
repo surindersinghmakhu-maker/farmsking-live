@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { NurseryService } from './nursery.service';
@@ -31,6 +32,7 @@ export class NurseryController {
 
   // ─── Buyer / General Nursery Endpoints ───
 
+  @Public()
   @Get('batches')
   @ApiOperation({ summary: 'List ready-for-sale nursery seedling batches' })
   async listBatches(
@@ -49,6 +51,7 @@ export class NurseryController {
     });
   }
 
+  @Public()
   @Get('batches/:id')
   @ApiOperation({ summary: 'Get details of a specific nursery batch' })
   async getBatchById(@Param('id') id: string) {

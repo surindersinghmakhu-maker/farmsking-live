@@ -8,7 +8,14 @@ import { ProductModerationStatus, CatalogApprovalMode, SellerKycStatus, Role } f
 
 @Injectable()
 export class ProductsService {
+  private publicCatalogCache: { timestamp: number; data: any[] } | null = null;
+  private readonly CATALOG_CACHE_TTL_MS = 25000;
+
   constructor(private readonly prisma: PrismaService) {}
+
+  clearCatalogCache() {
+    this.publicCatalogCache = null;
+  }
 
   async create(creator: AuthUser, dto: CreateProductDto) {
     const isAdmin = hasActiveRole(creator, Role.ADMIN) || hasActiveRole(creator, Role.SUPER_ADMIN);
@@ -106,7 +113,7 @@ export class ProductsService {
       moderationStatus = ProductModerationStatus.ACTIVE;
     }
 
-    return this.prisma.product.create({
+    const created = await this.prisma.product.create({
       data: {
         name: dto.name,
         title: dto.title || dto.name,
@@ -152,12 +159,19 @@ export class ProductsService {
         createdById: creator.id,
       },
     });
+    this.clearCatalogCache();
+    return created;
   }
 
   /** Customers browsing only ever see active & approved products; sellers can view their own inactive items */
   async listAll(user?: AuthUser, includeInactiveRequested = false, sellerStoreId?: string, slug?: string, categorySlug?: string) {
     const isAdmin = Boolean(user && (hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN)));
     const isSeller = Boolean(user && hasActiveRole(user, Role.SELLER));
+
+    const isPublicCatalog = !includeInactiveRequested && !sellerStoreId && !slug && !categorySlug && (!user || (!isAdmin && !isSeller));
+    if (isPublicCatalog && this.publicCatalogCache && Date.now() - this.publicCatalogCache.timestamp < this.CATALOG_CACHE_TTL_MS) {
+      return this.publicCatalogCache.data;
+    }
 
     let where: any = { isActive: true, moderationStatus: ProductModerationStatus.ACTIVE };
 
@@ -195,7 +209,7 @@ export class ProductsService {
     });
 
     // Strip out heavy base64 strings from descriptions in catalog listing to ensure lightning-fast response (<150ms)
-    return list.map((p) => {
+    const sanitized = list.map((p) => {
       let desc = p.description || '';
       if (desc.includes('data:image')) {
         const idx = desc.search(/\n\nGallery:\n|\nGallery:\n|Gallery:\s*data:/i);
@@ -208,6 +222,12 @@ export class ProductsService {
         description: desc,
       };
     });
+
+    if (isPublicCatalog) {
+      this.publicCatalogCache = { timestamp: Date.now(), data: sanitized };
+    }
+
+    return sanitized;
   }
 
   async findOne(id: string) {
@@ -252,6 +272,7 @@ export class ProductsService {
       delete updateData.commissionOverridePercentage;
     }
 
+    this.clearCatalogCache();
     return this.prisma.product.update({ where: { id }, data: updateData });
   }
 
@@ -262,6 +283,7 @@ export class ProductsService {
     if (!isAdmin && product.sellerStore?.sellerId !== user.id) {
       throw new ForbiddenException('You can only deactivate products belonging to your own seller store.');
     }
+    this.clearCatalogCache();
     return this.prisma.product.update({ where: { id }, data: { isActive: false } });
   }
 
@@ -432,6 +454,7 @@ export class ProductsService {
   /** Admin: Approve / Unblock product */
   async approveProductByAdmin(id: string) {
     await this.findOneOrThrow(id);
+    this.clearCatalogCache();
     return this.prisma.product.update({
       where: { id },
       data: { isActive: true, moderationStatus: ProductModerationStatus.ACTIVE, rejectionReason: null },
@@ -444,6 +467,7 @@ export class ProductsService {
       throw new BadRequestException('A reason is required when rejecting a product.');
     }
     await this.findOneOrThrow(id);
+    this.clearCatalogCache();
     return this.prisma.product.update({
       where: { id },
       data: { isActive: false, moderationStatus: ProductModerationStatus.REJECTED, rejectionReason: reason.trim() },

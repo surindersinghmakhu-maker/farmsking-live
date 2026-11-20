@@ -2497,7 +2497,7 @@ export class UsersService implements OnModuleInit {
       throw new ConflictException('This user account is already permanently deleted.');
     }
     if (this.appSettingsService) {
-      this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
+      await this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
     }
 
     // Check if the user has any entries across platform modules
@@ -2806,7 +2806,7 @@ export class UsersService implements OnModuleInit {
    */
   async approvePartnerApplication(caller: AuthUser, applicationId: string, adminConfirmationOtp?: string) {
     if (this.appSettingsService) {
-      this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
+      await this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
     }
 
     const existingApp = await this.prisma.partnerApplication.findUnique({

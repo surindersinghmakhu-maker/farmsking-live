@@ -213,7 +213,7 @@ export declare class AdvisorAssignmentController {
         subscriptionId: string | null;
         assignedById: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    listAvailableAdvisors(user: AuthUser): Promise<{
+    listAvailableAdvisors(user?: AuthUser): Promise<{
         rating: number | null;
         ratingCount: number;
         ratingLabel: string;

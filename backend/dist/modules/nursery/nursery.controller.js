@@ -16,6 +16,7 @@ exports.NurseryController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const public_decorator_1 = require("../../common/decorators/public.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const nursery_service_1 = require("./nursery.service");
 const create_nursery_batch_dto_1 = require("./dto/create-nursery-batch.dto");
@@ -81,6 +82,7 @@ let NurseryController = class NurseryController {
 };
 exports.NurseryController = NurseryController;
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)('batches'),
     (0, swagger_1.ApiOperation)({ summary: 'List ready-for-sale nursery seedling batches' }),
     __param(0, (0, common_1.Query)('category')),
@@ -93,6 +95,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], NurseryController.prototype, "listBatches", null);
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)('batches/:id'),
     (0, swagger_1.ApiOperation)({ summary: 'Get details of a specific nursery batch' }),
     __param(0, (0, common_1.Param)('id')),

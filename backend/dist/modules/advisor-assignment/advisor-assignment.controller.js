@@ -18,6 +18,7 @@ const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
+const public_decorator_1 = require("../../common/decorators/public.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const advisor_assignment_service_1 = require("./advisor-assignment.service");
 const create_advisor_assignment_dto_1 = require("./dto/create-advisor-assignment.dto");
@@ -143,7 +144,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "findMyPendingRequest", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.CUSTOMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)('available'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),

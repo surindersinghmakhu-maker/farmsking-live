@@ -169,7 +169,10 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
             include: DETAIL_INCLUDE,
         });
         const integrations = await this.appSettingsService.getIntegrations();
-        const activeGateway = integrations?.gateway?.routing?.farmerPlanGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT';
+        const isAdvisorBooking = Boolean(request.selectedDoctorId || request.selectedAdvisorId || request.doctorKingId || request.advisorKingId);
+        const activeGateway = isAdvisorBooking
+            ? (integrations?.gateway?.routing?.advisorBookingGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT')
+            : (integrations?.gateway?.routing?.farmerPlanGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT');
         const isTestPayment = activeGateway === 'TEST_MODE' || dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
         if (isTestPayment) {
             const actualAdmin = await this.prisma.user.findFirst({ where: { role: { in: [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN] }, deletedAt: null }, select: { id: true } });
@@ -182,6 +185,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
                 coupon: confirmResult.coupon,
                 plan: confirmResult.plan,
                 newEndDate: confirmResult.newEndDate,
+                advisorHired: confirmResult.advisorHired,
             };
         }
         const admins = await this.prisma.user.findMany({ where: { role: { in: [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN] }, deletedAt: null }, select: { id: true } });
@@ -225,7 +229,8 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
                 generationCostAmount: request.amount,
             },
         });
-        const result = await this.farmerPlansService.applyPlanChange(request.farmerId, request.targetPlan, request.daysGranted);
+        const targetAdvisorOrDoctorId = request.selectedAdvisorId || request.selectedDoctorId || undefined;
+        const result = await this.farmerPlansService.applyPlanChange(request.farmerId, request.targetPlan, request.daysGranted, coupon.id, targetAdvisorOrDoctorId);
         const totalAmount = Number(request.amount || 0);
         if (totalAmount > 0) {
             const appSettings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });

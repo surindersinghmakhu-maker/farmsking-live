@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { ActivityIndicator, Alert, Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
@@ -150,6 +151,7 @@ export default function OrdersScreen() {
 }
 
 function OrderCard({ order }: { order: CustomerOrder }) {
+  const queryClient = useQueryClient();
   const cancelOrder = useCancelOrder();
   const initiateCashfree = useInitiateCashfreePayment();
   const meta = STATUS_META[order.status];
@@ -160,6 +162,17 @@ function OrderCard({ order }: { order: CustomerOrder }) {
   const handlePayNow = async () => {
     try {
       const res = await initiateCashfree.mutateAsync({ id: order.id });
+      if (res?.isTestPayment) {
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+        const msg = `🎉 Test Payment Successful! Order #${order.orderNumber} is Confirmed, Paid & queued for vendor fulfillment.`;
+        if (Platform.OS === 'web') {
+          alert(msg);
+        } else {
+          Alert.alert('Payment Successful 🎉', msg);
+        }
+        return;
+      }
       if (res.paymentSessionId) {
         if (Platform.OS === 'web') {
           window.location.href = `https://payments.cashfree.com/order/#${res.paymentSessionId}`;

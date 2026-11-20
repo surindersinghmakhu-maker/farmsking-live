@@ -206,6 +206,7 @@ export class OrdersService {
     const integrations = await this.appSettingsService.getIntegrations();
     const activeGateway = integrations?.gateway?.routing?.ecommerceStoreGateway || integrations?.gateway?.activeGateway || 'CASHFREE';
     const isTestPaymentMode = activeGateway === 'TEST_MODE' || (dto.paymentMode as string) === 'TEST_MODE';
+    const isOnlineTest = isTestPaymentMode && (dto.paymentMode === OrderPaymentMode.ONLINE || (dto.paymentMode as string) === 'TEST_MODE');
 
     // Master Order & Vendor Sub-Orders Splitting (with atomic wallet check + debit)
     const order = await this.prisma.$transaction(async (tx) => {
@@ -261,7 +262,6 @@ export class OrdersService {
         }
       }
 
-      const isOnlineTest = isTestPaymentMode && (dto.paymentMode === OrderPaymentMode.ONLINE || (dto.paymentMode as string) === 'TEST_MODE');
       const created = await tx.customerOrder.create({
         data: {
           customerId: targetCustomerId,
@@ -407,13 +407,19 @@ export class OrdersService {
             subtotal: Number(groupSubtotal.toFixed(2)),
             commissionAmount: Number(groupCommissionAmount.toFixed(2)),
             vendorNetPayout,
-            orderStatus: SubOrderStatus.PLACED,
+            orderStatus: isOnlineTest ? SubOrderStatus.ACCEPTED : SubOrderStatus.PLACED,
           },
         });
       }
 
       return created;
     });
+
+    if (isOnlineTest) {
+      this.triggerShiprocketSubOrders(order.id).catch((err) =>
+        console.warn('Shiprocket dispatch notice for test-paid order:', err),
+      );
+    }
 
     // Auto-generate Tax Invoices / Bills of Supply, Commission Invoices, & Payout Statements
     this.billingService.createInvoicesForOrder(order.id).catch((err) =>
@@ -640,6 +646,13 @@ export class OrdersService {
         },
         include: DETAIL_INCLUDE,
       });
+      await this.prisma.subOrder.updateMany({
+        where: { orderId: id },
+        data: { orderStatus: SubOrderStatus.ACCEPTED },
+      });
+      this.triggerShiprocketSubOrders(id).catch((err) =>
+        console.warn('Shiprocket dispatch notice for test-paid order:', err),
+      );
       return { isTestPayment: true, paymentSessionId: null, orderId: order.orderNumber };
     }
 
@@ -727,6 +740,15 @@ export class OrdersService {
     const integrations = await this.appSettingsService.getIntegrations();
     const activeGateway = integrations?.gateway?.routing?.ecommerceStoreGateway || integrations?.gateway?.activeGateway || 'CASHFREE';
     const isTestPayment = activeGateway === 'TEST_MODE' || utrNumber.toUpperCase().includes('TEST') || utrNumber === '123456';
+    if (isTestPayment) {
+      await this.prisma.subOrder.updateMany({
+        where: { orderId: id },
+        data: { orderStatus: SubOrderStatus.ACCEPTED },
+      });
+      this.triggerShiprocketSubOrders(id).catch((err) =>
+        console.warn('Shiprocket dispatch notice for test-paid order:', err),
+      );
+    }
     return this.prisma.customerOrder.update({
       where: { id },
       data: {

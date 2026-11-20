@@ -173,6 +173,7 @@ let OrdersService = class OrdersService {
         const integrations = await this.appSettingsService.getIntegrations();
         const activeGateway = integrations?.gateway?.routing?.ecommerceStoreGateway || integrations?.gateway?.activeGateway || 'CASHFREE';
         const isTestPaymentMode = activeGateway === 'TEST_MODE' || dto.paymentMode === 'TEST_MODE';
+        const isOnlineTest = isTestPaymentMode && (dto.paymentMode === client_1.OrderPaymentMode.ONLINE || dto.paymentMode === 'TEST_MODE');
         const order = await this.prisma.$transaction(async (tx) => {
             let totalAmount = postCouponAmount;
             let walletDeduction = 0;
@@ -218,7 +219,6 @@ let OrdersService = class OrdersService {
                     totalAmount = Number(Math.max(0, postCouponAmount - walletDeduction).toFixed(2));
                 }
             }
-            const isOnlineTest = isTestPaymentMode && (dto.paymentMode === client_1.OrderPaymentMode.ONLINE || dto.paymentMode === 'TEST_MODE');
             const created = await tx.customerOrder.create({
                 data: {
                     customerId: targetCustomerId,
@@ -349,12 +349,15 @@ let OrdersService = class OrdersService {
                         subtotal: Number(groupSubtotal.toFixed(2)),
                         commissionAmount: Number(groupCommissionAmount.toFixed(2)),
                         vendorNetPayout,
-                        orderStatus: client_1.SubOrderStatus.PLACED,
+                        orderStatus: isOnlineTest ? client_1.SubOrderStatus.ACCEPTED : client_1.SubOrderStatus.PLACED,
                     },
                 });
             }
             return created;
         });
+        if (isOnlineTest) {
+            this.triggerShiprocketSubOrders(order.id).catch((err) => console.warn('Shiprocket dispatch notice for test-paid order:', err));
+        }
         this.billingService.createInvoicesForOrder(order.id).catch((err) => console.warn('Billing & GST Invoice auto-generation notice:', err));
         this.notifyCustomer(targetCustomerId, '🛒 Order Booked Successfully', `Your FarmsKing Order #${order.orderNumber} of ₹${order.totalAmount} has been booked successfully.`, order.id, 'ORDER_PLACED_SMS').catch((err) => console.warn('Order booking SMS notification notice:', err));
         return order;
@@ -546,6 +549,11 @@ let OrdersService = class OrdersService {
                 },
                 include: DETAIL_INCLUDE,
             });
+            await this.prisma.subOrder.updateMany({
+                where: { orderId: id },
+                data: { orderStatus: client_1.SubOrderStatus.ACCEPTED },
+            });
+            this.triggerShiprocketSubOrders(id).catch((err) => console.warn('Shiprocket dispatch notice for test-paid order:', err));
             return { isTestPayment: true, paymentSessionId: null, orderId: order.orderNumber };
         }
         const splits = order.subOrders.map(subOrder => ({
@@ -607,6 +615,13 @@ let OrdersService = class OrdersService {
         const integrations = await this.appSettingsService.getIntegrations();
         const activeGateway = integrations?.gateway?.routing?.ecommerceStoreGateway || integrations?.gateway?.activeGateway || 'CASHFREE';
         const isTestPayment = activeGateway === 'TEST_MODE' || utrNumber.toUpperCase().includes('TEST') || utrNumber === '123456';
+        if (isTestPayment) {
+            await this.prisma.subOrder.updateMany({
+                where: { orderId: id },
+                data: { orderStatus: client_1.SubOrderStatus.ACCEPTED },
+            });
+            this.triggerShiprocketSubOrders(id).catch((err) => console.warn('Shiprocket dispatch notice for test-paid order:', err));
+        }
         return this.prisma.customerOrder.update({
             where: { id },
             data: {

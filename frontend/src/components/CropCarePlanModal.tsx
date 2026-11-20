@@ -14,6 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useExecutiveTheme } from '@/src/store/theme-context';
@@ -39,6 +41,8 @@ interface CropCarePlanModalProps {
 }
 
 export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { colors, isDark } = useExecutiveTheme();
   const { user } = useAuth();
   const redeemCoupon = useRedeemFarmerPlanCoupon();
@@ -63,6 +67,17 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [submitSuccessMsg, setSubmitSuccessMsg] = useState<string | null>(null);
+  const [activatedConsultation, setActivatedConsultation] = useState<{
+    doctorName: string;
+    doctorRole: string;
+    specialization: string;
+    kingId?: string;
+    phone?: string | null;
+    planKey: string;
+    packageName: string;
+    validUntil: string;
+    isTestMode?: boolean;
+  } | null>(null);
 
   const selectedAdv = availableAdvisors.find((a) => a.id === selectedAdvisorId);
   const { data: appSettings } = useAppSettings();
@@ -108,6 +123,26 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
     tap();
     try {
       await redeemCoupon.mutateAsync({ code: previewData.code });
+      queryClient.invalidateQueries({ queryKey: ['my-advisor'] });
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignment'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-status'] });
+      queryClient.invalidateQueries({ queryKey: ['farmer-plan'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+
+      const selectedAdv = availableAdvisors.find((a) => a.id === selectedAdvisorId);
+      const isSeniorDoctor = (selectedAdv?.role as any) === 'DOCTOR' || !!(selectedAdv as any)?.isSeniorDoctor;
+
+      setActivatedConsultation({
+        doctorName: selectedAdv?.name || 'Dr. FarmsKing Agronomist',
+        doctorRole: isSeniorDoctor ? 'Senior Crop Doctor' : 'Certified Farm Advisor',
+        specialization: selectedAdv?.specialization || 'Crop Pathology & Field Health',
+        kingId: selectedAdv?.kingId || previewData.code,
+        phone: selectedAdv?.mobile || (selectedAdv as any)?.phone || null,
+        planKey: (previewData.plan as any) || 'GOLD',
+        packageName: 'Coupon Redeemed Plan',
+        validUntil: new Date(Date.now() + (previewData.daysGranted || 30) * 24 * 3600 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        isTestMode: false,
+      });
       setCouponStatus(`🎉 Crop Care Coupon "${previewData.code}" Redeemed Successfully! Doctor Plan Activated.`);
       setPreviewData(null);
       setCouponInput('');
@@ -139,6 +174,29 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
         await submitPayment.mutateAsync({
           id: res.id,
           utr: `TEST-CARE-${Date.now().toString().slice(-6)}`,
+        });
+        queryClient.invalidateQueries({ queryKey: ['my-advisor'] });
+        queryClient.invalidateQueries({ queryKey: ['advisor-assignment'] });
+        queryClient.invalidateQueries({ queryKey: ['subscription-status'] });
+        queryClient.invalidateQueries({ queryKey: ['farmer-plan'] });
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+
+        const pkgLabel = selectedPackage === 'PRESCRIPTION'
+          ? 'Single SOS Prescription'
+          : selectedPackage === 'SEASON'
+          ? 'Full Crop Season Care'
+          : 'VIP Farm Doctor 24/7';
+
+        setActivatedConsultation({
+          doctorName: selectedAdv?.name || 'Dr. FarmsKing Agronomist',
+          doctorRole: isSeniorDoctor ? 'Senior Crop Doctor' : 'Certified Farm Advisor',
+          specialization: selectedAdv?.specialization || 'Crop Pathology & Field Health',
+          kingId: selectedAdv?.kingId || 'FK-DOC',
+          phone: selectedAdv?.mobile || (selectedAdv as any)?.phone || null,
+          planKey,
+          packageName: pkgLabel,
+          validUntil: new Date(Date.now() + 365 * 24 * 3600 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          isTestMode: true,
         });
         setSubmitSuccessMsg('🎉 Test Payment Successful & Crop Care Plan Activated!');
         return;
@@ -197,6 +255,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
     setSubmitSuccessMsg(null);
     setShowUpiPay(false);
     setPaymentData(null);
+    setActivatedConsultation(null);
     onClose();
   };
 
@@ -219,7 +278,82 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
           </LinearGradient>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollBody}>
-            {showUpiPay && paymentData ? (
+            {activatedConsultation ? (
+              <View style={styles.activatedContainer}>
+                <View style={styles.activatedSuccessBadge}>
+                  <Ionicons name="checkmark-circle" size={48} color="#16a34a" />
+                </View>
+                <View style={styles.activatedModeTag}>
+                  <Text style={styles.activatedModeTagText}>
+                    {activatedConsultation.isTestMode ? '⚡ TEST MODE INSTANT AUTO-PAY SUCCESS' : '🎉 PLAN ACTIVATED SUCCESSFULLY'}
+                  </Text>
+                </View>
+                <Text style={styles.activatedTitle}>🎉 Crop Care Consultation Activated!</Text>
+                <Text style={styles.activatedSub}>
+                  Your <Text style={{ fontFamily: FONT.bold, color: '#0284c7' }}>{activatedConsultation.packageName}</Text> is now 100% active. Your dedicated Senior Agronomist is assigned to your crops.
+                </Text>
+
+                {/* Assigned Doctor Card */}
+                <View style={styles.doctorActiveCard}>
+                  <View style={styles.doctorAvatarBox}>
+                    <Ionicons name="medkit" size={26} color="#0284c7" />
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.doctorActiveName}>{activatedConsultation.doctorName}</Text>
+                      <View style={styles.doctorVerifiedPill}>
+                        <Ionicons name="shield-checkmark" size={10} color="#15803d" />
+                        <Text style={styles.doctorVerifiedText}>ICAR Verified</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.doctorActiveSpecialty}>{activatedConsultation.specialization}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                      <Text style={styles.doctorActiveMeta}>King ID: {activatedConsultation.kingId || 'FK-DOC'}</Text>
+                      <Text style={styles.doctorActiveMeta}>·</Text>
+                      <Text style={styles.doctorActiveMeta}>Valid: {activatedConsultation.validUntil}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Next Step Action Buttons */}
+                <View style={{ width: '100%', gap: 10, marginTop: 12 }}>
+                  <TouchableOpacity
+                    style={styles.startConsultationBtn}
+                    onPress={() => {
+                      resetModal();
+                      router.push('/(user)/(tabs)/ai-doctor' as any);
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="chatbubbles" size={18} color="#ffffff" />
+                    <Text style={styles.startConsultationBtnText}>Start Doctor Consultation Now →</Text>
+                  </TouchableOpacity>
+
+                  {activatedConsultation.phone ? (
+                    <TouchableOpacity
+                      style={styles.doctorWhatsAppBtn}
+                      onPress={() => {
+                        const cleanPhone = activatedConsultation.phone!.replace(/[^0-9]/g, '');
+                        const msg = `Hello ${activatedConsultation.doctorName}! I have activated my FarmsKing Crop Care Plan (${activatedConsultation.packageName}). I need agronomy guidance for my crops.`;
+                        Linking.openURL(`https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone}?text=${encodeURIComponent(msg)}`).catch(() => {});
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="logo-whatsapp" size={18} color="#ffffff" />
+                      <Text style={styles.doctorWhatsAppBtnText}>Connect on Doctor WhatsApp</Text>
+                    </TouchableOpacity>
+                  ) : null}
+
+                  <TouchableOpacity
+                    style={styles.doneCloseBtn}
+                    onPress={resetModal}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.doneCloseBtnText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : showUpiPay && paymentData ? (
               /* UPI PAYMENT & UTR SUBMISSION VIEW */
               <View style={{ gap: 12, alignItems: 'center' }}>
                 <Text style={styles.sectionTitle}>💳 Admin UPI QR Code & Payment Confirmation</Text>
@@ -968,5 +1102,146 @@ const styles = StyleSheet.create({
   },
   advSelectTextActive: {
     color: '#166534',
+  },
+  activatedContainer: {
+    gap: 14,
+    alignItems: 'center',
+    paddingVertical: 12,
+    width: '100%',
+  },
+  activatedSuccessBadge: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2.5,
+    borderColor: '#22c55e',
+  },
+  activatedModeTag: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  activatedModeTagText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#92400e',
+    letterSpacing: 0.5,
+  },
+  activatedTitle: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    textAlign: 'center',
+  },
+  activatedSub: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#475569',
+    textAlign: 'center',
+    lineHeight: 19,
+    paddingHorizontal: 8,
+  },
+  doctorActiveCard: {
+    width: '100%',
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 4,
+  },
+  doctorAvatarBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#e0f2fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#7dd3fc',
+  },
+  doctorActiveName: {
+    fontSize: 15,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  doctorVerifiedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  doctorVerifiedText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  doctorActiveSpecialty: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#0284c7',
+  },
+  doctorActiveMeta: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#64748b',
+  },
+  startConsultationBtn: {
+    width: '100%',
+    height: 46,
+    backgroundColor: '#0284c7',
+    borderRadius: RADIUS.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    ...premiumShadow('#0284c7', 'sm'),
+  },
+  startConsultationBtnText: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  doctorWhatsAppBtn: {
+    width: '100%',
+    height: 44,
+    backgroundColor: '#25D366',
+    borderRadius: RADIUS.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  doctorWhatsAppBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  doneCloseBtn: {
+    width: '100%',
+    height: 40,
+    backgroundColor: '#f1f5f9',
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneCloseBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#475569',
   },
 });

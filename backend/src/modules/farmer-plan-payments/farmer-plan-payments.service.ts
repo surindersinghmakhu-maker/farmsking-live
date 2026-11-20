@@ -191,7 +191,10 @@ export class FarmerPlanPaymentsService {
     });
 
     const integrations = await this.appSettingsService.getIntegrations();
-    const activeGateway = integrations?.gateway?.routing?.farmerPlanGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT';
+    const isAdvisorBooking = Boolean(request.selectedDoctorId || request.selectedAdvisorId || request.doctorKingId || request.advisorKingId);
+    const activeGateway = isAdvisorBooking
+      ? (integrations?.gateway?.routing?.advisorBookingGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT')
+      : (integrations?.gateway?.routing?.farmerPlanGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT');
     const isTestPayment = activeGateway === 'TEST_MODE' || dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
     if (isTestPayment) {
       const actualAdmin = await this.prisma.user.findFirst({ where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] }, deletedAt: null }, select: { id: true } });
@@ -204,6 +207,7 @@ export class FarmerPlanPaymentsService {
         coupon: confirmResult.coupon,
         plan: confirmResult.plan,
         newEndDate: confirmResult.newEndDate,
+        advisorHired: confirmResult.advisorHired,
       };
     }
 
@@ -266,7 +270,14 @@ export class FarmerPlanPaymentsService {
       },
     });
 
-    const result = await this.farmerPlansService.applyPlanChange(request.farmerId, request.targetPlan, request.daysGranted);
+    const targetAdvisorOrDoctorId = request.selectedAdvisorId || request.selectedDoctorId || undefined;
+    const result = await this.farmerPlansService.applyPlanChange(
+      request.farmerId,
+      request.targetPlan,
+      request.daysGranted,
+      coupon.id,
+      targetAdvisorOrDoctorId,
+    );
 
     // Revenue sharing credits: Dynamic Financial Split (Admin Configurable, separate Platform & Admin Fees)
     const totalAmount = Number(request.amount || 0);

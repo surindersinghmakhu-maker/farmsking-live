@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import * as ImagePicker from 'expo-image-picker';
@@ -791,6 +792,7 @@ function UpiUpgradeFlow({
     user?.role === 'SUPER_ADMIN' ||
     (Array.isArray(user?.roles) && (user.roles.includes('ADMIN') || user.roles.includes('SUPER_ADMIN')))
   );
+  const queryClient = useQueryClient();
   const initiate = useInitiateFarmerPlanPayment();
   const submit = useSubmitFarmerPlanPayment();
   const [selectedPayMethod, setSelectedPayMethod] = useState<'ADMIN_TEST' | 'UPI_QR' | 'GATEWAY'>('ADMIN_TEST');
@@ -888,6 +890,10 @@ function UpiUpgradeFlow({
         utr: testUtr,
         screenshotUrl: screenshotUrl ?? undefined,
       });
+      queryClient.invalidateQueries({ queryKey: ['farmer-plan'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription-status'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['my-advisor'] });
       setAutoActivatedData(res);
       setSubmitted(true);
     } catch (err: any) {

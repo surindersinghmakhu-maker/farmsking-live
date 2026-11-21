@@ -59,6 +59,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const [selectedPlanKey, setSelectedPlanKey] = useState<'SILVER' | 'GOLD' | 'ROYAL'>('GOLD');
   const [selectedAdvisorId, setSelectedAdvisorId] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<'PRESCRIPTION' | 'SEASON' | 'VIP'>('SEASON');
+  const [isInstallmentMode, setIsInstallmentMode] = useState<boolean>(false);
   const [isFreeTrialMode, setIsFreeTrialMode] = useState<boolean>(false);
   const [isAutoDebit, setIsAutoDebit] = useState<boolean>(false); // Auto-Debit (UPI Mandate) vs Manual Recharge
   const [utrInput, setUtrInput] = useState('');
@@ -93,7 +94,12 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
     ? (Number(selectedAdv?.feePerCropSeason) || 1499)
     : (Number(selectedAdv?.feeVipMonthly) || 4999);
 
-  const totalPayable = isFreeTrialMode ? 0 : packageBaseFee;
+  const isSeasonInstallment = selectedPackage === 'SEASON' && isInstallmentMode;
+  const totalPayable = isFreeTrialMode
+    ? 0
+    : isSeasonInstallment
+    ? Math.round(packageBaseFee * 0.40)
+    : packageBaseFee;
   const platformFee = Math.round(totalPayable * (platformFeePercent / 100));
   const adminFee = Math.round(totalPayable * (adminFeePercent / 100));
   const doctorNetPayout = Math.max(0, totalPayable - (platformFee + adminFee));
@@ -662,6 +668,57 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                           <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 4 }}>
                             ₹{Number(selectedAdv?.feePerCropSeason) || 499} <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/ Full Crop Cycle</Text>
                           </Text>
+
+                          {selectedPackage === 'SEASON' && (
+                            <View style={{ marginTop: 8, padding: 8, borderRadius: 8, backgroundColor: isDark ? 'rgba(16, 185, 129, 0.08)' : '#f0fdf4', borderWidth: 1, borderColor: '#16a34a' }}>
+                              <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a', marginBottom: 6 }}>
+                                🌾 Crop Cycle Payment Options:
+                              </Text>
+                              <View style={{ flexDirection: 'row', gap: 6 }}>
+                                <TouchableOpacity
+                                  onPress={() => { tap(); setIsInstallmentMode(false); }}
+                                  style={{
+                                    flex: 1,
+                                    paddingVertical: 6,
+                                    paddingHorizontal: 6,
+                                    borderRadius: 6,
+                                    backgroundColor: !isInstallmentMode ? '#16a34a' : (isDark ? '#1e293b' : '#ffffff'),
+                                    borderWidth: 1,
+                                    borderColor: '#16a34a',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: !isInstallmentMode ? '#ffffff' : '#16a34a' }}>
+                                    Full: ₹{Number(selectedAdv?.feePerCropSeason) || 499}
+                                  </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  onPress={() => { tap(); setIsInstallmentMode(true); }}
+                                  style={{
+                                    flex: 1,
+                                    paddingVertical: 6,
+                                    paddingHorizontal: 6,
+                                    borderRadius: 6,
+                                    backgroundColor: isInstallmentMode ? '#16a34a' : (isDark ? '#1e293b' : '#ffffff'),
+                                    borderWidth: 1,
+                                    borderColor: '#16a34a',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isInstallmentMode ? '#ffffff' : '#16a34a' }}>
+                                    3 Installments: ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * 0.40)} now
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+                              {isInstallmentMode && (
+                                <View style={{ marginTop: 6, paddingLeft: 2, gap: 2 }}>
+                                  <Text style={{ fontSize: 9.5, color: isDark ? '#a7f3d0' : '#065f46', fontFamily: FONT.semiBold }}>• Stage 1 (Sowing/Basal): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * 0.40)} (Pay Now)</Text>
+                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 2 (Mid-Season Flowering): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * 0.35)} (Due Day 45)</Text>
+                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 3 (Pre-Harvest/Grain Filling): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * 0.25)} (Due Day 90)</Text>
+                                </View>
+                              )}
+                            </View>
+                          )}
                         </TouchableOpacity>
 
                         {/* Package 3: VIP Farm Care */}

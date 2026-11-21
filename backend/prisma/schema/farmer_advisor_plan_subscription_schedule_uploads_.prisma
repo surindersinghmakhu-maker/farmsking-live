@@ -18,10 +18,15 @@ model AdvisorPlan {
   maxFarms          Int             @default(10)
   callRequestLimit  Int             @default(5)
   inAppCallLimit    Int             @default(3)
-  videoCallAllowed  Boolean         @default(false)
-  videoCallLimit    Int             @default(0)
-  chatEnabled       Boolean         @default(true)
-  approvalStatus    String          @default("APPROVED") // PENDING_APPROVAL, APPROVED, REJECTED
+  videoCallAllowed    Boolean         @default(false)
+  videoCallLimit      Int             @default(0)
+  chatEnabled         Boolean         @default(true)
+  callIntervalDays    Int             @default(10)
+  platformFeePercent  Decimal         @default(20.00) @db.Decimal(5, 2)
+  techInfraFee        Decimal         @default(0.00) @db.Decimal(8, 2)
+  allowsInstallments  Boolean         @default(true)
+  installmentCount    Int             @default(3)
+  approvalStatus      String          @default("APPROVED") // PENDING_APPROVAL, APPROVED, REJECTED
   adminNotes        String?
   reviewedById      String?
   reviewedAt        DateTime?
@@ -56,6 +61,7 @@ model AdvisorSubscription {
   advisorAssignment AdvisorAssignment?
   cropCycles        CropCycle[]           @relation("CropCycleSubscription")
   paymentRequests   PlanPaymentRequest[]
+  installments      CropCycleInstallment[]
 
   @@index([farmerId])
   @@index([planId])
@@ -155,4 +161,46 @@ model Upload {
 
   @@index([uploadedById])
   @@map("uploads")
+}
+
+model PlanFeature {
+  id              String   @id @default(uuid())
+  featureKey      String   @unique
+  title           String
+  description     String?
+  category        String   @default("CORE") // CORE, FINANCIAL, WORKFORCE, INTELLIGENCE
+  freeValue       String   @default("—")
+  proValue        String   @default("✓ Included")
+  smartValue      String   @default("✓ Included")
+  vipValue        String   @default("✓ Included")
+  isEnabledFree   Boolean  @default(false)
+  isEnabledPro    Boolean  @default(true)
+  isEnabledSmart  Boolean  @default(true)
+  isEnabledVip    Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("plan_features")
+}
+
+model CropCycleInstallment {
+  id                 String              @id @default(uuid())
+  subscriptionId     String
+  subscription       AdvisorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  installmentNumber  Int                 @default(1)
+  stageTitle         String
+  amount             Decimal             @db.Decimal(12, 2)
+  status             PlanPaymentStatus   @default(PENDING)
+  dueDate            DateTime?
+  paidAt             DateTime?
+  utr                String?
+  paymentMethod      String?             @default("UPI")
+  adminNotes         String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("crop_cycle_installments")
 }

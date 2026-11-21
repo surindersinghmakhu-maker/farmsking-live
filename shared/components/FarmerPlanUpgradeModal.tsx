@@ -34,18 +34,18 @@ const PLAN_RANK: Record<FarmerPlanType, number> = {
 };
 
 const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; color: string; price: string }> = {
-  FREE: { label: 'Free Pass', emoji: '🌱', color: '#166534', price: '₹0' },
-  PRO: { label: 'Kisan Card', emoji: '🌾', color: '#0284c7', price: '₹199/yr' },
-  SMART: { label: 'Boss Card', emoji: '👷', color: '#1d4ed8', price: '₹499/yr' },
-  VIP: { label: 'Farmer VIP Card', emoji: '👑', color: '#b45309', price: '₹999/yr' },
+  FREE: { label: 'Free Plan', emoji: '🌱', color: '#166534', price: '₹0' },
+  PRO: { label: 'Kisan Plan', emoji: '🌾', color: '#0284c7', price: '₹199/yr' },
+  SMART: { label: 'Boss Plan', emoji: '👷', color: '#1d4ed8', price: '₹499/yr' },
+  VIP: { label: 'Farmer VIP Plan', emoji: '👑', color: '#b45309', price: '₹999/yr' },
   // Legacy backward-compatibility mappings
-  BASIC: { label: 'Free Pass', emoji: '🌱', color: '#166534', price: '₹0' },
-  SUPER: { label: 'Farmer VIP Card', emoji: '👑', color: '#b45309', price: '₹999/yr' },
-  PLATINUM: { label: 'Farmer VIP Card', emoji: '👑', color: '#b45309', price: '₹999/yr' },
-  DIAMOND: { label: 'Farmer VIP Card', emoji: '👑', color: '#b45309', price: '₹999/yr' },
-  SILVER: { label: 'Kisan Card', emoji: '🌾', color: '#0284c7', price: '₹199/yr' },
-  GOLD: { label: 'Boss Card', emoji: '👷', color: '#1d4ed8', price: '₹499/yr' },
-  ROYAL: { label: 'Farmer VIP Card', emoji: '👑', color: '#b45309', price: '₹999/yr' },
+  BASIC: { label: 'Free Plan', emoji: '🌱', color: '#166534', price: '₹0' },
+  SUPER: { label: 'Farmer VIP Plan', emoji: '👑', color: '#b45309', price: '₹999/yr' },
+  PLATINUM: { label: 'Farmer VIP Plan', emoji: '👑', color: '#b45309', price: '₹999/yr' },
+  DIAMOND: { label: 'Farmer VIP Plan', emoji: '👑', color: '#b45309', price: '₹999/yr' },
+  SILVER: { label: 'Kisan Plan', emoji: '🌾', color: '#0284c7', price: '₹199/yr' },
+  GOLD: { label: 'Boss Plan', emoji: '👷', color: '#1d4ed8', price: '₹499/yr' },
+  ROYAL: { label: 'Farmer VIP Plan', emoji: '👑', color: '#b45309', price: '₹999/yr' },
 };
 
 interface PlanRow {
@@ -91,7 +91,7 @@ function PlanComparisonChart({
           <Text style={chartStyles.headerTitle}>Features</Text>
         </View>
         {plans.map((p) => {
-          const colMeta = PLAN_COLUMN_META[p] ?? { label: `${p} Card`, emoji: '👑', color: '#b45309', price: '₹0' };
+          const colMeta = PLAN_COLUMN_META[p] ?? { label: `${p} Plan`, emoji: '👑', color: '#b45309', price: '₹0' };
           const activeVariants = (pricingList ?? []).filter((it) => it.plan === p && it.isActive !== false);
           const displayPrice = p === 'FREE' ? '₹0' : activeVariants[0]
             ? `₹${activeVariants[0].price}/${Number(activeVariants[0].billingPeriodDays) === 365 ? 'yr' : `${activeVariants[0].billingPeriodDays}d`}`
@@ -561,10 +561,10 @@ export function FarmerPlanUpgradeModal({
               <Text style={styles.label}>👑 SELECT FARMSKING VIP PASS SCHEME</Text>
               <View style={{ gap: 8 }}>
                 {([
-                      { id: 'FARMER_BASIC', key: 'PRO', label: '🌾 Kisan Card', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic 🧾' },
-                      { id: 'FARMER_PRO', key: 'SMART', label: '👷 Boss Card 🚀', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login 👥 🚀' },
-                      { id: 'FARMER_SUPER', key: 'SUPER', label: '👑 Farmer VIP Card 💎', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Sub-Accounts Delegation 🛡️' },
-                      ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free VIP Pass Trial 🎁', iconName: 'leaf', color: '#166534', sub: `Full ${freeTrialPlan} Plan Access (${freeTrialDays}-Day Free Demo Trial) 🎁` }] : []),
+                      { id: 'FARMER_BASIC', key: 'PRO', label: '🌾 Kisan Plan', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic 🧾' },
+                      { id: 'FARMER_PRO', key: 'SMART', label: '👷 Boss Plan 🚀', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login 👥 🚀' },
+                      { id: 'FARMER_SUPER', key: 'SUPER', label: '👑 Farmer VIP Plan 💎', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Sub-Accounts Delegation 🛡️' },
+                      ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Plan Trial 🎁', iconName: 'leaf', color: '#166534', sub: `Full ${freeTrialPlan} Plan Access (${freeTrialDays}-Day Free Demo Trial) 🎁` }] : []),
                     ]
                 ).map((item) => {
                   const p = item.key as FarmerPlanType;
@@ -706,10 +706,10 @@ export function FarmerPlanUpgradeModal({
                     Activate VIP Pass via UPI ⚡ — {
                       (() => {
                         const allOpts = [
-                          { id: 'FARMER_FREE', label: 'Free VIP Pass 🎁', key: 'FREE' },
-                          { id: 'FARMER_BASIC', label: 'Kisan Card 🌾', key: 'PRO' },
-                          { id: 'FARMER_PRO', label: 'Boss Card 👷', key: 'SMART' },
-                          { id: 'FARMER_SUPER', label: 'Farmer VIP Card 👑', key: 'SUPER' },
+                          { id: 'FARMER_FREE', label: 'Free Plan 🎁', key: 'FREE' },
+                          { id: 'FARMER_BASIC', label: 'Kisan Plan 🌾', key: 'PRO' },
+                          { id: 'FARMER_PRO', label: 'Boss Plan 👷', key: 'SMART' },
+                          { id: 'FARMER_SUPER', label: 'Farmer VIP Plan 👑', key: 'SUPER' },
                           { id: 'CARE_SILVER', label: 'Crop Advisor 🩺', key: 'SILVER' },
                           { id: 'CARE_GOLD', label: 'Crop Doctor 🏆', key: 'GOLD' },
                           { id: 'CARE_ROYAL', label: 'Crop Doctor VIP 👑', key: 'ROYAL' },

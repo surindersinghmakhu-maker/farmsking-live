@@ -6,7 +6,7 @@
 export const FARMSKING_CORPORATE_IDENTITY = {
   legalName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
   brandName: 'FarmsKing',
-  tagline: 'Farming Easy, Farming Smart | National Agritech & Smart Farming Platform',
+  tagline: 'Smart Farming | National Agritech & Smart Farming Platform',
   cin: 'U62013PB2026PTC070389',
   pan: 'AAHCF3566C',
   tan: 'AMRF11527F',

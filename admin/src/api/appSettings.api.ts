@@ -743,7 +743,7 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   brandDisplayName: 'FarmsKing™',
   brandName: 'FarmsKing™',
   shortName: 'FarmsKing',
-  tagline: 'Farming Easy, Farming Smart | National Smart Farming Platform',
+  tagline: 'Smart Farming | National Smart Farming Platform',
   mcaSrn: 'AC6979718',
   cinNumber: 'U62013PB2026PTC070389',
   cin: 'U62013PB2026PTC070389',
@@ -816,7 +816,7 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   emailTemplates: {
     registration: {
       subject: 'Welcome to FarmsKing — Smart Farming Platform',
-      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\n<h2 style="color:#16a34a;margin-bottom:8px;">Welcome to FarmsKing, {{farmer_name}}! 🌾</h2>\n<p style="font-size:15px;line-height:1.6;">Your smart farming account has been successfully created. You now have direct access to AI Crop Doctor pathology, real-time APMC wholesale mandi rates, satellite field telemetry, and certified inputs.</p>\n<div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:12px 16px;margin:20px 0;border-radius:4px;">\n<p style="margin:0;font-weight:bold;color:#166534;">Motto: Farming Easy, Farming Smart</p>\n</div>\n<p style="font-size:13px;color:#64748b;">If you need assistance, contact our 24/7 helpline at +91 95776 22000 or email support@farmsking.in.</p>\n</div>',
+      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\n<h2 style="color:#16a34a;margin-bottom:8px;">Welcome to FarmsKing, {{farmer_name}}! 🌾</h2>\n<p style="font-size:15px;line-height:1.6;">Your smart farming account has been successfully created. You now have direct access to AI Crop Doctor pathology, real-time APMC wholesale mandi rates, satellite field telemetry, and certified inputs.</p>\n<div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:12px 16px;margin:20px 0;border-radius:4px;">\n<p style="margin:0;font-weight:bold;color:#166534;">Motto: Smart Farming</p>\n</div>\n<p style="font-size:13px;color:#64748b;">If you need assistance, contact our 24/7 helpline at +91 95776 22000 or email support@farmsking.in.</p>\n</div>',
     },
     otp: {
       subject: 'Your FarmsKing Security Verification Code',

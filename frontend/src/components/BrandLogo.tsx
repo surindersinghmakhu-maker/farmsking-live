@@ -7,7 +7,6 @@ import { ExecutiveThemeContext } from '@/src/store/theme-context';
 
 const LOGO_HD = require('@/assets/images/farmsking_logo_hd.png');
 const LOGO_DARK = require('@/assets/images/farmsking_logo_dark.png');
-const LOGO_ROUND_GOLDRING = require('@/assets/images/farmsking_logo_round_goldring.png');
 const LOGO_FAVICON = require('@/assets/images/favicon.png');
 
 export interface BrandLogoProps {

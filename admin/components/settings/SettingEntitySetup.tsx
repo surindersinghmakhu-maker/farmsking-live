@@ -688,7 +688,7 @@ export default function SettingEntitySetup() {
                       style={[styles.input, { color: textColor }]}
                       value={masterData.tagline}
                       onChangeText={(txt) => handleUpdateMasterField('tagline', txt)}
-                      placeholder="Farming Easy, Farming Smart | National Smart Farming Platform"
+                      placeholder="Smart Farming | National Smart Farming Platform"
                       placeholderTextColor={subTextColor}
                     />
                   </View>

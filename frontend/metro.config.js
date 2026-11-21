@@ -25,6 +25,12 @@ if (Array.isArray(config.resolver.blockList)) {
   config.resolver.blockList = customBlockList;
 }
 
+// Allow Metro to resolve modules from the shared root folder
+config.watchFolders = [path.resolve(__dirname, '..', 'shared')];
+config.resolver.nodeModulesPaths = [
+  path.resolve(__dirname, 'node_modules'),
+];
+
 // Limit Metro worker threads so laptop doesn't freeze
 config.maxWorkers = 2;
 

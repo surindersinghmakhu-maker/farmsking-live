@@ -28,6 +28,7 @@ import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
 import SettingFeaturesSetup from '@/components/settings/SettingFeaturesSetup';
 import SettingPaymentShareSetup from '@/components/settings/SettingPaymentShareSetup';
 import SettingPlanOffersSetup from '@/components/settings/SettingPlanOffersSetup';
+import SettingThemeSetup from '@/components/settings/SettingThemeSetup';
 import SettingAuditLogsView from '@/src/components/settings/SettingAuditLogsView';
 
 // Tab configuration array — allows adding new tabs cleanly whenever needed
@@ -82,6 +83,12 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
     description: 'Third-party API providers, credentials, gateways & live service configurations',
   },
   {
+    id: 'THEME',
+    label: 'Theme',
+    icon: 'color-palette-outline',
+    description: 'Platform appearance, obsidian/slate palettes, glow accents, typography & visual controls',
+  },
+  {
     id: 'OTHER',
     label: 'Other',
     icon: 'options-outline',
@@ -116,6 +123,9 @@ export default function NewSettingsScreen() {
     if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
       return 'TOOLS_API';
     }
+    if (tabParam === 'THEME' || tabParam === 'THEMES' || tabParam === 'COLORS' || tabParam === 'APPEARANCE') {
+      return 'THEME';
+    }
     if (tabParam === 'OTHER' || tabParam === 'OTHERS' || tabParam === 'SYSTEM' || tabParam === 'MISC') {
       return 'OTHER';
     }
@@ -137,6 +147,8 @@ export default function NewSettingsScreen() {
       setActiveTab('PAYMENT_SHARE');
     } else if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
       setActiveTab('TOOLS_API');
+    } else if (tabParam === 'THEME' || tabParam === 'THEMES' || tabParam === 'COLORS' || tabParam === 'APPEARANCE') {
+      setActiveTab('THEME');
     } else if (tabParam === 'OTHER' || tabParam === 'OTHERS' || tabParam === 'SYSTEM' || tabParam === 'MISC') {
       setActiveTab('OTHER');
     } else if (tabParam === 'ABOUT') {
@@ -727,6 +739,12 @@ export default function NewSettingsScreen() {
         {activeTab === 'TOOLS_API' && (
           <View style={{ width: '100%' }}>
             <ThirdPartyServicesSection />
+          </View>
+        )}
+
+        {activeTab === 'THEME' && (
+          <View style={{ width: '100%' }}>
+            <SettingThemeSetup />
           </View>
         )}
 

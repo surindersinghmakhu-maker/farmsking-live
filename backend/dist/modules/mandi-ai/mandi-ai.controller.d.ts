@@ -8,9 +8,9 @@ export declare class MandiAIController {
         createdAt: Date;
         mandiName: string;
         cropName: string;
+        confidenceScore: number;
         predictedDate: Date;
         predictedPrice: import("@prisma/client/runtime/library").Decimal;
-        confidenceScore: number;
     }[]>;
     createPriceLockContract(user: AuthUser, dto: CreatePriceLockDto): Promise<{
         id: string;
@@ -25,14 +25,14 @@ export declare class MandiAIController {
     }>;
     getMyPriceLockContracts(user: AuthUser): Promise<({
         farmer: {
+            name: string;
             id: string;
             kingId: string | null;
-            name: string;
         };
         buyer: {
+            name: string;
             id: string;
             kingId: string | null;
-            name: string;
         };
     } & {
         id: string;

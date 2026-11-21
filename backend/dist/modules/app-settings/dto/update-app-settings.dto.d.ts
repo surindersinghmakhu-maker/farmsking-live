@@ -66,4 +66,20 @@ export declare class UpdateAppSettingsDto {
     accountsMaintenanceMode?: boolean;
     walletWithdrawalEnabled?: boolean;
     allowedWithdrawalRoles?: string[];
+    cropCareInstallmentStage1Percent?: number;
+    cropCareInstallmentStage2Percent?: number;
+    cropCareInstallmentStage3Percent?: number;
+    cropCareStage2DueDays?: number;
+    cropCareStage3DueDays?: number;
+    doctorResponseSlaHours?: number;
+    doctorPayoutHoldDays?: number;
+    maxInAppCallDurationMinutes?: number;
+    techInfraVideoCallFee?: number;
+    freePlanMaxCrops?: number;
+    farmerPlanExpiryWarningDays?: number;
+    farmerPlanGracePeriodDays?: number;
+    maskPhoneNumbersBetweenUsers?: boolean;
+    defaultArhtiyaInterestRateAnnual?: number;
+    mandiMarketFeePercent?: number;
+    mandiRdfPercent?: number;
 }

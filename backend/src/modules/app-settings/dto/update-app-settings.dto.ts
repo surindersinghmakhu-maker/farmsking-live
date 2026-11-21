@@ -241,5 +241,54 @@ export class UpdateAppSettingsDto {
   @IsOptional()
   @IsArray()
   allowedWithdrawalRoles?: string[];
+
+  @IsOptional()
+  cropCareInstallmentStage1Percent?: number;
+
+  @IsOptional()
+  cropCareInstallmentStage2Percent?: number;
+
+  @IsOptional()
+  cropCareInstallmentStage3Percent?: number;
+
+  @IsOptional()
+  cropCareStage2DueDays?: number;
+
+  @IsOptional()
+  cropCareStage3DueDays?: number;
+
+  @IsOptional()
+  doctorResponseSlaHours?: number;
+
+  @IsOptional()
+  doctorPayoutHoldDays?: number;
+
+  @IsOptional()
+  maxInAppCallDurationMinutes?: number;
+
+  @IsOptional()
+  techInfraVideoCallFee?: number;
+
+  @IsOptional()
+  freePlanMaxCrops?: number;
+
+  @IsOptional()
+  farmerPlanExpiryWarningDays?: number;
+
+  @IsOptional()
+  farmerPlanGracePeriodDays?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  maskPhoneNumbersBetweenUsers?: boolean;
+
+  @IsOptional()
+  defaultArhtiyaInterestRateAnnual?: number;
+
+  @IsOptional()
+  mandiMarketFeePercent?: number;
+
+  @IsOptional()
+  mandiRdfPercent?: number;
 }
 

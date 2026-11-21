@@ -19,9 +19,9 @@ export declare class AdminChatService {
     getAdminConversations(): Promise<any[]>;
     getAdminFarmerThread(farmerId: string): Promise<{
         farmer: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
             village: string | null;
             district: string | null;
         } | null;

@@ -341,6 +341,80 @@ export default function SettingPlanOffersSetup() {
               </View>
             </View>
 
+            {/* Farmer Software Plan Limits & Governance Controls */}
+            <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: cardBorder, paddingTop: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <Ionicons name="options-outline" size={16} color="#0284c7" />
+                <Text style={{ fontSize: 13, fontWeight: '700', color: textColor }}>
+                  🌾 Farmer Software Plan Limits & Expiry Governance
+                </Text>
+              </View>
+              <Text style={{ fontSize: 11, color: subTextColor, marginBottom: 12 }}>
+                Dynamic controls for free-tier quotas, renewal reminder cadences, grace periods and financial ledger benchmarks.
+              </Text>
+
+              <View style={styles.fieldsGrid}>
+                <View style={styles.fieldItem}>
+                  <Text style={[styles.label, { color: textColor }]}>Free Plan Max Crops Quota</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    keyboardType="numeric"
+                    value={String(appForm.freePlanMaxCrops ?? 3)}
+                    onChangeText={(t) => updateAppField('freePlanMaxCrops', parseInt(t, 10) || 3)}
+                  />
+                  <Text style={{ fontSize: 10, color: subTextColor, marginTop: 2 }}>Max active crops allowed without upgrading (default: 3)</Text>
+                </View>
+
+                <View style={styles.fieldItem}>
+                  <Text style={[styles.label, { color: textColor }]}>Expiry Warning Trigger (Days Prior)</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    keyboardType="numeric"
+                    value={String(appForm.farmerPlanExpiryWarningDays ?? 7)}
+                    onChangeText={(t) => updateAppField('farmerPlanExpiryWarningDays', parseInt(t, 10) || 7)}
+                  />
+                  <Text style={{ fontSize: 10, color: subTextColor, marginTop: 2 }}>Days before expiry to display warning banner & send WhatsApp</Text>
+                </View>
+
+                <View style={styles.fieldItem}>
+                  <Text style={[styles.label, { color: textColor }]}>Plan Grace Period (Days After Expiry)</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    keyboardType="numeric"
+                    value={String(appForm.farmerPlanGracePeriodDays ?? 5)}
+                    onChangeText={(t) => updateAppField('farmerPlanGracePeriodDays', parseInt(t, 10) || 5)}
+                  />
+                  <Text style={{ fontSize: 10, color: subTextColor, marginTop: 2 }}>Days of full read/write access before hard-locking data</Text>
+                </View>
+
+                <View style={styles.fieldItem}>
+                  <Text style={[styles.label, { color: textColor }]}>Default Arhtiya Annual Interest (%)</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    keyboardType="numeric"
+                    value={String(appForm.defaultArhtiyaInterestRateAnnual ?? 18.0)}
+                    onChangeText={(t) => updateAppField('defaultArhtiyaInterestRateAnnual', parseFloat(t) || 18.0)}
+                  />
+                  <Text style={{ fontSize: 10, color: subTextColor, marginTop: 2 }}>Standard commission agent interest rate benchmark (1.5%/mo = 18%)</Text>
+                </View>
+              </View>
+
+              {/* Privacy & Phone Masking Toggle */}
+              <View style={[styles.toggleRow, { marginTop: 12, borderTopColor: cardBorder, borderTopWidth: 1, paddingTop: 10 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: textColor }]}>Mask Phone Numbers Between Farmer & Doctor</Text>
+                  <Text style={[styles.toggleSub, { color: subTextColor }]}>
+                    Strictly hide personal SIM cards on consultation cards — force in-app chat & in-app audio call to protect platform commissions
+                  </Text>
+                </View>
+                <Switch
+                  value={Boolean(appForm.maskPhoneNumbersBetweenUsers ?? true)}
+                  onValueChange={(v) => updateAppField('maskPhoneNumbersBetweenUsers', v)}
+                  trackColor={{ false: '#475569', true: '#0284c7' }}
+                />
+              </View>
+            </View>
+
             {/* Live Pricing Tiers Table / Cards */}
             <View style={{ marginTop: 20 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>

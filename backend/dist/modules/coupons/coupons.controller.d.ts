@@ -50,9 +50,9 @@ export declare class CouponsController {
     }>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         businessPartner: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         };
     } & {
         id: string;
@@ -143,33 +143,33 @@ export declare class CouponsController {
     }>;
     getRedemptions(user: AuthUser, id: string): Promise<({
         customer: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         } | null;
     } & {
-        id: string;
         customerId: string | null;
-        couponId: string;
+        id: string;
         discountAmount: import("@prisma/client/runtime/library").Decimal;
-        orderId: string | null;
-        orderAmount: import("@prisma/client/runtime/library").Decimal;
+        couponId: string;
         commissionAmount: import("@prisma/client/runtime/library").Decimal;
+        orderId: string | null;
         creditedAt: Date | null;
+        orderAmount: import("@prisma/client/runtime/library").Decimal;
         redeemedAt: Date;
     })[]>;
     redeem(user: AuthUser, code: string, dto: RedeemCouponDto): Promise<{
         discountAmount: number;
         commissionAmount: number;
         redemption: {
-            id: string;
             customerId: string | null;
-            couponId: string;
+            id: string;
             discountAmount: import("@prisma/client/runtime/library").Decimal;
-            orderId: string | null;
-            orderAmount: import("@prisma/client/runtime/library").Decimal;
+            couponId: string;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
+            orderId: string | null;
             creditedAt: Date | null;
+            orderAmount: import("@prisma/client/runtime/library").Decimal;
             redeemedAt: Date;
         };
     }>;

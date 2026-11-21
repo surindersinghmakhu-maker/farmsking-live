@@ -15,42 +15,42 @@ export declare class ReferralsController {
         totalRoyaltiesEarned: number;
         directReferrals: ({
             referredUser: {
+                name: string;
+                mobile: string;
                 id: string;
                 kingId: string | null;
-                mobile: string;
-                name: string;
                 createdAt: Date;
             };
         } & {
             id: string;
             createdAt: Date;
+            level: number;
             referrerId: string;
             referredUserId: string;
-            level: number;
             isGuarantor: boolean;
             trustScoreBonus: number;
         })[];
         extendedReferrals: ({
             referredUser: {
+                name: string;
                 id: string;
                 kingId: string | null;
-                name: string;
                 createdAt: Date;
             };
         } & {
             id: string;
             createdAt: Date;
+            level: number;
             referrerId: string;
             referredUserId: string;
-            level: number;
             isGuarantor: boolean;
             trustScoreBonus: number;
         })[];
         royaltiesHistory: ({
             sourceUser: {
+                name: string;
                 id: string;
                 kingId: string | null;
-                name: string;
             };
         } & {
             id: string;
@@ -65,9 +65,9 @@ export declare class ReferralsController {
     linkReferralOnSignUp(user: AuthUser, dto: LinkReferralDto): Promise<{
         id: string;
         createdAt: Date;
+        level: number;
         referrerId: string;
         referredUserId: string;
-        level: number;
         isGuarantor: boolean;
         trustScoreBonus: number;
     } | null>;

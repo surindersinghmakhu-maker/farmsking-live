@@ -321,4 +321,69 @@ __decorate([
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
 ], UpdateAppSettingsDto.prototype, "allowedWithdrawalRoles", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "cropCareInstallmentStage1Percent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "cropCareInstallmentStage2Percent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "cropCareInstallmentStage3Percent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "cropCareStage2DueDays", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "cropCareStage3DueDays", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "doctorResponseSlaHours", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "doctorPayoutHoldDays", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "maxInAppCallDurationMinutes", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "techInfraVideoCallFee", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "freePlanMaxCrops", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "farmerPlanExpiryWarningDays", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "farmerPlanGracePeriodDays", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateAppSettingsDto.prototype, "maskPhoneNumbersBetweenUsers", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "defaultArhtiyaInterestRateAnnual", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "mandiMarketFeePercent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "mandiRdfPercent", void 0);
 //# sourceMappingURL=update-app-settings.dto.js.map

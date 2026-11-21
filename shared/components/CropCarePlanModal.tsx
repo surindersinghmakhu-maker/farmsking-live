@@ -86,6 +86,12 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const adminFeePercent = appSettings?.advisorAdminFeePercent ?? 10.0;
   const doctorPayoutPercent = Math.max(0, 100 - (platformFeePercent + adminFeePercent));
 
+  const stage1Pct = (appSettings?.cropCareInstallmentStage1Percent ?? 40.0) / 100;
+  const stage2Pct = (appSettings?.cropCareInstallmentStage2Percent ?? 35.0) / 100;
+  const stage3Pct = (appSettings?.cropCareInstallmentStage3Percent ?? 25.0) / 100;
+  const stage2Days = appSettings?.cropCareStage2DueDays ?? 45;
+  const stage3Days = appSettings?.cropCareStage3DueDays ?? 90;
+
   const isTestCareGateway = (appSettings as any)?.advisorBookingGateway === 'TEST_MODE' || (appSettings as any)?.activePaymentGateway === 'TEST_MODE' || (appSettings as any)?.paymentGateway?.routing?.advisorBookingGateway === 'TEST_MODE';
 
   const packageBaseFee = selectedPackage === 'PRESCRIPTION'
@@ -98,7 +104,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const totalPayable = isFreeTrialMode
     ? 0
     : isSeasonInstallment
-    ? Math.round(packageBaseFee * 0.40)
+    ? Math.round(packageBaseFee * stage1Pct)
     : packageBaseFee;
   const platformFee = Math.round(totalPayable * (platformFeePercent / 100));
   const adminFee = Math.round(totalPayable * (adminFeePercent / 100));
@@ -706,15 +712,15 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                                   }}
                                 >
                                   <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isInstallmentMode ? '#ffffff' : '#16a34a' }}>
-                                    3 Installments: ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * 0.40)} now
+                                    3 Installments: ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * stage1Pct)} now
                                   </Text>
                                 </TouchableOpacity>
                               </View>
                               {isInstallmentMode && (
                                 <View style={{ marginTop: 6, paddingLeft: 2, gap: 2 }}>
-                                  <Text style={{ fontSize: 9.5, color: isDark ? '#a7f3d0' : '#065f46', fontFamily: FONT.semiBold }}>• Stage 1 (Sowing/Basal): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * 0.40)} (Pay Now)</Text>
-                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 2 (Mid-Season Flowering): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * 0.35)} (Due Day 45)</Text>
-                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 3 (Pre-Harvest/Grain Filling): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * 0.25)} (Due Day 90)</Text>
+                                  <Text style={{ fontSize: 9.5, color: isDark ? '#a7f3d0' : '#065f46', fontFamily: FONT.semiBold }}>• Stage 1 (Sowing/Basal): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * stage1Pct)} (Pay Now)</Text>
+                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 2 (Mid-Season Flowering): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * stage2Pct)} (Due Day {stage2Days})</Text>
+                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 3 (Pre-Harvest/Grain Filling): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * stage3Pct)} (Due Day {stage3Days})</Text>
                                 </View>
                               )}
                             </View>

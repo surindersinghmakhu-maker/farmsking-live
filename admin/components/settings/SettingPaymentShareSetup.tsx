@@ -545,6 +545,131 @@ export default function SettingPaymentShareSetup() {
                   🛡️ <Text style={{ fontWeight: '700', color: textColor }}>Statutory Royalty Rule</Text>: All partner commissions, franchise royalties, and referral bonuses are disbursed solely from FarmsKing's Platform & Admin share ({((platFee + admFee)).toFixed(1)}%). The Doctor's net payout ({netDoctorPayout.toFixed(1)}%) is strictly guaranteed without dilution.
                 </Text>
               </View>
+
+              {/* Crop Care 3-Stage Milestone Installments Governance */}
+              <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: cardBorder, paddingTop: 14 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <Ionicons name="calendar-outline" size={16} color="#10b981" />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: textColor }}>
+                    🌾 Crop Cycle 3-Stage Milestone Installments (% & Due Days)
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 11, color: subTextColor, marginBottom: 10 }}>
+                  Configure percentage splits and payment milestone timing for full-season crop cycle plans (120-150 days).
+                </Text>
+
+                <View style={[styles.grid, isDesktop && styles.grid3]}>
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Stage 1: Sowing & Basal (%)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.cropCareInstallmentStage1Percent ?? 40.0)}
+                      onChangeText={(t) => updateAppField('cropCareInstallmentStage1Percent', parseFloat(t) || 0)}
+                    />
+                    <Text style={styles.fieldHint}>Payable upfront to onboard doctor (default: 40%)</Text>
+                  </View>
+
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Stage 2: Mid-Season Vegetative (%)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.cropCareInstallmentStage2Percent ?? 35.0)}
+                      onChangeText={(t) => updateAppField('cropCareInstallmentStage2Percent', parseFloat(t) || 0)}
+                    />
+                    <Text style={styles.fieldHint}>Due at Day {appForm.cropCareStage2DueDays ?? 45} (default: 35%)</Text>
+                  </View>
+
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Stage 3: Pre-Harvest & Yield (%)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.cropCareInstallmentStage3Percent ?? 25.0)}
+                      onChangeText={(t) => updateAppField('cropCareInstallmentStage3Percent', parseFloat(t) || 0)}
+                    />
+                    <Text style={styles.fieldHint}>Due at Day {appForm.cropCareStage3DueDays ?? 90} (default: 25%)</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.grid, isDesktop && styles.grid2, { marginTop: 10 }]}>
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Stage 2 Due Trigger (Days from Sowing)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.cropCareStage2DueDays ?? 45)}
+                      onChangeText={(t) => updateAppField('cropCareStage2DueDays', parseInt(t, 10) || 45)}
+                    />
+                  </View>
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Stage 3 Due Trigger (Days from Sowing)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.cropCareStage3DueDays ?? 90)}
+                      onChangeText={(t) => updateAppField('cropCareStage3DueDays', parseInt(t, 10) || 90)}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* Consultation Quality, SLA & Bandwidth Governance */}
+              <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: cardBorder, paddingTop: 14 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <Ionicons name="timer-outline" size={16} color="#6366f1" />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: textColor }}>
+                    ⏱️ Consultation Quality, SLA & Call Bandwidth Governance
+                  </Text>
+                </View>
+
+                <View style={[styles.grid, isDesktop && styles.grid2]}>
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Doctor Response SLA (Hours to Prescribe)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.doctorResponseSlaHours ?? 12)}
+                      onChangeText={(t) => updateAppField('doctorResponseSlaHours', parseInt(t, 10) || 12)}
+                    />
+                    <Text style={styles.fieldHint}>Alerts admin & triggers auto-reassign if doctor exceeds this limit</Text>
+                  </View>
+
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Escrow Payout Hold Period (Days)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.doctorPayoutHoldDays ?? 3)}
+                      onChangeText={(t) => updateAppField('doctorPayoutHoldDays', parseInt(t, 10) || 3)}
+                    />
+                    <Text style={styles.fieldHint}>Days held in escrow before doctor withdrawal to guarantee fulfillment</Text>
+                  </View>
+
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Max In-App Call Duration (Minutes)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.maxInAppCallDurationMinutes ?? 15)}
+                      onChangeText={(t) => updateAppField('maxInAppCallDurationMinutes', parseInt(t, 10) || 15)}
+                    />
+                    <Text style={styles.fieldHint}>Automatic call cutoff limit to protect server audio bridge</Text>
+                  </View>
+
+                  <View style={styles.fieldItem}>
+                    <Text style={[styles.label, { color: textColor }]}>Video Call Server Infrastructure Fee (₹)</Text>
+                    <TextInput
+                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                      keyboardType="numeric"
+                      value={String(appForm.techInfraVideoCallFee ?? 5.0)}
+                      onChangeText={(t) => updateAppField('techInfraVideoCallFee', parseFloat(t) || 0)}
+                    />
+                    <Text style={styles.fieldHint}>Deducted per live video consultation for cloud media servers</Text>
+                  </View>
+                </View>
+              </View>
             </View>
           );
         })()}

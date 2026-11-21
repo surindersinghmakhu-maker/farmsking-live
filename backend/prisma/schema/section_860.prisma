@@ -153,6 +153,26 @@ model AppSetting {
   advisorPlatformFeePercent      Float    @default(10.0)
   advisorAdminFeePercent         Float    @default(10.0)
 
+  /// Crop Care Installments & Consultation Governance (Admin Configurable)
+  cropCareInstallmentStage1Percent Float    @default(40.0)
+  cropCareInstallmentStage2Percent Float    @default(35.0)
+  cropCareInstallmentStage3Percent Float    @default(25.0)
+  cropCareStage2DueDays            Int      @default(45)
+  cropCareStage3DueDays            Int      @default(90)
+  doctorResponseSlaHours           Int      @default(12)
+  doctorPayoutHoldDays             Int      @default(3)
+  maxInAppCallDurationMinutes      Int      @default(15)
+  techInfraVideoCallFee            Float    @default(5.0)
+
+  /// Farmer Software Plan Limits & Gating (Admin Configurable)
+  freePlanMaxCrops                 Int      @default(3)
+  farmerPlanExpiryWarningDays      Int      @default(7)
+  farmerPlanGracePeriodDays        Int      @default(5)
+  maskPhoneNumbersBetweenUsers     Boolean  @default(true)
+  defaultArhtiyaInterestRateAnnual Float    @default(18.0)
+  mandiMarketFeePercent            Float    @default(2.0)
+  mandiRdfPercent                  Float    @default(2.0)
+
   /// Platform TDS/fee deducted on wallet withdrawal (%) — Indian standard: 2% TDS (Sec 194N)
   withdrawalPlatformFeePercent  Float   @default(2.0)
   /// GST on platform service fee for wallet payout — 18% as per Indian GST rules

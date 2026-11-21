@@ -6,8 +6,8 @@ export declare class PaymentReceiptsService {
     findOneOrThrow(user: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;
-        farmerId: string;
         partyId: string;
+        farmerId: string;
         partyName: string;
         previousBalance: import("@prisma/client/runtime/library").Decimal;
         receiptNo: string;

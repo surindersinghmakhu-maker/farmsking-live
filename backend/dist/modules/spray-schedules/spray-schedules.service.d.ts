@@ -20,9 +20,9 @@ export declare class SprayScheduleService {
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
+        dosageInstructions: string | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         scheduledDate: Date;
-        dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
         createdByAdvisorId: string;
@@ -37,9 +37,9 @@ export declare class SprayScheduleService {
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
+        dosageInstructions: string | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         scheduledDate: Date;
-        dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
         createdByAdvisorId: string;
@@ -54,9 +54,9 @@ export declare class SprayScheduleService {
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
+        dosageInstructions: string | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         scheduledDate: Date;
-        dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
         createdByAdvisorId: string;
@@ -71,17 +71,17 @@ export declare class SprayScheduleService {
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
+        dosageInstructions: string | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         scheduledDate: Date;
-        dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
         createdByAdvisorId: string;
         completedSprayId: string | null;
     }>;
     searchCatalog(query: string): Promise<{
-        id: string;
         name: string;
+        id: string;
         createdAt: Date;
         deletedAt: Date | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;

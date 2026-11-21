@@ -6,9 +6,9 @@ export declare class AddressesService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     create(user: AuthUser, dto: CreateAddressDto): Promise<{
-        id: string;
-        mobile: string | null;
         name: string | null;
+        mobile: string | null;
+        id: string;
         district: string;
         state: string;
         pincode: string;
@@ -20,9 +20,9 @@ export declare class AddressesService {
         isDefault: boolean;
     }>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
-        id: string;
-        mobile: string | null;
         name: string | null;
+        mobile: string | null;
+        id: string;
         district: string;
         state: string;
         pincode: string;
@@ -34,9 +34,9 @@ export declare class AddressesService {
         isDefault: boolean;
     }[]>;
     setDefault(user: AuthUser, id: string): Promise<{
-        id: string;
-        mobile: string | null;
         name: string | null;
+        mobile: string | null;
+        id: string;
         district: string;
         state: string;
         pincode: string;
@@ -51,9 +51,9 @@ export declare class AddressesService {
         success: boolean;
     }>;
     update(user: AuthUser, id: string, dto: UpdateAddressDto): Promise<{
-        id: string;
-        mobile: string | null;
         name: string | null;
+        mobile: string | null;
+        id: string;
         district: string;
         state: string;
         pincode: string;

@@ -9,9 +9,9 @@ export declare class NotificationsService {
         createdAt: Date;
         data: Prisma.JsonValue | null;
         body: string;
-        type: import(".prisma/client").$Enums.NotificationType;
-        title: string;
         userId: string;
+        title: string;
+        type: import(".prisma/client").$Enums.NotificationType;
         isRead: boolean;
         readAt: Date | null;
     } | null>;
@@ -20,9 +20,9 @@ export declare class NotificationsService {
         createdAt: Date;
         data: Prisma.JsonValue | null;
         body: string;
-        type: import(".prisma/client").$Enums.NotificationType;
-        title: string;
         userId: string;
+        title: string;
+        type: import(".prisma/client").$Enums.NotificationType;
         isRead: boolean;
         readAt: Date | null;
     }[]>;
@@ -34,9 +34,9 @@ export declare class NotificationsService {
         createdAt: Date;
         data: Prisma.JsonValue | null;
         body: string;
-        type: import(".prisma/client").$Enums.NotificationType;
-        title: string;
         userId: string;
+        title: string;
+        type: import(".prisma/client").$Enums.NotificationType;
         isRead: boolean;
         readAt: Date | null;
     }>;

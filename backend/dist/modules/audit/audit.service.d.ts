@@ -7,10 +7,10 @@ export declare class AuditService {
     list(filters: ListAuditLogQueryDto): Promise<{
         items: ({
             actor: {
+                name: string;
                 id: string;
                 kingId: string | null;
                 role: import(".prisma/client").$Enums.Role;
-                name: string;
             } | null;
         } & {
             id: string;

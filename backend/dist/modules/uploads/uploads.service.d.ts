@@ -27,10 +27,10 @@ export declare class UploadsService {
         id: string;
         createdAt: Date;
         fileUrl: string;
+        uploadedById: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
-        uploadedById: string;
     }>;
     createFromBase64(user: AuthUser, dataUri: string, customFilename?: string, folder?: string): Promise<{
         provider: string;
@@ -38,9 +38,9 @@ export declare class UploadsService {
         id: string;
         createdAt: Date;
         fileUrl: string;
+        uploadedById: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
-        uploadedById: string;
     }>;
 }

@@ -19,8 +19,8 @@ export declare class NurseryService {
     }): Promise<{
         items: ({
             owner: {
-                id: string;
                 name: string;
+                id: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -31,9 +31,9 @@ export declare class NurseryService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            minOrderAmount: import("@prisma/client/runtime/library").Decimal;
             ownerId: string;
             plotId: string | null;
+            minOrderAmount: import("@prisma/client/runtime/library").Decimal;
             category: import(".prisma/client").$Enums.NurseryCategoryType;
             sowingDate: Date;
             stage: string;
@@ -65,37 +65,37 @@ export declare class NurseryService {
         totalPages: number;
     }>;
     getBatchById(id: string): Promise<{
-        owner: {
+        reviews: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            orderId: string;
+            isPublic: boolean;
+            buyerId: string;
+            batchId: string;
+            deliveryRating: number;
+            plantQualityRating: number;
+            growthRating: number | null;
+            compositeRating: import("@prisma/client/runtime/library").Decimal;
+            reviewText: string | null;
+            reviewPhotos: string[];
+        }[];
+        owner: {
             name: string;
+            id: string;
             village: string | null;
             district: string | null;
             state: string | null;
             photoUrl: string | null;
             kycVerified: boolean;
         };
-        reviews: {
-            isPublic: boolean;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            buyerId: string;
-            orderId: string;
-            batchId: string;
-            deliveryRating: number;
-            plantQualityRating: number;
-            reviewText: string | null;
-            growthRating: number | null;
-            compositeRating: import("@prisma/client/runtime/library").Decimal;
-            reviewPhotos: string[];
-        }[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        minOrderAmount: import("@prisma/client/runtime/library").Decimal;
         ownerId: string;
         plotId: string | null;
+        minOrderAmount: import("@prisma/client/runtime/library").Decimal;
         category: import(".prisma/client").$Enums.NurseryCategoryType;
         sowingDate: Date;
         stage: string;
@@ -125,9 +125,9 @@ export declare class NurseryService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        minOrderAmount: import("@prisma/client/runtime/library").Decimal;
         ownerId: string;
         plotId: string | null;
+        minOrderAmount: import("@prisma/client/runtime/library").Decimal;
         category: import(".prisma/client").$Enums.NurseryCategoryType;
         sowingDate: Date;
         stage: string;
@@ -155,16 +155,16 @@ export declare class NurseryService {
     }>;
     getMyGrowerBatches(ownerId: string): Promise<({
         _count: {
-            orders: number;
             reviews: number;
+            orders: number;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        minOrderAmount: import("@prisma/client/runtime/library").Decimal;
         ownerId: string;
         plotId: string | null;
+        minOrderAmount: import("@prisma/client/runtime/library").Decimal;
         category: import(".prisma/client").$Enums.NurseryCategoryType;
         sowingDate: Date;
         stage: string;
@@ -192,9 +192,9 @@ export declare class NurseryService {
     })[]>;
     getMyGrowerOrders(ownerId: string): Promise<({
         buyer: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -357,9 +357,9 @@ export declare class NurseryService {
     getMyOrders(buyerId: string): Promise<({
         batch: {
             owner: {
-                id: string;
-                mobile: string;
                 name: string;
+                mobile: string;
+                id: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -368,9 +368,9 @@ export declare class NurseryService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            minOrderAmount: import("@prisma/client/runtime/library").Decimal;
             ownerId: string;
             plotId: string | null;
+            minOrderAmount: import("@prisma/client/runtime/library").Decimal;
             category: import(".prisma/client").$Enums.NurseryCategoryType;
             sowingDate: Date;
             stage: string;
@@ -397,9 +397,9 @@ export declare class NurseryService {
             totalReviews: number;
         };
         agent: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         } | null;
     } & {
         id: string;
@@ -453,18 +453,18 @@ export declare class NurseryService {
     })[]>;
     getOrderById(userId: string, orderId: string): Promise<{
         buyer: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
             village: string | null;
             district: string | null;
             state: string | null;
         };
         batch: {
             owner: {
-                id: string;
-                mobile: string;
                 name: string;
+                mobile: string;
+                id: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -473,9 +473,9 @@ export declare class NurseryService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            minOrderAmount: import("@prisma/client/runtime/library").Decimal;
             ownerId: string;
             plotId: string | null;
+            minOrderAmount: import("@prisma/client/runtime/library").Decimal;
             category: import(".prisma/client").$Enums.NurseryCategoryType;
             sowingDate: Date;
             stage: string;
@@ -502,23 +502,23 @@ export declare class NurseryService {
             totalReviews: number;
         };
         agent: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         } | null;
         review: {
-            isPublic: boolean;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            buyerId: string;
             orderId: string;
+            isPublic: boolean;
+            buyerId: string;
             batchId: string;
             deliveryRating: number;
             plantQualityRating: number;
-            reviewText: string | null;
             growthRating: number | null;
             compositeRating: import("@prisma/client/runtime/library").Decimal;
+            reviewText: string | null;
             reviewPhotos: string[];
         } | null;
     } & {
@@ -722,11 +722,11 @@ export declare class NurseryService {
         calamityType: string | null;
     }>;
     logEnquiryTicket(agentId: string, dto: LogEnquiryDto): Promise<{
+        customerId: string;
         id: string;
         createdAt: Date;
-        customerId: string;
-        description: string;
         status: string;
+        description: string;
         resolvedAt: Date | null;
         orderId: string | null;
         assignedPartnerId: string;
@@ -737,17 +737,17 @@ export declare class NurseryService {
     }>;
     getAgentOrders(agentId: string): Promise<({
         buyer: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
             village: string | null;
             district: string | null;
         };
         batch: {
             owner: {
-                id: string;
-                mobile: string;
                 name: string;
+                mobile: string;
+                id: string;
                 village: string | null;
                 district: string | null;
             };
@@ -755,9 +755,9 @@ export declare class NurseryService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            minOrderAmount: import("@prisma/client/runtime/library").Decimal;
             ownerId: string;
             plotId: string | null;
+            minOrderAmount: import("@prisma/client/runtime/library").Decimal;
             category: import(".prisma/client").$Enums.NurseryCategoryType;
             sowingDate: Date;
             stage: string;

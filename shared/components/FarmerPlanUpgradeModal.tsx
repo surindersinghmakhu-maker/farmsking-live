@@ -76,6 +76,7 @@ function PlanComparisonChart({
   inGrace,
   pricingList = [],
   onPickPlan,
+  maxFreeCrops = 3,
 }: {
   plans: FarmerPlanType[];
   currentPlan: FarmerPlanType;
@@ -83,7 +84,15 @@ function PlanComparisonChart({
   inGrace: boolean;
   pricingList?: FarmerPlanPricing[];
   onPickPlan: (plan: FarmerPlanType) => void;
+  maxFreeCrops?: number;
 }) {
+  const dynamicRows = PLAN_ROWS.map((r) => {
+    if (r.label === 'Total Crop Cycles') {
+      return { ...r, values: { ...r.values, FREE: `Max ${maxFreeCrops}` } };
+    }
+    return r;
+  });
+
   return (
     <View style={chartStyles.tableContainer}>
       <View style={chartStyles.headerRow}>
@@ -109,7 +118,7 @@ function PlanComparisonChart({
         })}
       </View>
 
-      {PLAN_ROWS.map((row, idx) => (
+      {dynamicRows.map((row, idx) => (
         <View key={row.label} style={[chartStyles.row, idx % 2 === 1 && chartStyles.zebraRow]}>
           <View style={[chartStyles.cell, chartStyles.labelCell]}>
             <Text style={chartStyles.labelText} numberOfLines={2}>{row.label}</Text>
@@ -777,6 +786,7 @@ export function FarmerPlanUpgradeModal({
                   inGrace={inGrace}
                   pricingList={pricingList}
                   onPickPlan={handlePickPlan}
+                  maxFreeCrops={appSettings?.freePlanMaxCrops ?? 3}
                 />
               ) : null}
             </View>

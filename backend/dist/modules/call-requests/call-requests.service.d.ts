@@ -17,16 +17,16 @@ export declare class CallRequestsService {
         } | null;
         notes: string | null;
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
             photoUrl: string | null;
         };
         advisor: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         };
         id: string;
         createdAt: Date;
@@ -38,16 +38,16 @@ export declare class CallRequestsService {
     }>;
     getMyPending(farmer: AuthUser): import(".prisma/client").Prisma.Prisma__CallRequestClient<({
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
             photoUrl: string | null;
         };
         advisor: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         };
     } & {
         id: string;
@@ -60,16 +60,16 @@ export declare class CallRequestsService {
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     listMine(advisor: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
             photoUrl: string | null;
         };
         advisor: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         };
     } & {
         id: string;
@@ -82,16 +82,16 @@ export declare class CallRequestsService {
     })[]>;
     resolve(advisor: AuthUser, id: string, dto: ResolveCallRequestDto): Promise<{
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
             photoUrl: string | null;
         };
         advisor: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         };
     } & {
         id: string;

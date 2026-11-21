@@ -49,14 +49,14 @@ export declare class GardenerPlansController {
     }>;
     redeemCoupon(user: AuthUser, dto: RedeemGardenerPlanCouponDto): Promise<{
         plan: {
+            startDate: Date;
+            endDate: Date | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            startDate: Date;
-            endDate: Date | null;
+            couponId: string | null;
             plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             expiredAt: Date | null;
-            couponId: string | null;
             gardenerId: string;
             hasUsedVipTrial: boolean;
             trialStartedAt: Date | null;
@@ -80,18 +80,18 @@ export declare class GardenerPlansController {
     }>;
     listAllCoupons(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
-            id: string;
             name: string;
+            id: string;
         };
         assignedGardener: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         } | null;
         usedByGardener: {
-            id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+            id: string;
         } | null;
     } & {
         id: string;
@@ -112,20 +112,20 @@ export declare class GardenerPlansController {
             plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         } | null;
         gardener: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
         };
     } & {
+        startDate: Date;
+        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        startDate: Date;
-        endDate: Date | null;
+        couponId: string | null;
         plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         expiredAt: Date | null;
-        couponId: string | null;
         gardenerId: string;
         hasUsedVipTrial: boolean;
         trialStartedAt: Date | null;

@@ -1,7 +1,7 @@
 export declare const FARMSKING_CORPORATE_IDENTITY: {
     readonly legalName: "FARMSKING TECHNOLOGIES PRIVATE LIMITED";
     readonly brandName: "FarmsKing";
-    readonly tagline: "Farming Easy, Farming Smart | National Agritech & Smart Farming Platform";
+    readonly tagline: "Smart Farming | National Agritech & Smart Farming Platform";
     readonly cin: "U62013PB2026PTC070389";
     readonly pan: "AAHCF3566C";
     readonly tan: "AMRF11527F";

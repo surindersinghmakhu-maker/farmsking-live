@@ -19,96 +19,96 @@ export declare class LabourService {
     assertSupervisorLabourAccess(user: AuthUser, mode: 'view' | 'entry'): Promise<void>;
     createWorker(user: AuthUser, dto: CreateLabourWorkerDto): Promise<{
         user: {
-            id: string;
             mobile: string;
+            id: string;
         } | null;
     } & {
-        id: string;
-        mobile: string | null;
         name: string;
+        mobile: string | null;
+        id: string;
         photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        userId: string | null;
         notes: string | null;
-        farmerId: string;
         farmId: string | null;
         address: string | null;
+        farmerId: string;
         relation: string | null;
         defaultDailyWage: import("@prisma/client/runtime/library").Decimal | null;
         defaultRate: import("@prisma/client/runtime/library").Decimal | null;
         defaultUnit: string | null;
+        userId: string | null;
     }>;
     getWorkersForFarmer(user: AuthUser): Promise<{
         totalEarned: number;
         totalPaid: number;
         pendingBalance: number;
-        id: string;
-        mobile: string | null;
         name: string;
+        mobile: string | null;
+        id: string;
         photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        userId: string | null;
         notes: string | null;
-        farmerId: string;
         farmId: string | null;
         address: string | null;
+        farmerId: string;
         relation: string | null;
         defaultDailyWage: import("@prisma/client/runtime/library").Decimal | null;
         defaultRate: import("@prisma/client/runtime/library").Decimal | null;
         defaultUnit: string | null;
+        userId: string | null;
     }[]>;
     updateWorker(user: AuthUser, id: string, dto: UpdateLabourWorkerDto): Promise<{
         user: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
             photoUrl: string | null;
         } | null;
     } & {
-        id: string;
-        mobile: string | null;
         name: string;
+        mobile: string | null;
+        id: string;
         photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        userId: string | null;
         notes: string | null;
-        farmerId: string;
         farmId: string | null;
         address: string | null;
+        farmerId: string;
         relation: string | null;
         defaultDailyWage: import("@prisma/client/runtime/library").Decimal | null;
         defaultRate: import("@prisma/client/runtime/library").Decimal | null;
         defaultUnit: string | null;
+        userId: string | null;
     }>;
     deleteWorker(user: AuthUser, id: string): Promise<{
-        id: string;
-        mobile: string | null;
         name: string;
+        mobile: string | null;
+        id: string;
         photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        userId: string | null;
         notes: string | null;
-        farmerId: string;
         farmId: string | null;
         address: string | null;
+        farmerId: string;
         relation: string | null;
         defaultDailyWage: import("@prisma/client/runtime/library").Decimal | null;
         defaultRate: import("@prisma/client/runtime/library").Decimal | null;
         defaultUnit: string | null;
+        userId: string | null;
     }>;
     createWorkEntry(farmerId: string, recordedById: string, dto: CreateWorkEntryDto): Promise<{
         worker: {
-            id: string;
             name: string;
+            id: string;
         };
     } & {
         id: string;
@@ -116,7 +116,6 @@ export declare class LabourService {
         updatedAt: Date;
         deletedAt: Date | null;
         notes: string | null;
-        farmerId: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;
         quantity: number;
@@ -124,6 +123,7 @@ export declare class LabourService {
         farmId: string | null;
         plotId: string | null;
         cropCycleId: string | null;
+        farmerId: string;
         workerId: string;
         workType: string;
         workDate: Date;
@@ -131,9 +131,9 @@ export declare class LabourService {
     }>;
     getWorkEntries(farmerId: string, workerId?: string): Promise<({
         worker: {
-            id: string;
-            mobile: string | null;
             name: string;
+            mobile: string | null;
+            id: string;
         };
     } & {
         id: string;
@@ -141,7 +141,6 @@ export declare class LabourService {
         updatedAt: Date;
         deletedAt: Date | null;
         notes: string | null;
-        farmerId: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;
         quantity: number;
@@ -149,6 +148,7 @@ export declare class LabourService {
         farmId: string | null;
         plotId: string | null;
         cropCycleId: string | null;
+        farmerId: string;
         workerId: string;
         workType: string;
         workDate: Date;
@@ -156,58 +156,58 @@ export declare class LabourService {
     })[]>;
     createPayment(farmerId: string, recordedById: string, dto: CreateLabourPaymentDto): Promise<{
         worker: {
-            id: string;
             name: string;
+            id: string;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        farmerId: string;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
         paymentDate: Date;
+        farmerId: string;
         workerId: string;
     }>;
     getPayments(farmerId: string, workerId?: string): Promise<({
         worker: {
-            id: string;
             name: string;
+            id: string;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        farmerId: string;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
+        amount: import("@prisma/client/runtime/library").Decimal;
         paymentDate: Date;
+        farmerId: string;
         workerId: string;
     })[]>;
     getWorkerStatement(farmerId: string, workerId: string): Promise<{
         worker: {
-            id: string;
-            mobile: string | null;
             name: string;
+            mobile: string | null;
+            id: string;
             photoUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
-            userId: string | null;
             notes: string | null;
-            farmerId: string;
             farmId: string | null;
             address: string | null;
+            farmerId: string;
             relation: string | null;
             defaultDailyWage: import("@prisma/client/runtime/library").Decimal | null;
             defaultRate: import("@prisma/client/runtime/library").Decimal | null;
             defaultUnit: string | null;
+            userId: string | null;
         };
         totalEarned: number;
         totalPaid: number;
@@ -228,7 +228,6 @@ export declare class LabourService {
             updatedAt: Date;
             deletedAt: Date | null;
             notes: string | null;
-            farmerId: string;
             totalAmount: import("@prisma/client/runtime/library").Decimal;
             recordedById: string;
             quantity: number;
@@ -236,6 +235,7 @@ export declare class LabourService {
             farmId: string | null;
             plotId: string | null;
             cropCycleId: string | null;
+            farmerId: string;
             workerId: string;
             workType: string;
             workDate: Date;
@@ -246,12 +246,12 @@ export declare class LabourService {
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
-            amount: import("@prisma/client/runtime/library").Decimal;
             notes: string | null;
-            farmerId: string;
             paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
             recordedById: string;
+            amount: import("@prisma/client/runtime/library").Decimal;
             paymentDate: Date;
+            farmerId: string;
             workerId: string;
         }[];
     }>;
@@ -305,9 +305,9 @@ export declare class LabourService {
             defaultRate: import("@prisma/client/runtime/library").Decimal | null;
             defaultUnit: string | null;
             farmer: {
-                id: string;
-                mobile: string;
                 name: string;
+                mobile: string;
+                id: string;
                 village: string | null;
                 photoUrl: string | null;
             };
@@ -323,7 +323,6 @@ export declare class LabourService {
             updatedAt: Date;
             deletedAt: Date | null;
             notes: string | null;
-            farmerId: string;
             totalAmount: import("@prisma/client/runtime/library").Decimal;
             recordedById: string;
             quantity: number;
@@ -331,6 +330,7 @@ export declare class LabourService {
             farmId: string | null;
             plotId: string | null;
             cropCycleId: string | null;
+            farmerId: string;
             workerId: string;
             workType: string;
             workDate: Date;
@@ -341,12 +341,12 @@ export declare class LabourService {
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
-            amount: import("@prisma/client/runtime/library").Decimal;
             notes: string | null;
-            farmerId: string;
             paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
             recordedById: string;
+            amount: import("@prisma/client/runtime/library").Decimal;
             paymentDate: Date;
+            farmerId: string;
             workerId: string;
         }[];
         profiles: {
@@ -360,9 +360,9 @@ export declare class LabourService {
                 defaultRate: import("@prisma/client/runtime/library").Decimal | null;
                 defaultUnit: string | null;
                 farmer: {
-                    id: string;
-                    mobile: string;
                     name: string;
+                    mobile: string;
+                    id: string;
                     village: string | null;
                     photoUrl: string | null;
                 };
@@ -378,7 +378,6 @@ export declare class LabourService {
                 updatedAt: Date;
                 deletedAt: Date | null;
                 notes: string | null;
-                farmerId: string;
                 totalAmount: import("@prisma/client/runtime/library").Decimal;
                 recordedById: string;
                 quantity: number;
@@ -386,6 +385,7 @@ export declare class LabourService {
                 farmId: string | null;
                 plotId: string | null;
                 cropCycleId: string | null;
+                farmerId: string;
                 workerId: string;
                 workType: string;
                 workDate: Date;
@@ -396,12 +396,12 @@ export declare class LabourService {
                 createdAt: Date;
                 updatedAt: Date;
                 deletedAt: Date | null;
-                amount: import("@prisma/client/runtime/library").Decimal;
                 notes: string | null;
-                farmerId: string;
                 paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
                 recordedById: string;
+                amount: import("@prisma/client/runtime/library").Decimal;
                 paymentDate: Date;
+                farmerId: string;
                 workerId: string;
             }[];
         }[];

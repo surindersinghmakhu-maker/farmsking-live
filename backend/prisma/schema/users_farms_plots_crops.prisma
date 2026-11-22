@@ -162,6 +162,10 @@ model User {
   partnerAssignmentAsCustomer        PartnerAssignment?         @relation("PartnerAssignmentCustomer")
   notifications                      Notification[]
   gardens                            Garden[]
+  plants                             Plant[]
+  plantCareSchedules                 PlantCareSchedule[]
+  plantDiagnoses                     PlantDiagnosis[]
+  aiCreditLedger                     AiCreditLedger?
   customerOrders                     CustomerOrder[]
   partnerReferrals                   PartnerReferral[]
   referralsSent                      UserReferral[]             @relation("ReferrerUser")

@@ -1,41 +1,132 @@
 // ─── Phase 6: Gardener, Customer, Business Partner Dashboards ────────────
 
 model Garden {
-  id          String   @id @default(uuid())
-  gardenerId  String
-  gardener    User     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
-  name        String
-  location    String?
-  area        Float?
-  healthScore Int      @default(85)
-  status      String   @default("Active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String              @id @default(uuid())
+  gardenerId       String
+  gardener         User                @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  name             String
+  gardenType       GardenType          @default(BALCONY)
+  location         String?
+  area             Float?
+  sunlightExposure String?
+  wateringSource   String?
+  healthScore      Int                 @default(85)
+  status           String              @default("Active")
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
-  visits   GardenVisit[]
-  plants   Plant[]
-  expenses GardenExpense[]
+  visits    GardenVisit[]
+  plants    Plant[]
+  expenses  GardenExpense[]
+  schedules PlantCareSchedule[]
 
   @@index([gardenerId])
   @@map("gardens")
 }
 
 model Plant {
-  id          String    @id @default(uuid())
-  gardenId    String
-  garden      Garden    @relation(fields: [gardenId], references: [id], onDelete: Cascade)
-  name        String
-  species     String?
-  plantedDate DateTime?
-  healthNotes String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  id            String              @id @default(uuid())
+  gardenId      String?
+  garden        Garden?             @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  gardenerId    String?
+  gardener      User?               @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  name          String
+  customName    String?
+  species       String?
+  variety       String?
+  photoUrl      String?
+  locationType  String?
+  potSizeInches Float?
+  potType       String?
+  healthStatus  String              @default("Healthy")
+  plantedDate   DateTime?
+  healthNotes   String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  deletedAt     DateTime?
 
-  expenses GardenExpense[]
+  expenses   GardenExpense[]
+  schedules  PlantCareSchedule[]
+  healthLogs PlantHealthLog[]
+  diagnoses  PlantDiagnosis[]
 
   @@index([gardenId])
+  @@index([gardenerId])
   @@map("plants")
+}
+
+model PlantCareSchedule {
+  id                String        @id @default(uuid())
+  plantId           String
+  plant             Plant         @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  gardenId          String?
+  garden            Garden?       @relation(fields: [gardenId], references: [id], onDelete: SetNull)
+  gardenerId        String
+  gardener          User          @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  careType          PlantCareType
+  title             String
+  instructions      String?
+  intervalDays      Int           @default(1)
+  nextDueDate       DateTime
+  lastCompletedDate DateTime?
+  isReminderActive  Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([plantId])
+  @@index([gardenId])
+  @@index([gardenerId])
+  @@index([nextDueDate])
+  @@map("plant_care_schedules")
+}
+
+model PlantHealthLog {
+  id              String   @id @default(uuid())
+  plantId         String
+  plant           Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  photoUrl        String
+  conditionStatus String
+  notes           String?
+  loggedAt        DateTime @default(now())
+
+  @@index([plantId])
+  @@map("plant_health_logs")
+}
+
+model PlantDiagnosis {
+  id                   String   @id @default(uuid())
+  gardenerId           String
+  gardener             User     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  plantId              String?
+  plant                Plant?   @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  leafPhotoUrl         String
+  detectedIssue        String
+  category             String
+  confidence           String
+  organicRemedy        String
+  chemicalRemedy       String?
+  preventiveCare       String?
+  expertConsultationId String?
+  createdAt            DateTime @default(now())
+
+  @@index([gardenerId])
+  @@index([plantId])
+  @@map("plant_diagnoses")
+}
+
+model AiCreditLedger {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthlyQuota  Int      @default(5)
+  usedThisMonth Int      @default(0)
+  bonusCredits  Int      @default(0)
+  resetDate     DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("ai_credit_ledgers")
 }
 
 model GardenVisit {

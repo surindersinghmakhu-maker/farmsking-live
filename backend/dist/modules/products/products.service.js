@@ -49,6 +49,10 @@ let ProductsService = class ProductsService {
         }
         const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
         const isTestingUser = creator?.mobile === '9501529971';
+        const prohibitedKeywords = ['machinery', 'tractor', 'harvester', 'hardware-rental', 'equipment-rental', 'heavy-implements'];
+        if (prohibitedKeywords.some((kw) => categorySlug.includes(kw))) {
+            throw new common_1.BadRequestException('Listing agricultural heavy machinery, tractors, or hardware rental equipment is strictly prohibited under FarmsKing statutory e-MoA corporate charter. The platform exclusively permits certified bio-fertilizers, organic inputs, seeds, nursery plants, and digital farming tools.');
+        }
         if (sellerStore && !isAdmin && !isTestingUser) {
             const now = new Date();
             if (categorySlug.includes('seed') || categorySlug === 'seeds') {

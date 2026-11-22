@@ -42,7 +42,15 @@ let VoiceCallService = class VoiceCallService {
         try {
             const { RtcTokenBuilder, RtcRole } = require('agora-token');
             const agoraRole = role === 'publisher' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
-            const expirationTimeInSeconds = 3600 * 2;
+            let durationMinutes = 45;
+            try {
+                const appSettings = await this.prisma.appSetting.findFirst();
+                if (appSettings?.maxInAppCallDurationMinutes && appSettings.maxInAppCallDurationMinutes > 0) {
+                    durationMinutes = appSettings.maxInAppCallDurationMinutes;
+                }
+            }
+            catch { }
+            const expirationTimeInSeconds = durationMinutes * 60;
             const currentTimestamp = Math.floor(Date.now() / 1000);
             const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
             const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, uid, agoraRole, privilegeExpiredTs);

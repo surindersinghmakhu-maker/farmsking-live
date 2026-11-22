@@ -712,15 +712,15 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                                   }}
                                 >
                                   <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isInstallmentMode ? '#ffffff' : '#16a34a' }}>
-                                    3 Installments: ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * stage1Pct)} now
+                                    3 Installments: ₹{Math.round(packageBaseFee * stage1Pct)} now
                                   </Text>
                                 </TouchableOpacity>
                               </View>
                               {isInstallmentMode && (
                                 <View style={{ marginTop: 6, paddingLeft: 2, gap: 2 }}>
-                                  <Text style={{ fontSize: 9.5, color: isDark ? '#a7f3d0' : '#065f46', fontFamily: FONT.semiBold }}>• Stage 1 (Sowing/Basal): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * stage1Pct)} (Pay Now)</Text>
-                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 2 (Mid-Season Flowering): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * stage2Pct)} (Due Day {stage2Days})</Text>
-                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 3 (Pre-Harvest/Grain Filling): ₹{Math.round((Number(selectedAdv?.feePerCropSeason) || 499) * stage3Pct)} (Due Day {stage3Days})</Text>
+                                  <Text style={{ fontSize: 9.5, color: isDark ? '#a7f3d0' : '#065f46', fontFamily: FONT.semiBold }}>• Stage 1 (Sowing/Basal): ₹{Math.round(packageBaseFee * stage1Pct)} ({Math.round(stage1Pct * 100)}% Pay Now)</Text>
+                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 2 (Mid-Season Flowering): ₹{Math.round(packageBaseFee * stage2Pct)} ({Math.round(stage2Pct * 100)}% Due Day {stage2Days})</Text>
+                                  <Text style={{ fontSize: 9.5, color: '#64748b' }}>• Stage 3 (Pre-Harvest/Grain Filling): ₹{Math.round(packageBaseFee * stage3Pct)} ({Math.round(stage3Pct * 100)}% Due Day {stage3Days})</Text>
                                 </View>
                               )}
                             </View>

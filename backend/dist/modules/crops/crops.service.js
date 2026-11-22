@@ -105,8 +105,10 @@ let CropsService = class CropsService {
             const planPricing = await this.prisma.farmerPlanPricing.findFirst({
                 where: { plan },
             });
-            const maxTotalCrops = planPricing?.maxTotalCrops ?? (plan === client_1.FarmerSubscriptionPlan.FREE ? farmer_plans_service_1.FREE_PLAN_MAX_CROPS : null);
-            const maxActiveCrops = planPricing?.maxActiveCrops ?? (plan === client_1.FarmerSubscriptionPlan.FREE ? farmer_plans_service_1.FREE_PLAN_MAX_ACTIVE_CROPS : null);
+            const appSettings = await this.prisma.appSetting.findFirst();
+            const dynamicFreeMax = appSettings?.freePlanMaxCrops ?? farmer_plans_service_1.FREE_PLAN_MAX_ACTIVE_CROPS;
+            const maxTotalCrops = planPricing?.maxTotalCrops ?? (plan === client_1.FarmerSubscriptionPlan.FREE ? (appSettings?.freePlanMaxCrops ?? farmer_plans_service_1.FREE_PLAN_MAX_CROPS) : null);
+            const maxActiveCrops = planPricing?.maxActiveCrops ?? (plan === client_1.FarmerSubscriptionPlan.FREE ? dynamicFreeMax : null);
             if (maxTotalCrops != null && maxTotalCrops > 0) {
                 const totalCrops = await this.prisma.cropCycle.count({
                     where: {
@@ -115,7 +117,7 @@ let CropsService = class CropsService {
                     },
                 });
                 if (totalCrops >= maxTotalCrops) {
-                    const planName = plan === client_1.FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === client_1.FarmerSubscriptionPlan.SMART ? 'Pro Plan' : (plan === client_1.FarmerSubscriptionPlan.SUPER || plan === client_1.FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Card' : 'Free Plan';
+                    const planName = plan === client_1.FarmerSubscriptionPlan.PRO ? 'Kisan Plan' : plan === client_1.FarmerSubscriptionPlan.SMART ? 'Boss Plan' : (plan === client_1.FarmerSubscriptionPlan.SUPER || plan === client_1.FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Plan' : 'Free Plan';
                     throw new common_1.ForbiddenException(`Your current plan (${planName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`);
                 }
             }
@@ -128,7 +130,7 @@ let CropsService = class CropsService {
                     },
                 });
                 if (activeCrops >= maxActiveCrops) {
-                    const planName = plan === client_1.FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === client_1.FarmerSubscriptionPlan.SMART ? 'Pro Plan' : (plan === client_1.FarmerSubscriptionPlan.SUPER || plan === client_1.FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Card' : 'Free Plan';
+                    const planName = plan === client_1.FarmerSubscriptionPlan.PRO ? 'Kisan Plan' : plan === client_1.FarmerSubscriptionPlan.SMART ? 'Boss Plan' : (plan === client_1.FarmerSubscriptionPlan.SUPER || plan === client_1.FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Plan' : 'Free Plan';
                     throw new common_1.ForbiddenException(`Your current plan (${planName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`);
                 }
             }

@@ -84,9 +84,11 @@ export class CropsService {
       const planPricing = await this.prisma.farmerPlanPricing.findFirst({
         where: { plan },
       });
+      const appSettings = await this.prisma.appSetting.findFirst();
+      const dynamicFreeMax = appSettings?.freePlanMaxCrops ?? FREE_PLAN_MAX_ACTIVE_CROPS;
 
-      const maxTotalCrops = planPricing?.maxTotalCrops ?? (plan === FarmerSubscriptionPlan.FREE ? FREE_PLAN_MAX_CROPS : null);
-      const maxActiveCrops = planPricing?.maxActiveCrops ?? (plan === FarmerSubscriptionPlan.FREE ? FREE_PLAN_MAX_ACTIVE_CROPS : null);
+      const maxTotalCrops = planPricing?.maxTotalCrops ?? (plan === FarmerSubscriptionPlan.FREE ? (appSettings?.freePlanMaxCrops ?? FREE_PLAN_MAX_CROPS) : null);
+      const maxActiveCrops = planPricing?.maxActiveCrops ?? (plan === FarmerSubscriptionPlan.FREE ? dynamicFreeMax : null);
 
       // 1. Total Crops Allowed Enforcement (maxTotalCrops)
       if (maxTotalCrops != null && maxTotalCrops > 0) {
@@ -97,7 +99,7 @@ export class CropsService {
           },
         });
         if (totalCrops >= maxTotalCrops) {
-          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Pro Plan' : (plan === FarmerSubscriptionPlan.SUPER || plan === FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Card' : 'Free Plan';
+          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Kisan Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Boss Plan' : (plan === FarmerSubscriptionPlan.SUPER || plan === FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Plan' : 'Free Plan';
           throw new ForbiddenException(
             `Your current plan (${planName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`,
           );
@@ -114,7 +116,7 @@ export class CropsService {
           },
         });
         if (activeCrops >= maxActiveCrops) {
-          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Pro Plan' : (plan === FarmerSubscriptionPlan.SUPER || plan === FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Card' : 'Free Plan';
+          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Kisan Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Boss Plan' : (plan === FarmerSubscriptionPlan.SUPER || plan === FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Plan' : 'Free Plan';
           throw new ForbiddenException(
             `Your current plan (${planName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`,
           );

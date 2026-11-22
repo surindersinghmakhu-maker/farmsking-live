@@ -47,6 +47,14 @@ export class ProductsService {
     const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
     const isTestingUser = (creator as any)?.mobile === '9501529971';
 
+    // 0. Statutory Scope Boundary (e-MoA Alignment): Zero hardware sales, zero equipment rental, zero machinery manufacturing
+    const prohibitedKeywords = ['machinery', 'tractor', 'harvester', 'hardware-rental', 'equipment-rental', 'heavy-implements'];
+    if (prohibitedKeywords.some((kw) => categorySlug.includes(kw))) {
+      throw new BadRequestException(
+        'Listing agricultural heavy machinery, tractors, or hardware rental equipment is strictly prohibited under FarmsKing statutory e-MoA corporate charter. The platform exclusively permits certified bio-fertilizers, organic inputs, seeds, nursery plants, and digital farming tools.',
+      );
+    }
+
     if (sellerStore && !isAdmin && !isTestingUser) {
       const now = new Date();
       // 1. Category Restriction: Seeds, Pesticides & Fertilizers strictly require valid unexpired Agri Inputs License

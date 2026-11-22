@@ -256,7 +256,7 @@ export function MarketRatesCard() {
     };
   };
 
-  const userState = user?.state || data?.state || '';
+  const userState = user?.state || data?.state || 'Punjab';
 
   // Calculate 24h Min, Max & Avg for State level and National level for crops.
   // Calculate 24h Min, Max & Avg for State level and National level for active crops of logged in farmer.
@@ -1315,7 +1315,7 @@ export function MarketRatesCard() {
                     </View>
                     <View style={styles.widgetLocationPill}>
                       <Ionicons name="location" size={10} color="#34d399" />
-                      <Text style={styles.widgetLocationText}>{userState ? userState.toUpperCase() : 'LOCAL'}</Text>
+                      <Text style={styles.widgetLocationText}>{userState ? userState.toUpperCase() : 'PUNJAB'}</Text>
                     </View>
                   </View>
 

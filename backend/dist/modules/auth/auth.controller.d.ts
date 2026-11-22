@@ -243,14 +243,13 @@ export declare class AuthController {
         success: boolean;
         message: string;
         user: {
-            name: string;
-            mobile: string;
-            upiId: string | null;
-            id: string;
-            kingId: string | null;
-            role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -264,6 +263,7 @@ export declare class AuthController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -276,14 +276,13 @@ export declare class AuthController {
         success: boolean;
         message: string;
         user: {
-            name: string;
-            mobile: string;
-            upiId: string | null;
-            id: string;
-            kingId: string | null;
-            role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -297,6 +296,7 @@ export declare class AuthController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -325,14 +325,13 @@ export declare class AuthController {
         message: string;
         email: string | null;
         user: {
-            name: string;
-            mobile: string;
-            upiId: string | null;
-            id: string;
-            kingId: string | null;
-            role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -346,6 +345,7 @@ export declare class AuthController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -364,14 +364,13 @@ export declare class AuthController {
         message: string;
         email: string | null;
         user: {
-            name: string;
-            mobile: string;
-            upiId: string | null;
-            id: string;
-            kingId: string | null;
-            role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -385,6 +384,7 @@ export declare class AuthController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
+            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;

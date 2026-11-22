@@ -13,15 +13,15 @@ export declare class VoiceCallService {
     startGroupCall(user: AuthUser, dto: StartGroupCallDto): Promise<{
         call: {
             host: {
-                name: string;
                 id: string;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
                 photoUrl: string | null;
             };
             participants: ({
                 user: {
-                    name: string;
                     id: string;
+                    name: string;
                     village: string | null;
                     photoUrl: string | null;
                 };
@@ -29,19 +29,20 @@ export declare class VoiceCallService {
                 id: string;
                 role: string;
                 userId: string;
+                callId: string;
                 isMuted: boolean;
                 isHandRaised: boolean;
                 joinedAt: Date;
                 leftAt: Date | null;
-                callId: string;
             })[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             title: string;
+            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             channelName: string;
+            hostId: string;
             scheduledAt: Date | null;
             targetAudienceType: string;
             targetPlanType: string | null;
@@ -51,7 +52,6 @@ export declare class VoiceCallService {
             alertMessage: string | null;
             startedAt: Date;
             endedAt: Date | null;
-            hostId: string;
         };
         token: string;
         appId: string;
@@ -61,33 +61,34 @@ export declare class VoiceCallService {
     joinGroupCall(user: AuthUser, callId: string): Promise<{
         call: {
             host: {
-                name: string;
                 id: string;
+                name: string;
                 photoUrl: string | null;
             };
             participants: ({
                 user: {
-                    name: string;
                     id: string;
+                    name: string;
                     photoUrl: string | null;
                 };
             } & {
                 id: string;
                 role: string;
                 userId: string;
+                callId: string;
                 isMuted: boolean;
                 isHandRaised: boolean;
                 joinedAt: Date;
                 leftAt: Date | null;
-                callId: string;
             })[];
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             title: string;
+            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             channelName: string;
+            hostId: string;
             scheduledAt: Date | null;
             targetAudienceType: string;
             targetPlanType: string | null;
@@ -97,7 +98,6 @@ export declare class VoiceCallService {
             alertMessage: string | null;
             startedAt: Date;
             endedAt: Date | null;
-            hostId: string;
         };
         token: string;
         appId: string;
@@ -109,14 +109,14 @@ export declare class VoiceCallService {
     }>;
     getActiveCallForUser(user: AuthUser): Promise<({
         host: {
-            name: string;
             id: string;
+            name: string;
             photoUrl: string | null;
         };
         participants: ({
             user: {
-                name: string;
                 id: string;
+                name: string;
                 village: string | null;
                 photoUrl: string | null;
             };
@@ -124,19 +124,20 @@ export declare class VoiceCallService {
             id: string;
             role: string;
             userId: string;
+            callId: string;
             isMuted: boolean;
             isHandRaised: boolean;
             joinedAt: Date;
             leftAt: Date | null;
-            callId: string;
         })[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         title: string;
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
+        hostId: string;
         scheduledAt: Date | null;
         targetAudienceType: string;
         targetPlanType: string | null;
@@ -146,15 +147,15 @@ export declare class VoiceCallService {
         alertMessage: string | null;
         startedAt: Date;
         endedAt: Date | null;
-        hostId: string;
     }) | null>;
     scheduleGroupCall(advisor: AuthUser, dto: ScheduleGroupCallDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         title: string;
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
+        hostId: string;
         scheduledAt: Date | null;
         targetAudienceType: string;
         targetPlanType: string | null;
@@ -164,7 +165,6 @@ export declare class VoiceCallService {
         alertMessage: string | null;
         startedAt: Date;
         endedAt: Date | null;
-        hostId: string;
     }>;
     sendGroupCallAlert(advisor: AuthUser, callId: string, customMessage?: string): Promise<{
         success: boolean;
@@ -175,28 +175,29 @@ export declare class VoiceCallService {
     getAdvisorGroupEvents(advisor: AuthUser): Promise<({
         participants: ({
             user: {
-                name: string;
-                mobile: string;
                 id: string;
+                mobile: string;
+                name: string;
                 village: string | null;
             };
         } & {
             id: string;
             role: string;
             userId: string;
+            callId: string;
             isMuted: boolean;
             isHandRaised: boolean;
             joinedAt: Date;
             leftAt: Date | null;
-            callId: string;
         })[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         title: string;
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
+        hostId: string;
         scheduledAt: Date | null;
         targetAudienceType: string;
         targetPlanType: string | null;
@@ -206,13 +207,12 @@ export declare class VoiceCallService {
         alertMessage: string | null;
         startedAt: Date;
         endedAt: Date | null;
-        hostId: string;
     })[]>;
     getFarmerGroupInvitations(farmer: AuthUser): Promise<({
         host: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
             photoUrl: string | null;
             specialization: string | null;
         };
@@ -220,9 +220,10 @@ export declare class VoiceCallService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         title: string;
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
+        hostId: string;
         scheduledAt: Date | null;
         targetAudienceType: string;
         targetPlanType: string | null;
@@ -232,6 +233,5 @@ export declare class VoiceCallService {
         alertMessage: string | null;
         startedAt: Date;
         endedAt: Date | null;
-        hostId: string;
     })[]>;
 }

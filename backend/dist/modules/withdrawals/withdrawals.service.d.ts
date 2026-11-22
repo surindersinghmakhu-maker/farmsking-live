@@ -14,18 +14,18 @@ export declare class WithdrawalsService {
     create(user: AuthUser, dto: CreateWithdrawalDto): Promise<void>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        status: import(".prisma/client").$Enums.WithdrawalStatus;
-        notes: string | null;
-        requestedAt: Date;
-        platformExpense: boolean;
-        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         businessPartnerId: string;
         requestedAmount: import("@prisma/client/runtime/library").Decimal;
         approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
         platformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
+        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         netPayableAmount: import("@prisma/client/runtime/library").Decimal | null;
+        platformExpense: boolean;
+        status: import(".prisma/client").$Enums.WithdrawalStatus;
+        requestedAt: Date;
         processedAt: Date | null;
         processedById: string | null;
+        notes: string | null;
     }[]>;
     listAll(): Promise<{
         partnerWallet: {
@@ -37,27 +37,27 @@ export declare class WithdrawalsService {
             commissionEarnings: number;
         };
         businessPartner: {
-            name: string;
-            mobile: string;
-            upiId: string | null;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
+            upiId: string | null;
             bankAccountNumber: string | null;
             bankIfsc: string | null;
         };
         id: string;
-        status: import(".prisma/client").$Enums.WithdrawalStatus;
-        notes: string | null;
-        requestedAt: Date;
-        platformExpense: boolean;
-        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         businessPartnerId: string;
         requestedAmount: import("@prisma/client/runtime/library").Decimal;
         approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
         platformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
+        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         netPayableAmount: import("@prisma/client/runtime/library").Decimal | null;
+        platformExpense: boolean;
+        status: import(".prisma/client").$Enums.WithdrawalStatus;
+        requestedAt: Date;
         processedAt: Date | null;
         processedById: string | null;
+        notes: string | null;
     }[]>;
     private findOneOrThrow;
     approve(admin: AuthUser, id: string, dto: ApproveWithdrawalDto): Promise<{
@@ -65,29 +65,29 @@ export declare class WithdrawalsService {
         gstAmount: number;
         netPayableAmount: number;
         id: string;
-        status: import(".prisma/client").$Enums.WithdrawalStatus;
-        notes: string | null;
-        requestedAt: Date;
-        platformExpense: boolean;
         businessPartnerId: string;
         requestedAmount: import("@prisma/client/runtime/library").Decimal;
         approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
+        platformExpense: boolean;
+        status: import(".prisma/client").$Enums.WithdrawalStatus;
+        requestedAt: Date;
         processedAt: Date | null;
         processedById: string | null;
+        notes: string | null;
     }>;
     reject(admin: AuthUser, id: string, notes?: string): Promise<{
         id: string;
-        status: import(".prisma/client").$Enums.WithdrawalStatus;
-        notes: string | null;
-        requestedAt: Date;
-        platformExpense: boolean;
-        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         businessPartnerId: string;
         requestedAmount: import("@prisma/client/runtime/library").Decimal;
         approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
         platformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
+        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         netPayableAmount: import("@prisma/client/runtime/library").Decimal | null;
+        platformExpense: boolean;
+        status: import(".prisma/client").$Enums.WithdrawalStatus;
+        requestedAt: Date;
         processedAt: Date | null;
         processedById: string | null;
+        notes: string | null;
     }>;
 }

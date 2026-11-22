@@ -84,13 +84,13 @@ export declare class FarmerPlansController {
             endDate: Date | null;
             farmerId: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
-            couponId: string | null;
             expiredAt: Date | null;
+            couponId: string | null;
         } | null;
         activeRecord: ({
             coupon: {
-                category: import(".prisma/client").$Enums.PlanCouponCategory;
                 code: string;
+                category: import(".prisma/client").$Enums.PlanCouponCategory;
             } | null;
         } & {
             id: string;
@@ -110,8 +110,8 @@ export declare class FarmerPlansController {
         }) | undefined;
         sleepRecords: ({
             coupon: {
-                category: import(".prisma/client").$Enums.PlanCouponCategory;
                 code: string;
+                category: import(".prisma/client").$Enums.PlanCouponCategory;
             } | null;
         } & {
             id: string;
@@ -131,8 +131,8 @@ export declare class FarmerPlansController {
         })[];
         pastRecords: ({
             coupon: {
-                category: import(".prisma/client").$Enums.PlanCouponCategory;
                 code: string;
+                category: import(".prisma/client").$Enums.PlanCouponCategory;
             } | null;
         } & {
             id: string;
@@ -152,8 +152,8 @@ export declare class FarmerPlansController {
         })[];
         allHistory: ({
             coupon: {
-                category: import(".prisma/client").$Enums.PlanCouponCategory;
                 code: string;
+                category: import(".prisma/client").$Enums.PlanCouponCategory;
             } | null;
         } & {
             id: string;
@@ -209,209 +209,210 @@ export declare class FarmerPlansController {
         endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
-        subscriptionId: string | null;
-        advisorId: string;
         farmerId: string;
+        advisorId: string;
+        subscriptionId: string | null;
         assignedById: string | null;
     }>;
     createCoupon(user: AuthUser, dto: CreateFarmerPlanCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        category: import(".prisma/client").$Enums.PlanCouponCategory;
-        assignedAdvisorId: string | null;
+        code: string;
+        expiresAt: Date | null;
+        createdById: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         daysGranted: number;
-        doctorKingId: string | null;
-        advisorKingId: string | null;
-        createdById: string;
-        code: string;
-        isUsed: boolean;
-        usedAt: Date | null;
-        expiresAt: Date | null;
-        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.PlanCouponCategory;
+        assignedFarmerId: string | null;
+        assignedBusinessPartnerId: string | null;
         doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         includeMembership: boolean;
         includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
         includedMembershipDays: number | null;
+        advisorKingId: string | null;
+        isUsed: boolean;
+        usedAt: Date | null;
+        usedByFarmerId: string | null;
+        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         createdByRole: import(".prisma/client").$Enums.Role | null;
         payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
         payoutRecipientId: string | null;
-        assignedFarmerId: string | null;
-        assignedBusinessPartnerId: string | null;
-        usedByFarmerId: string | null;
+        doctorKingId: string | null;
     }[]>;
     generateOwnCoupon(user: AuthUser, dto: GenerateAdvisorCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        category: import(".prisma/client").$Enums.PlanCouponCategory;
-        assignedAdvisorId: string | null;
+        code: string;
+        expiresAt: Date | null;
+        createdById: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         daysGranted: number;
-        doctorKingId: string | null;
-        advisorKingId: string | null;
-        createdById: string;
-        code: string;
-        isUsed: boolean;
-        usedAt: Date | null;
-        expiresAt: Date | null;
-        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.PlanCouponCategory;
+        assignedFarmerId: string | null;
+        assignedBusinessPartnerId: string | null;
         doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         includeMembership: boolean;
         includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
         includedMembershipDays: number | null;
+        advisorKingId: string | null;
+        isUsed: boolean;
+        usedAt: Date | null;
+        usedByFarmerId: string | null;
+        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         createdByRole: import(".prisma/client").$Enums.Role | null;
         payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
         payoutRecipientId: string | null;
-        assignedFarmerId: string | null;
-        assignedBusinessPartnerId: string | null;
-        usedByFarmerId: string | null;
+        doctorKingId: string | null;
     } | {
         id: string;
         createdAt: Date;
-        category: import(".prisma/client").$Enums.PlanCouponCategory;
-        assignedAdvisorId: string | null;
+        code: string;
+        expiresAt: Date | null;
+        createdById: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         daysGranted: number;
-        doctorKingId: string | null;
-        advisorKingId: string | null;
-        createdById: string;
-        code: string;
-        isUsed: boolean;
-        usedAt: Date | null;
-        expiresAt: Date | null;
-        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.PlanCouponCategory;
+        assignedFarmerId: string | null;
+        assignedBusinessPartnerId: string | null;
         doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         includeMembership: boolean;
         includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
         includedMembershipDays: number | null;
+        advisorKingId: string | null;
+        isUsed: boolean;
+        usedAt: Date | null;
+        usedByFarmerId: string | null;
+        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         createdByRole: import(".prisma/client").$Enums.Role | null;
         payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
         payoutRecipientId: string | null;
-        assignedFarmerId: string | null;
-        assignedBusinessPartnerId: string | null;
-        usedByFarmerId: string | null;
+        doctorKingId: string | null;
     }[]>;
     deactivateCoupon(id: string): Promise<{
         id: string;
         createdAt: Date;
-        category: import(".prisma/client").$Enums.PlanCouponCategory;
-        assignedAdvisorId: string | null;
+        code: string;
+        expiresAt: Date | null;
+        createdById: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         daysGranted: number;
-        doctorKingId: string | null;
-        advisorKingId: string | null;
-        createdById: string;
-        code: string;
-        isUsed: boolean;
-        usedAt: Date | null;
-        expiresAt: Date | null;
-        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.PlanCouponCategory;
+        assignedFarmerId: string | null;
+        assignedBusinessPartnerId: string | null;
         doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         includeMembership: boolean;
         includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
         includedMembershipDays: number | null;
+        advisorKingId: string | null;
+        isUsed: boolean;
+        usedAt: Date | null;
+        usedByFarmerId: string | null;
+        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         createdByRole: import(".prisma/client").$Enums.Role | null;
         payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
         payoutRecipientId: string | null;
-        assignedFarmerId: string | null;
-        assignedBusinessPartnerId: string | null;
-        usedByFarmerId: string | null;
+        doctorKingId: string | null;
     }>;
     listMineForAdvisor(user: AuthUser): Promise<({
-        assignedAdvisor: {
-            name: string;
-            mobile: string;
-            id: string;
-            kingId: string | null;
-            specialization: string | null;
-        } | null;
         createdBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
             specialization: string | null;
         };
-        assignedFarmer: {
-            name: string;
-            mobile: string;
+        assignedAdvisor: {
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
+            specialization: string | null;
+        } | null;
+        assignedFarmer: {
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            name: string;
         } | null;
         usedByFarmer: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        category: import(".prisma/client").$Enums.PlanCouponCategory;
-        assignedAdvisorId: string | null;
+        code: string;
+        expiresAt: Date | null;
+        createdById: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         daysGranted: number;
-        doctorKingId: string | null;
-        advisorKingId: string | null;
-        createdById: string;
-        code: string;
-        isUsed: boolean;
-        usedAt: Date | null;
-        expiresAt: Date | null;
-        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.PlanCouponCategory;
+        assignedFarmerId: string | null;
+        assignedBusinessPartnerId: string | null;
         doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         includeMembership: boolean;
         includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
         includedMembershipDays: number | null;
+        advisorKingId: string | null;
+        isUsed: boolean;
+        usedAt: Date | null;
+        usedByFarmerId: string | null;
+        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         createdByRole: import(".prisma/client").$Enums.Role | null;
         payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
         payoutRecipientId: string | null;
-        assignedFarmerId: string | null;
-        assignedBusinessPartnerId: string | null;
-        usedByFarmerId: string | null;
+        doctorKingId: string | null;
     })[]>;
     listMineForBusinessPartner(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
-        category: import(".prisma/client").$Enums.PlanCouponCategory;
-        assignedAdvisorId: string | null;
+        code: string;
+        expiresAt: Date | null;
+        createdById: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         daysGranted: number;
-        doctorKingId: string | null;
-        advisorKingId: string | null;
-        createdById: string;
-        code: string;
-        isUsed: boolean;
-        usedAt: Date | null;
-        expiresAt: Date | null;
-        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.PlanCouponCategory;
+        assignedFarmerId: string | null;
+        assignedBusinessPartnerId: string | null;
         doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         includeMembership: boolean;
         includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
         includedMembershipDays: number | null;
+        advisorKingId: string | null;
+        isUsed: boolean;
+        usedAt: Date | null;
+        usedByFarmerId: string | null;
+        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         createdByRole: import(".prisma/client").$Enums.Role | null;
         payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
         payoutRecipientId: string | null;
-        assignedFarmerId: string | null;
-        assignedBusinessPartnerId: string | null;
-        usedByFarmerId: string | null;
+        doctorKingId: string | null;
     }[]>;
     getPricing(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
+        isActive: boolean;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         mrp: import("@prisma/client/runtime/library").Decimal | null;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -434,13 +435,13 @@ export declare class FarmerPlansController {
         chatEnabled: boolean;
         weatherEnabled: boolean;
         gardenAdvisorIncluded: boolean;
-        isActive: boolean;
     }[]>;
     updatePricing(user: AuthUser, plan: FarmerSubscriptionPlan, dto: UpdateFarmerPlanPricingDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
+        isActive: boolean;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         mrp: import("@prisma/client/runtime/library").Decimal | null;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -463,13 +464,13 @@ export declare class FarmerPlansController {
         chatEnabled: boolean;
         weatherEnabled: boolean;
         gardenAdvisorIncluded: boolean;
-        isActive: boolean;
     } | null>;
     deletePricing(user: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
+        isActive: boolean;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         mrp: import("@prisma/client/runtime/library").Decimal | null;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -492,60 +493,59 @@ export declare class FarmerPlansController {
         chatEnabled: boolean;
         weatherEnabled: boolean;
         gardenAdvisorIncluded: boolean;
-        isActive: boolean;
     }>;
     listAllCoupons(): import(".prisma/client").Prisma.PrismaPromise<({
-        assignedAdvisor: {
-            name: string;
-            mobile: string;
-            id: string;
-        } | null;
         createdBy: {
-            name: string;
             id: string;
+            name: string;
         };
-        assignedFarmer: {
-            name: string;
-            mobile: string;
+        assignedAdvisor: {
             id: string;
+            mobile: string;
+            name: string;
+        } | null;
+        assignedFarmer: {
+            id: string;
+            mobile: string;
+            name: string;
         } | null;
         assignedBusinessPartner: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         } | null;
         usedByFarmer: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        category: import(".prisma/client").$Enums.PlanCouponCategory;
-        assignedAdvisorId: string | null;
+        code: string;
+        expiresAt: Date | null;
+        createdById: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         daysGranted: number;
-        doctorKingId: string | null;
-        advisorKingId: string | null;
-        createdById: string;
-        code: string;
-        isUsed: boolean;
-        usedAt: Date | null;
-        expiresAt: Date | null;
-        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.PlanCouponCategory;
+        assignedFarmerId: string | null;
+        assignedBusinessPartnerId: string | null;
         doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         includeMembership: boolean;
         includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
         includedMembershipDays: number | null;
+        advisorKingId: string | null;
+        isUsed: boolean;
+        usedAt: Date | null;
+        usedByFarmerId: string | null;
+        generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+        adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
         createdByRole: import(".prisma/client").$Enums.Role | null;
         payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
         payoutRecipientId: string | null;
-        assignedFarmerId: string | null;
-        assignedBusinessPartnerId: string | null;
-        usedByFarmerId: string | null;
+        doctorKingId: string | null;
     })[]>;
     getCouponFinancialSummary(): Promise<{
         directAdminIncome: number;
@@ -557,16 +557,16 @@ export declare class FarmerPlansController {
         unusedCouponsCount: number;
     }>;
     listAllFarmerPlans(): import(".prisma/client").Prisma.PrismaPromise<({
+        coupon: {
+            code: string;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+        } | null;
         farmer: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
         };
-        coupon: {
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
-            code: string;
-        } | null;
     } & {
         id: string;
         createdAt: Date;
@@ -575,8 +575,8 @@ export declare class FarmerPlansController {
         endDate: Date | null;
         farmerId: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
-        couponId: string | null;
         expiredAt: Date | null;
+        couponId: string | null;
     })[]>;
     applyCouponToFarmerDirectly(user: AuthUser, dto: ApplyCouponToFarmerDto): Promise<{
         plan: any;

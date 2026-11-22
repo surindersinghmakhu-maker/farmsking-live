@@ -19,9 +19,9 @@ export declare class SprayScheduleService {
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         cropCycleId: string;
-        scheduledDate: Date;
-        sprayType: import(".prisma/client").$Enums.SprayType | null;
         recommendedProduct: string | null;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+        scheduledDate: Date;
         dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
@@ -36,9 +36,9 @@ export declare class SprayScheduleService {
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         cropCycleId: string;
-        scheduledDate: Date;
-        sprayType: import(".prisma/client").$Enums.SprayType | null;
         recommendedProduct: string | null;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+        scheduledDate: Date;
         dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
@@ -53,9 +53,9 @@ export declare class SprayScheduleService {
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         cropCycleId: string;
-        scheduledDate: Date;
-        sprayType: import(".prisma/client").$Enums.SprayType | null;
         recommendedProduct: string | null;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+        scheduledDate: Date;
         dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
@@ -70,9 +70,9 @@ export declare class SprayScheduleService {
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         cropCycleId: string;
-        scheduledDate: Date;
-        sprayType: import(".prisma/client").$Enums.SprayType | null;
         recommendedProduct: string | null;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+        scheduledDate: Date;
         dosageInstructions: string | null;
         alternativeOption: string | null;
         alternativeOption2: string | null;
@@ -80,8 +80,8 @@ export declare class SprayScheduleService {
         completedSprayId: string | null;
     }>;
     searchCatalog(query: string): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         deletedAt: Date | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;

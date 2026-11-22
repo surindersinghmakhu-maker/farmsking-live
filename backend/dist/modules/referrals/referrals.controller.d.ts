@@ -15,59 +15,59 @@ export declare class ReferralsController {
         totalRoyaltiesEarned: number;
         directReferrals: ({
             referredUser: {
-                name: string;
-                mobile: string;
                 id: string;
                 kingId: string | null;
+                mobile: string;
+                name: string;
                 createdAt: Date;
             };
         } & {
             id: string;
             createdAt: Date;
-            level: number;
-            referredUserId: string;
             referrerId: string;
+            referredUserId: string;
+            level: number;
             isGuarantor: boolean;
             trustScoreBonus: number;
         })[];
         extendedReferrals: ({
             referredUser: {
-                name: string;
                 id: string;
                 kingId: string | null;
+                name: string;
                 createdAt: Date;
             };
         } & {
             id: string;
             createdAt: Date;
-            level: number;
-            referredUserId: string;
             referrerId: string;
+            referredUserId: string;
+            level: number;
             isGuarantor: boolean;
             trustScoreBonus: number;
         })[];
         royaltiesHistory: ({
             sourceUser: {
-                name: string;
                 id: string;
                 kingId: string | null;
+                name: string;
             };
         } & {
             id: string;
             createdAt: Date;
-            userId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
+            userId: string;
+            sourceUserId: string;
             royaltyType: string;
             referenceCode: string | null;
-            sourceUserId: string;
         })[];
     }>;
     linkReferralOnSignUp(user: AuthUser, dto: LinkReferralDto): Promise<{
         id: string;
         createdAt: Date;
-        level: number;
-        referredUserId: string;
         referrerId: string;
+        referredUserId: string;
+        level: number;
         isGuarantor: boolean;
         trustScoreBonus: number;
     } | null>;

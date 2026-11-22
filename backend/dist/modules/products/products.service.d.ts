@@ -13,9 +13,9 @@ export declare class ProductsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         createdById: string;
-        description: string | null;
         title: string | null;
         brand: string | null;
         rejectionReason: string | null;
@@ -76,9 +76,9 @@ export declare class ProductsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         createdById: string;
-        description: string | null;
         title: string | null;
         brand: string | null;
         rejectionReason: string | null;
@@ -129,9 +129,9 @@ export declare class ProductsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         createdById: string;
-        description: string | null;
         title: string | null;
         brand: string | null;
         rejectionReason: string | null;
@@ -181,9 +181,9 @@ export declare class ProductsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         createdById: string;
-        description: string | null;
         title: string | null;
         brand: string | null;
         rejectionReason: string | null;
@@ -281,9 +281,9 @@ export declare class ProductsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         createdById: string;
-        description: string | null;
         title: string | null;
         brand: string | null;
         rejectionReason: string | null;
@@ -333,9 +333,9 @@ export declare class ProductsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         createdById: string;
-        description: string | null;
         title: string | null;
         brand: string | null;
         rejectionReason: string | null;
@@ -385,9 +385,9 @@ export declare class ProductsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         createdById: string;
-        description: string | null;
         title: string | null;
         brand: string | null;
         rejectionReason: string | null;

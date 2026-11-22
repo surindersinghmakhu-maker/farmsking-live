@@ -3026,9 +3026,7 @@ export default function PublicLandingPage() {
                   </View>
                   <Ionicons name="sparkles" size={18} color={isDay ? '#0891b2' : '#06b6d4'} />
                 </View>
-                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#0284c7' : '#38bdf8' }]}>
-                  {platformMetrics && platformMetrics.aiLatencySeconds ? `< ${platformMetrics.aiLatencySeconds}s` : '< 1s'}
-                </Text>
+                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#0284c7' : '#38bdf8' }]}>&lt; 5 Seconds</Text>
                 <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Instant AI Leaf Diagnosis</Text>
                 <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Edge pathology vision model calibrated across verified plant pathology databases</Text>
               </SpatialTiltCard>

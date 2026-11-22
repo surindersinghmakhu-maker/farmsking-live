@@ -10,10 +10,10 @@ export declare class SaleBillsService {
     create(user: AuthUser, dto: CreateSaleBillDto): Promise<{
         id: string;
         createdAt: Date;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         items: import("@prisma/client/runtime/library").JsonValue;
         notes: string | null;
         farmerId: string;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         discountAmount: import("@prisma/client/runtime/library").Decimal | null;
         partyId: string | null;
         billNo: string;
@@ -33,10 +33,10 @@ export declare class SaleBillsService {
     update(user: AuthUser, id: string, dto: CreateSaleBillDto): Promise<{
         id: string;
         createdAt: Date;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         items: import("@prisma/client/runtime/library").JsonValue;
         notes: string | null;
         farmerId: string;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         discountAmount: import("@prisma/client/runtime/library").Decimal | null;
         partyId: string | null;
         billNo: string;
@@ -57,10 +57,10 @@ export declare class SaleBillsService {
     listMine(user: AuthUser): Promise<{
         id: string;
         createdAt: Date;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         items: import("@prisma/client/runtime/library").JsonValue;
         notes: string | null;
         farmerId: string;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         discountAmount: import("@prisma/client/runtime/library").Decimal | null;
         partyId: string | null;
         billNo: string;
@@ -83,10 +83,10 @@ export declare class SaleBillsService {
     remove(user: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         items: import("@prisma/client/runtime/library").JsonValue;
         notes: string | null;
         farmerId: string;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         discountAmount: import("@prisma/client/runtime/library").Decimal | null;
         partyId: string | null;
         billNo: string;

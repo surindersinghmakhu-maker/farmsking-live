@@ -115,9 +115,9 @@ export declare class LabourService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
         farmerId: string;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;
         quantity: number;
         unit: string;
@@ -140,9 +140,9 @@ export declare class LabourService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
         farmerId: string;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;
         quantity: number;
         unit: string;
@@ -227,9 +227,9 @@ export declare class LabourService {
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
+            totalAmount: import("@prisma/client/runtime/library").Decimal;
             notes: string | null;
             farmerId: string;
-            totalAmount: import("@prisma/client/runtime/library").Decimal;
             recordedById: string;
             quantity: number;
             unit: string;
@@ -322,9 +322,9 @@ export declare class LabourService {
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
+            totalAmount: import("@prisma/client/runtime/library").Decimal;
             notes: string | null;
             farmerId: string;
-            totalAmount: import("@prisma/client/runtime/library").Decimal;
             recordedById: string;
             quantity: number;
             unit: string;
@@ -377,9 +377,9 @@ export declare class LabourService {
                 createdAt: Date;
                 updatedAt: Date;
                 deletedAt: Date | null;
+                totalAmount: import("@prisma/client/runtime/library").Decimal;
                 notes: string | null;
                 farmerId: string;
-                totalAmount: import("@prisma/client/runtime/library").Decimal;
                 recordedById: string;
                 quantity: number;
                 unit: string;

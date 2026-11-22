@@ -846,7 +846,7 @@ export default function LoginScreen() {
                     <Text style={styles.trustInlineText}> · Trusted by 50,000+ Farmers</Text>
                   </View>
                   <Text style={styles.corpAddressNotice}>
-                    Regd. Office: VPO Goindwal Sahib, Tarn Taran, Punjab
+                    Regd. Office: Village Booh, Kapurthala - 144601, Punjab
                   </Text>
                 </View>
               </LinearGradient>

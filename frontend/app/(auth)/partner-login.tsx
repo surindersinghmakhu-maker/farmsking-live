@@ -658,7 +658,7 @@ export default function PartnerLoginScreen() {
                       <Text style={styles.trustInlineText}> · Trusted by 5,000+ Agri Partners</Text>
                     </View>
                     <Text style={styles.corpAddressNotice}>
-                      Regd. Office: VPO Goindwal Sahib, Tarn Taran, Punjab
+                      Regd. Office: Village Booh, Kapurthala - 144601, Punjab
                     </Text>
                   </View>
                 </LinearGradient>

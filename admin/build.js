@@ -213,16 +213,16 @@ try {
     <meta name="google" content="notranslate" />
     <link rel="preload" href="/favicon.png?v=7" as="image" />
     <title>FarmsKing - Admin Staff</title>
-    <meta name="description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
-    <meta name="keywords" content="FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India" />
+    <meta name="description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Village Booh, Kapurthala, HQ: Makhu." />
+    <meta name="keywords" content="FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Village Booh, Kapurthala, Makhu, Punjab, National Agri Marketplace, Agtech India" />
     <meta property="og:title" content="FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform" />
-    <meta property="og:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
+    <meta property="og:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Village Booh, Kapurthala, HQ: Makhu." />
     <meta property="og:image" content="https://farmsking.in/brand_logo.png" />
     <meta property="og:url" content="https://farmsking.in" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform" />
-    <meta name="twitter:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
+    <meta name="twitter:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Village Booh, Kapurthala, HQ: Makhu." />
     <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
     <!-- 🌟 Global Official K Brand Favicons & Icons -->
@@ -247,10 +247,10 @@ try {
       "address": [
         {
           "@type": "PostalAddress",
-          "streetAddress": "VPO Goindwal Sahib, Tehsil Khadur Sahib",
-          "addressLocality": "Goindwal Sahib, District Tarn Taran",
+          "streetAddress": "C/o Baldev Singh, Village Booh",
+          "addressLocality": "Village Booh, District Kapurthala",
           "addressRegion": "Punjab",
-          "postalCode": "143422",
+          "postalCode": "144601",
           "addressCountry": "IN"
         },
         {

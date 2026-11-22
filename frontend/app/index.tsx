@@ -4609,7 +4609,7 @@ export default function PublicLandingPage() {
                   © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED
                 </Text>
                 <Text style={{ fontSize: 9.5, color: isDay ? '#64748b' : '#64748b', textAlign: 'center', marginTop: 3 }}>
-                  All rights reserved • Regd: Goindwal Sahib, Tarn Taran, Punjab
+                  All rights reserved • Regd: Village Booh, Kapurthala - 144601, Punjab
                 </Text>
                 <Text style={{ fontSize: 10, color: isDay ? '#059669' : '#34d399', textAlign: 'center', marginTop: 3, fontWeight: '700' }}>
                   Developer Company: Exilent Web Solutions

@@ -232,19 +232,19 @@ export default function TermsOfServiceScreen() {
             </Text>
             <View style={[styles.officerBox, isDay ? styles.officerBoxDay : styles.officerBoxNight]}>
               <Text style={[styles.officerName, isDay ? styles.officerNameDay : styles.officerNameNight]}>
-                Grievance Officer: Surinder Singh (Designated Nodal &amp; Compliance Officer)
+                Grievance Officer: Er. Gagandeep Kaur (Director &amp; Statutory Compliance Officer)
               </Text>
               <Text style={[styles.officerRole, isDay ? styles.officerRoleDay : styles.officerRoleNight]}>
                 FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                Email: grievance@farmsking.in / support@farmsking.in
+                Email: compliance@farmsking.in / support@farmsking.in
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
                 Helpline: +91 95776-22000 (Farmer Support Desk • Mon–Sat 10:00 AM – 6:00 PM IST)
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                Registered Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422 • Corporate HQ: Main Market, Makhu, District Ferozepur, Punjab - 142044 • Jurisdiction: Courts of Punjab, India
+                Registered Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Punjab - 144601 • Corporate HQ: Main Market, Makhu, District Ferozepur, Punjab - 142044 • Jurisdiction: Courts of Punjab, India
               </Text>
             </View>
           </View>

@@ -39,10 +39,14 @@ export declare class AppSettingsService {
         locationHeadquarters?: string;
         noscriptHtmlContent?: string;
     }): Promise<{
+        id: string;
+        whatsappGroupJid: string | null;
+        upiId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
-        upiId: string | null;
         upiPayeeName: string | null;
         adminName: string | null;
         adminMobile: string | null;
@@ -51,7 +55,6 @@ export declare class AppSettingsService {
         whatsappGroupSyncEnabled: boolean;
         whatsappAutoAddEnabled: boolean;
         whatsappAutoRemoveEnabled: boolean;
-        whatsappGroupJid: string | null;
         otpDeliveryChannel: string;
         referralSignupBonusAmount: number;
         newUserSignupBonusAmount: number;
@@ -93,9 +96,6 @@ export declare class AppSettingsService {
         defaultArhtiyaInterestRateAnnual: number;
         mandiMarketFeePercent: number;
         mandiRdfPercent: number;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
         updatedById: string | null;
     }>;
@@ -209,10 +209,14 @@ export declare class AppSettingsService {
     update(admin: AuthUser, dto: UpdateAppSettingsDto): Promise<any>;
     getFeatureFlags(): Promise<FeatureFlagsMap>;
     updateFeatureFlags(admin: AuthUser, flags: FeatureFlagsMap): Promise<{
+        id: string;
+        whatsappGroupJid: string | null;
+        upiId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
-        upiId: string | null;
         upiPayeeName: string | null;
         adminName: string | null;
         adminMobile: string | null;
@@ -221,7 +225,6 @@ export declare class AppSettingsService {
         whatsappGroupSyncEnabled: boolean;
         whatsappAutoAddEnabled: boolean;
         whatsappAutoRemoveEnabled: boolean;
-        whatsappGroupJid: string | null;
         otpDeliveryChannel: string;
         referralSignupBonusAmount: number;
         newUserSignupBonusAmount: number;
@@ -263,9 +266,6 @@ export declare class AppSettingsService {
         defaultArhtiyaInterestRateAnnual: number;
         mandiMarketFeePercent: number;
         mandiRdfPercent: number;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
         updatedById: string | null;
     }>;

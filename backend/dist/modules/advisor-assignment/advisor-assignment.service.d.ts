@@ -23,10 +23,15 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     private notExpiredClause;
     findFarmersByStatus(user: AuthUser, status: 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'ALL'): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
-            name: string;
-            mobile: string;
+            farmerPlan: {
+                endDate: Date | null;
+                plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+                expiredAt: Date | null;
+            } | null;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -34,26 +39,21 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            farmerPlan: {
-                endDate: Date | null;
-                plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
-                expiredAt: Date | null;
-            } | null;
         };
         subscription: ({
             plan: {
-                name: string;
                 id: string;
+                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                isActive: boolean;
+                description: string | null;
                 adminNotes: string | null;
                 reviewedById: string | null;
                 reviewedAt: Date | null;
-                description: string | null;
-                isActive: boolean;
-                price: import("@prisma/client/runtime/library").Decimal;
                 advisorId: string | null;
                 hiringModel: import(".prisma/client").$Enums.HiringModelType;
+                price: import("@prisma/client/runtime/library").Decimal;
                 chatEnabled: boolean;
                 billingCycle: string;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
@@ -70,28 +70,28 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
                 approvalStatus: string;
             };
         } & {
-            startDate: Date | null;
-            endDate: Date | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
+            startDate: Date | null;
+            endDate: Date | null;
             status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
-            notes: string | null;
-            cancelledAt: Date | null;
-            farmerId: string;
-            planId: string;
             requestedAt: Date;
+            notes: string | null;
+            farmerId: string;
+            cancelledAt: Date | null;
+            planId: string;
             approvedAt: Date | null;
             approvedById: string | null;
         }) | null;
     } & {
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -102,10 +102,15 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     findFarmerDetail(user: AuthUser, farmerId: string): Promise<{
         farmer: {
             farms: any;
-            name: string;
-            mobile: string;
+            farmerPlan: {
+                endDate: Date | null;
+                plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+                expiredAt: Date | null;
+            } | null;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -115,27 +120,22 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
             waterType: import(".prisma/client").$Enums.WaterType | null;
             createdAt: Date;
             deletedAt: Date | null;
-            farmerPlan: {
-                endDate: Date | null;
-                plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
-                expiredAt: Date | null;
-            } | null;
         };
         assignment: ({
             subscription: ({
                 plan: {
-                    name: string;
                     id: string;
+                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    isActive: boolean;
+                    description: string | null;
                     adminNotes: string | null;
                     reviewedById: string | null;
                     reviewedAt: Date | null;
-                    description: string | null;
-                    isActive: boolean;
-                    price: import("@prisma/client/runtime/library").Decimal;
                     advisorId: string | null;
                     hiringModel: import(".prisma/client").$Enums.HiringModelType;
+                    price: import("@prisma/client/runtime/library").Decimal;
                     chatEnabled: boolean;
                     billingCycle: string;
                     planType: import(".prisma/client").$Enums.FarmerPlanType;
@@ -152,28 +152,28 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
                     approvalStatus: string;
                 };
             } & {
-                startDate: Date | null;
-                endDate: Date | null;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
                 deletedAt: Date | null;
+                startDate: Date | null;
+                endDate: Date | null;
                 status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
-                notes: string | null;
-                cancelledAt: Date | null;
-                farmerId: string;
-                planId: string;
                 requestedAt: Date;
+                notes: string | null;
+                farmerId: string;
+                cancelledAt: Date | null;
+                planId: string;
                 approvedAt: Date | null;
                 approvedById: string | null;
             }) | null;
         } & {
-            startDate: Date;
-            endDate: Date | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
+            startDate: Date;
+            endDate: Date | null;
             status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
             notes: string | null;
             farmerId: string;
@@ -186,9 +186,9 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     private getDoctorRatingStats;
     findMyAdvisor(user: AuthUser): Promise<({
         advisor: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -198,12 +198,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
             yearsExperience: number | null;
         };
     } & {
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -216,8 +216,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         ratingCount: number;
         ratingLabel: string;
         activeFarmerCount: number;
-        name: string;
         id: string;
+        name: string;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -253,9 +253,9 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         ratingCount: number;
         ratingLabel: string;
         activeFarmerCount: number;
-        name: string;
         id: string;
         kingId: string | null;
+        name: string;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -277,12 +277,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         doctorConsultationFee: import("@prisma/client/runtime/library").Decimal | null;
     }[]>;
     assertAdvisorAssignedToFarmer(advisorId: string, farmerId: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -291,12 +291,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     }>;
     assertAdvisorAssignedToFarmerAnyExpiry(advisorId: string, farmerId: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -308,17 +308,17 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     private roleToAdvisorType;
     createFromSubscription(subscriptionId: string, farmerId: string): Promise<{
         advisor: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         };
     } & {
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -328,18 +328,18 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     }>;
     findMyPendingRequest(user: AuthUser): import(".prisma/client").Prisma.Prisma__AdvisorAssignmentClient<({
         advisor: {
-            name: string;
             id: string;
+            name: string;
             photoUrl: string | null;
             specialization: string | null;
         };
     } & {
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -348,12 +348,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     requestSpecificAdvisor(farmerId: string, advisorId: string, cropId?: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -363,27 +363,27 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     }>;
     findPendingDoctorChangeRequests(): Promise<({
         farmer: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             district: string | null;
             state: string | null;
         };
         advisor: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
             specialization: string | null;
         };
     } & {
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -392,12 +392,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     })[]>;
     adminApproveDoctorChange(adminUser: AuthUser, assignmentId: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -406,12 +406,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     }>;
     adminRejectDoctorChange(adminUser: AuthUser, assignmentId: string, reason?: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -420,12 +420,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     }>;
     cancelMyPendingRequest(user: AuthUser): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -434,12 +434,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     }>;
     accept(user: AuthUser, id: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -449,12 +449,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     }>;
     private payoutAdvisorShareOnAccept;
     reject(user: AuthUser, id: string, reason?: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -463,12 +463,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     }>;
     create(user: AuthUser, dto: CreateAdvisorAssignmentDto): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -477,12 +477,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     }>;
     findOneOrThrow(user: AuthUser, id: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -491,12 +491,12 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         assignedById: string | null;
     }>;
     revoke(user: AuthUser, id: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        startDate: Date;
+        endDate: Date | null;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         notes: string | null;
         farmerId: string;
@@ -509,18 +509,18 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     }>;
     createOrUpdateAdvisorPlan(advisorUser: AuthUser, dto: any): Promise<any>;
     getMyAdvisorPlans(advisorUser: AuthUser): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
+        description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
-        description: string | null;
-        isActive: boolean;
-        price: import("@prisma/client/runtime/library").Decimal;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
+        price: import("@prisma/client/runtime/library").Decimal;
         chatEnabled: boolean;
         billingCycle: string;
         planType: import(".prisma/client").$Enums.FarmerPlanType;
@@ -537,18 +537,18 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         approvalStatus: string;
     }[]>;
     getDoctorApprovedPlans(advisorId: string): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
+        description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
-        description: string | null;
-        isActive: boolean;
-        price: import("@prisma/client/runtime/library").Decimal;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
+        price: import("@prisma/client/runtime/library").Decimal;
         chatEnabled: boolean;
         billingCycle: string;
         planType: import(".prisma/client").$Enums.FarmerPlanType;
@@ -566,25 +566,25 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     }[]>;
     getPendingAdvisorPlansForAdmin(): Promise<{
         advisor: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
             specialization: string | null;
         } | null | undefined;
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
+        description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
-        description: string | null;
-        isActive: boolean;
-        price: import("@prisma/client/runtime/library").Decimal;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
+        price: import("@prisma/client/runtime/library").Decimal;
         chatEnabled: boolean;
         billingCycle: string;
         planType: import(".prisma/client").$Enums.FarmerPlanType;
@@ -601,18 +601,18 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         approvalStatus: string;
     }[]>;
     adminApproveAdvisorPlan(adminUser: AuthUser, planId: string, modifications?: any): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
+        description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
-        description: string | null;
-        isActive: boolean;
-        price: import("@prisma/client/runtime/library").Decimal;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
+        price: import("@prisma/client/runtime/library").Decimal;
         chatEnabled: boolean;
         billingCycle: string;
         planType: import(".prisma/client").$Enums.FarmerPlanType;
@@ -629,18 +629,18 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         approvalStatus: string;
     }>;
     adminRejectAdvisorPlan(adminUser: AuthUser, planId: string, reason?: string): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
+        description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
-        description: string | null;
-        isActive: boolean;
-        price: import("@prisma/client/runtime/library").Decimal;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
+        price: import("@prisma/client/runtime/library").Decimal;
         chatEnabled: boolean;
         billingCycle: string;
         planType: import(".prisma/client").$Enums.FarmerPlanType;

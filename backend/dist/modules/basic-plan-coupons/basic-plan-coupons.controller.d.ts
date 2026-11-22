@@ -20,19 +20,19 @@ export declare class BasicPlanCouponsController {
     }>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
         usedByFarmer: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         } | null;
         purchasedBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -50,19 +50,19 @@ export declare class BasicPlanCouponsController {
     })[]>;
     listAvailable(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
         usedByFarmer: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         } | null;
         purchasedBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -80,19 +80,19 @@ export declare class BasicPlanCouponsController {
     })[]>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
         usedByFarmer: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         } | null;
         purchasedBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -110,19 +110,19 @@ export declare class BasicPlanCouponsController {
     })[]>;
     purchase(user: AuthUser, code: string): Promise<{
         createdBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
         usedByFarmer: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         } | null;
         purchasedBy: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -140,15 +140,15 @@ export declare class BasicPlanCouponsController {
     }>;
     redeem(user: AuthUser, code: string): Promise<{
         plan: {
-            startDate: Date;
-            endDate: Date | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            couponId: string | null;
+            startDate: Date;
+            endDate: Date | null;
             farmerId: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
+            couponId: string | null;
         };
         daysAdded: number;
         newEndDate: Date;

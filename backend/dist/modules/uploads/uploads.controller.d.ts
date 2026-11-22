@@ -9,10 +9,10 @@ export declare class UploadsController {
         id: string;
         createdAt: Date;
         fileUrl: string;
-        uploadedById: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
+        uploadedById: string;
     }>;
     uploadBase64(user: AuthUser, body: {
         dataUri: string;
@@ -24,9 +24,9 @@ export declare class UploadsController {
         id: string;
         createdAt: Date;
         fileUrl: string;
-        uploadedById: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
+        uploadedById: string;
     }>;
 }

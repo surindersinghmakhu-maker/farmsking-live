@@ -50,9 +50,9 @@ export declare class CouponsController {
     }>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         businessPartner: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -143,33 +143,33 @@ export declare class CouponsController {
     }>;
     getRedemptions(user: AuthUser, id: string): Promise<({
         customer: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         } | null;
     } & {
-        customerId: string | null;
         id: string;
-        discountAmount: import("@prisma/client/runtime/library").Decimal;
+        customerId: string | null;
         couponId: string;
-        commissionAmount: import("@prisma/client/runtime/library").Decimal;
+        discountAmount: import("@prisma/client/runtime/library").Decimal;
         orderId: string | null;
-        creditedAt: Date | null;
         orderAmount: import("@prisma/client/runtime/library").Decimal;
+        commissionAmount: import("@prisma/client/runtime/library").Decimal;
+        creditedAt: Date | null;
         redeemedAt: Date;
     })[]>;
     redeem(user: AuthUser, code: string, dto: RedeemCouponDto): Promise<{
         discountAmount: number;
         commissionAmount: number;
         redemption: {
-            customerId: string | null;
             id: string;
-            discountAmount: import("@prisma/client/runtime/library").Decimal;
+            customerId: string | null;
             couponId: string;
-            commissionAmount: import("@prisma/client/runtime/library").Decimal;
+            discountAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string | null;
-            creditedAt: Date | null;
             orderAmount: import("@prisma/client/runtime/library").Decimal;
+            commissionAmount: import("@prisma/client/runtime/library").Decimal;
+            creditedAt: Date | null;
             redeemedAt: Date;
         };
     }>;

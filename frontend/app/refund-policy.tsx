@@ -272,7 +272,7 @@ export default function RefundPolicyScreen() {
                 ✉️ Support Email: support@farmsking.in / grievance@farmsking.in
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                📍 Regd. Office: VPO Goindwal Sahib, Tarn Taran - 143422 • Operational HQ: Main Market, Makhu, Ferozepur, Punjab - 142044
+                📍 Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601 • Operational HQ: Main Market, Makhu, Ferozepur, Punjab - 142044
               </Text>
             </View>
           </View>

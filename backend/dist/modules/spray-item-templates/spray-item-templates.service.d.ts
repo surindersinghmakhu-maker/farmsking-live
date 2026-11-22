@@ -5,11 +5,11 @@ export declare class SprayItemTemplatesService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     create(advisorId: string, dto: CreateSprayItemTemplateDto): import(".prisma/client").Prisma.Prisma__SprayItemTemplateClient<{
+        dose: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        dose: string | null;
         advisorId: string;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         item: string;
@@ -17,11 +17,11 @@ export declare class SprayItemTemplatesService {
         alternative2: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     listMine(advisorId: string): import(".prisma/client").Prisma.PrismaPromise<{
+        dose: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        dose: string | null;
         advisorId: string;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         item: string;
@@ -29,11 +29,11 @@ export declare class SprayItemTemplatesService {
         alternative2: string | null;
     }[]>;
     listForMyAdvisor(farmerId: string): Promise<{
+        dose: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        dose: string | null;
         advisorId: string;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         item: string;
@@ -42,16 +42,16 @@ export declare class SprayItemTemplatesService {
     }[]>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         advisor: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
     } & {
+        dose: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        dose: string | null;
         advisorId: string;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         item: string;
@@ -60,11 +60,11 @@ export declare class SprayItemTemplatesService {
     })[]>;
     private findOwned;
     update(advisorId: string, id: string, dto: UpdateSprayItemTemplateDto): Promise<{
+        dose: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        dose: string | null;
         advisorId: string;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         item: string;
@@ -72,11 +72,11 @@ export declare class SprayItemTemplatesService {
         alternative2: string | null;
     }>;
     remove(advisorId: string, id: string): Promise<{
+        dose: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        dose: string | null;
         advisorId: string;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
         item: string;

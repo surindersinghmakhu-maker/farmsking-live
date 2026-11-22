@@ -13,10 +13,10 @@ export declare class KingConnectController {
     constructor(service: KingConnectService);
     sendConnectRequest(user: AuthUser, dto: SendConnectRequestDto): Promise<{
         receiver: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -32,11 +32,11 @@ export declare class KingConnectController {
     }>;
     listPendingConnections(user: AuthUser): Promise<({
         initiator: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             role: import(".prisma/client").$Enums.Role;
+            name: string;
             village: string | null;
         };
     } & {
@@ -53,9 +53,9 @@ export declare class KingConnectController {
     })[]>;
     respondToConnect(user: AuthUser, id: string, dto: RespondConnectDto): Promise<{
         initiator: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
     } & {
         id: string;
@@ -71,18 +71,18 @@ export declare class KingConnectController {
     }>;
     listConnections(user: AuthUser): Promise<({
         receiver: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             role: import(".prisma/client").$Enums.Role;
+            name: string;
         };
         initiator: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             role: import(".prisma/client").$Enums.Role;
+            name: string;
         };
     } & {
         id: string;
@@ -109,16 +109,16 @@ export declare class KingConnectController {
         acceptedCount: number;
     }>;
     createSyncRequest(user: AuthUser, dto: CreateSyncRequestDto): Promise<{
-        senderId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.SyncRequestStatus;
-        rejectionReason: string | null;
-        notes: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
+        senderId: string;
         expiresAt: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
+        status: import(".prisma/client").$Enums.SyncRequestStatus;
+        notes: string | null;
+        rejectionReason: string | null;
         transactionType: import(".prisma/client").$Enums.PartyLedgerEntryType;
         rejectedAt: Date | null;
         receiverId: string;
@@ -131,22 +131,22 @@ export declare class KingConnectController {
     }>;
     listPendingSync(user: AuthUser): Promise<({
         sender: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
         };
     } & {
-        senderId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.SyncRequestStatus;
-        rejectionReason: string | null;
-        notes: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
+        senderId: string;
         expiresAt: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
+        status: import(".prisma/client").$Enums.SyncRequestStatus;
+        notes: string | null;
+        rejectionReason: string | null;
         transactionType: import(".prisma/client").$Enums.PartyLedgerEntryType;
         rejectedAt: Date | null;
         receiverId: string;
@@ -159,26 +159,26 @@ export declare class KingConnectController {
     })[]>;
     listSyncHistory(user: AuthUser): Promise<({
         sender: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
         receiver: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
     } & {
-        senderId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.SyncRequestStatus;
-        rejectionReason: string | null;
-        notes: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
+        senderId: string;
         expiresAt: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
+        status: import(".prisma/client").$Enums.SyncRequestStatus;
+        notes: string | null;
+        rejectionReason: string | null;
         transactionType: import(".prisma/client").$Enums.PartyLedgerEntryType;
         rejectedAt: Date | null;
         receiverId: string;
@@ -190,16 +190,16 @@ export declare class KingConnectController {
         acceptedAt: Date | null;
     })[]>;
     respondToSync(user: AuthUser, id: string, dto: RespondSyncRequestDto): Promise<{
-        senderId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.SyncRequestStatus;
-        rejectionReason: string | null;
-        notes: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
+        senderId: string;
         expiresAt: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
+        status: import(".prisma/client").$Enums.SyncRequestStatus;
+        notes: string | null;
+        rejectionReason: string | null;
         transactionType: import(".prisma/client").$Enums.PartyLedgerEntryType;
         rejectedAt: Date | null;
         receiverId: string;
@@ -212,28 +212,28 @@ export declare class KingConnectController {
     }>;
     createDemand(user: AuthUser, dto: CreateDemandRequestDto): Promise<{
         farmer: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
         requester: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        expiresAt: Date;
         status: import(".prisma/client").$Enums.DemandStatus;
-        rejectionReason: string | null;
         notes: string | null;
+        farmerId: string;
+        rejectionReason: string | null;
         quantity: number;
         unit: string;
-        farmerId: string;
-        expiresAt: Date;
-        orderId: string | null;
         cropName: string;
+        orderId: string | null;
         linkId: string;
         counterNote: string | null;
         requesterId: string;
@@ -243,30 +243,30 @@ export declare class KingConnectController {
     }>;
     listDemands(user: AuthUser, type?: 'incoming' | 'outgoing'): Promise<({
         farmer: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
         };
         requester: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        expiresAt: Date;
         status: import(".prisma/client").$Enums.DemandStatus;
-        rejectionReason: string | null;
         notes: string | null;
+        farmerId: string;
+        rejectionReason: string | null;
         quantity: number;
         unit: string;
-        farmerId: string;
-        expiresAt: Date;
-        orderId: string | null;
         cropName: string;
+        orderId: string | null;
         linkId: string;
         counterNote: string | null;
         requesterId: string;
@@ -276,23 +276,23 @@ export declare class KingConnectController {
     })[]>;
     respondToDemand(user: AuthUser, id: string, dto: RespondDemandRequestDto): Promise<{
         requester: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        expiresAt: Date;
         status: import(".prisma/client").$Enums.DemandStatus;
-        rejectionReason: string | null;
         notes: string | null;
+        farmerId: string;
+        rejectionReason: string | null;
         quantity: number;
         unit: string;
-        farmerId: string;
-        expiresAt: Date;
-        orderId: string | null;
         cropName: string;
+        orderId: string | null;
         linkId: string;
         counterNote: string | null;
         requesterId: string;
@@ -302,26 +302,26 @@ export declare class KingConnectController {
     }>;
     createPaymentRequest(user: AuthUser, dto: CreatePaymentRequestDto): Promise<{
         sender: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
         receiver: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
     } & {
-        senderId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.PaymentRequestStatus;
-        rejectionReason: string | null;
-        notes: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
+        senderId: string;
         expiresAt: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
+        status: import(".prisma/client").$Enums.PaymentRequestStatus;
+        notes: string | null;
+        rejectionReason: string | null;
         receiverId: string;
         linkId: string;
         refBillNo: string | null;
@@ -331,28 +331,28 @@ export declare class KingConnectController {
     }>;
     listPaymentRequests(user: AuthUser, type?: 'incoming' | 'outgoing'): Promise<({
         sender: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
         };
         receiver: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
         };
     } & {
-        senderId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.PaymentRequestStatus;
-        rejectionReason: string | null;
-        notes: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
+        senderId: string;
         expiresAt: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
+        status: import(".prisma/client").$Enums.PaymentRequestStatus;
+        notes: string | null;
+        rejectionReason: string | null;
         receiverId: string;
         linkId: string;
         refBillNo: string | null;
@@ -362,21 +362,21 @@ export declare class KingConnectController {
     })[]>;
     respondToPaymentRequest(user: AuthUser, id: string, dto: RespondPaymentRequestDto): Promise<{
         sender: {
-            name: string;
             id: string;
             kingId: string | null;
+            name: string;
         };
     } & {
-        senderId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.PaymentRequestStatus;
-        rejectionReason: string | null;
-        notes: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
+        senderId: string;
         expiresAt: Date;
+        amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
+        status: import(".prisma/client").$Enums.PaymentRequestStatus;
+        notes: string | null;
+        rejectionReason: string | null;
         receiverId: string;
         linkId: string;
         refBillNo: string | null;
@@ -388,16 +388,16 @@ export declare class KingConnectController {
     getSharedLedger(user: AuthUser, linkId: string): Promise<{
         link: {
             receiver: {
-                name: string;
-                mobile: string;
                 id: string;
                 kingId: string | null;
+                mobile: string;
+                name: string;
             };
             initiator: {
-                name: string;
-                mobile: string;
                 id: string;
                 kingId: string | null;
+                mobile: string;
+                name: string;
             };
         } & {
             id: string;
@@ -413,24 +413,24 @@ export declare class KingConnectController {
         };
         syncRequests: ({
             sender: {
-                name: string;
                 kingId: string | null;
+                name: string;
             };
             receiver: {
-                name: string;
                 kingId: string | null;
+                name: string;
             };
         } & {
-            senderId: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.SyncRequestStatus;
-            rejectionReason: string | null;
-            notes: string | null;
-            amount: import("@prisma/client/runtime/library").Decimal;
+            senderId: string;
             expiresAt: Date;
+            amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
+            status: import(".prisma/client").$Enums.SyncRequestStatus;
+            notes: string | null;
+            rejectionReason: string | null;
             transactionType: import(".prisma/client").$Enums.PartyLedgerEntryType;
             rejectedAt: Date | null;
             receiverId: string;
@@ -443,24 +443,24 @@ export declare class KingConnectController {
         })[];
         paymentRequests: ({
             sender: {
-                name: string;
                 kingId: string | null;
+                name: string;
             };
             receiver: {
-                name: string;
                 kingId: string | null;
+                name: string;
             };
         } & {
-            senderId: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.PaymentRequestStatus;
-            rejectionReason: string | null;
-            notes: string | null;
-            amount: import("@prisma/client/runtime/library").Decimal;
+            senderId: string;
             expiresAt: Date;
+            amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
+            status: import(".prisma/client").$Enums.PaymentRequestStatus;
+            notes: string | null;
+            rejectionReason: string | null;
             receiverId: string;
             linkId: string;
             refBillNo: string | null;

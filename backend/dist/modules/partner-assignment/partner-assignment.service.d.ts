@@ -5,36 +5,36 @@ export declare class PartnerAssignmentService {
     constructor(prisma: PrismaService);
     findMyPartner(user: AuthUser): import(".prisma/client").Prisma.Prisma__PartnerAssignmentClient<({
         businessPartner: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
         };
     } & {
-        startDate: Date;
-        endDate: Date | null;
-        customerId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
+        startDate: Date;
+        endDate: Date | null;
+        customerId: string;
         businessPartnerId: string;
+        status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     findMyCustomers(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         customer: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
         };
     } & {
-        startDate: Date;
-        endDate: Date | null;
-        customerId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
+        startDate: Date;
+        endDate: Date | null;
+        customerId: string;
         businessPartnerId: string;
+        status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
     })[]>;
 }

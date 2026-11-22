@@ -13,16 +13,16 @@ export declare class CallRequestsController {
         } | null;
         notes: string | null;
         farmer: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         advisor: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         };
         id: string;
         createdAt: Date;
@@ -34,16 +34,16 @@ export declare class CallRequestsController {
     }>;
     getMyPending(user: AuthUser): import(".prisma/client").Prisma.Prisma__CallRequestClient<({
         farmer: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         advisor: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -56,16 +56,16 @@ export declare class CallRequestsController {
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         advisor: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -78,16 +78,16 @@ export declare class CallRequestsController {
     })[]>;
     resolve(user: AuthUser, id: string, dto: ResolveCallRequestDto): Promise<{
         farmer: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         advisor: {
-            name: string;
-            mobile: string;
             id: string;
+            mobile: string;
+            name: string;
         };
     } & {
         id: string;

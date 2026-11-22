@@ -10,18 +10,18 @@ export declare class ChatService {
     constructor(prisma: PrismaService, notificationsService: NotificationsService, chatGateway: ChatGateway);
     assertCanChat(userId: string, userRole: Role, otherUserId: string): Promise<void>;
     sendMessage(sender: AuthUser, receiverId: string, content: string): Promise<{
-        senderId: string;
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
         content: string;
         receiverId: string;
     }>;
     getMessages(user: AuthUser, otherUserId: string): Promise<{
-        senderId: string;
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
         content: string;
@@ -29,16 +29,16 @@ export declare class ChatService {
     }[]>;
     listConversations(user: AuthUser): Promise<{
         partner: {
-            name: string;
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         lastMessage: {
-            senderId: string;
             id: string;
             createdAt: Date;
+            senderId: string;
             isRead: boolean;
             readAt: Date | null;
             content: string;
@@ -52,9 +52,9 @@ export declare class ChatService {
         isOnline: boolean;
     };
     getMessagesBetweenAsAdmin(userAId: string, userBId: string): import(".prisma/client").Prisma.PrismaPromise<{
-        senderId: string;
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
         content: string;

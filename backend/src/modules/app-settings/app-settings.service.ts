@@ -233,9 +233,9 @@ export class AppSettingsService {
     return {
       seoTitle: seo.seoTitle || (settings as any).seoTitle || "FarmsKing: Smart Farming Platform & Agriculture App India | Smart Farming (farmsking.in)",
       metaDescription: seo.metaDescription || (settings as any).metaDescription || "FarmsKing (farmsking.in) is India's premier Smart Farming Platform & Agriculture App. Smart Farming. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India.",
-      metaKeywords: seo.metaKeywords || (settings as any).metaKeywords || "FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab",
-      locationHeadquarters: seo.locationHeadquarters || (settings as any).locationHeadquarters || "Registered Office: Goindwal Sahib, Tarn Taran - 143422 | Operational Office: Makhu, Ferozepur, Punjab - 142044",
-      noscriptHtmlContent: seo.noscriptHtmlContent || (settings as any).noscriptHtmlContent || "🌾 FarmsKing: Smart Farming Platform & Agriculture App India | Smart Farming (farmsking.in). FarmsKing Technologies Private Limited is India's leading Smart Farming Platform and Agriculture App. Guided by the motto 'Smart Farming', FarmsKing empowers Indian farmers and plant lovers with multimodal AI Crop Doctor pathology, live APMC wholesale mandi rates across 50+ crops, 6-constellation satellite remote sensing, certified organic bio-fertilizers, and transparent digital bahi-khata accounting. Headquartered in Makhu (Punjab) with registered office in Goindwal Sahib. Board of Directors: Bakshish Singh and Gagandeep Kaur; Lead Founder & Chief AI Architect: Surinder Singh; General Manager: Gurnam Singh; Tech Support: Engg. Gurdit Singh.",
+      metaKeywords: seo.metaKeywords || (settings as any).metaKeywords || "FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Kapurthala, Punjab",
+      locationHeadquarters: seo.locationHeadquarters || (settings as any).locationHeadquarters || "Registered Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala - 144601 | Operational Office: Makhu, Ferozepur, Punjab - 142044",
+      noscriptHtmlContent: seo.noscriptHtmlContent || (settings as any).noscriptHtmlContent || "🌾 FarmsKing: Smart Farming Platform & Agriculture App India | Smart Farming (farmsking.in). FarmsKing Technologies Private Limited is India's leading Smart Farming Platform and Agriculture App. Guided by the motto 'Smart Farming', FarmsKing empowers Indian farmers and plant lovers with multimodal AI Crop Doctor pathology, live APMC wholesale mandi rates across 50+ crops, 6-constellation satellite remote sensing, certified organic bio-fertilizers, and transparent digital bahi-khata accounting. Headquartered in Makhu (Punjab) with registered office in Village Booh, Kapurthala. Board of Directors: Bakshish Singh and Gagandeep Kaur; Lead Founder & Chief AI Architect: Surinder Singh; General Manager: Gurnam Singh; Tech Support: Engg. Gurdit Singh.",
     };
   }
 
@@ -426,7 +426,7 @@ export class AppSettingsService {
     const companyLegalName = pm.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED';
     const helplinePhone = pm.primaryMobile || (settings as any)?.adminMobile || '+91 95776-22000';
     const supportEmail = pm.contactEmail || pm.supportEmail || email || 'support@farmsking.in';
-    const registeredAddress = pm.registeredAddress || 'M/s GURU NANAK COMPUTER ACADEMY, Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India';
+    const registeredAddress = pm.registeredAddress || 'C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India';
     const operationalHqAddress = pm.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India';
 
     const appDownloadUrl = (settings as any)?.appDownloadUrl || (pm as any)?.appDownloadUrl || 'https://www.farmsking.in';
@@ -991,11 +991,11 @@ export class AppSettingsService {
         brandName: stored.projectMasterData?.brandName || stored.projectMasterData?.brandDisplayName || stored.about?.brandName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.brandDisplayName,
         tagline: stored.projectMasterData?.tagline || stored.about?.tagline || settings.tagline || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.tagline,
         logoUrl: stored.projectMasterData?.logoUrl || stored.about?.logoUrl || settings.logoUrl || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.logoUrl,
-        cinNumber: stored.projectMasterData?.cinNumber || stored.projectMasterData?.cin || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.cinNumber || 'U01100PB2026PTC063294',
-        cin: stored.projectMasterData?.cin || stored.projectMasterData?.cinNumber || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.cin || 'U01100PB2026PTC063294',
-        companyPan: stored.projectMasterData?.companyPan || stored.projectMasterData?.panNumber || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.companyPan || 'AABCF1234D',
-        panNumber: stored.projectMasterData?.panNumber || stored.projectMasterData?.companyPan || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.panNumber || 'AABCF1234D',
-        companyTan: stored.projectMasterData?.companyTan || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.companyTan || 'PTLA12345B',
+        cinNumber: stored.projectMasterData?.cinNumber || stored.projectMasterData?.cin || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.cinNumber || 'U62013PB2026PTC070389',
+        cin: stored.projectMasterData?.cin || stored.projectMasterData?.cinNumber || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.cin || 'U62013PB2026PTC070389',
+        companyPan: stored.projectMasterData?.companyPan || stored.projectMasterData?.panNumber || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.companyPan || 'AAHCF3566C',
+        panNumber: stored.projectMasterData?.panNumber || stored.projectMasterData?.companyPan || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.panNumber || 'AAHCF3566C',
+        companyTan: stored.projectMasterData?.companyTan || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.companyTan || 'AMRF11527F',
         registeredAddress: stored.projectMasterData?.registeredAddress || stored.projectMasterData?.registeredOfficeAddress || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.registeredAddress,
         registeredOfficeAddress: stored.projectMasterData?.registeredOfficeAddress || stored.projectMasterData?.registeredAddress || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.registeredAddress,
         primaryMobile: stored.projectMasterData?.primaryMobile || stored.projectMasterData?.officialPhone || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.primaryMobile,

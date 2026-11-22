@@ -7,8 +7,8 @@ export declare class GardensController {
     private readonly gardensService;
     constructor(gardensService: GardensService);
     create(user: AuthUser, dto: CreateGardenDto): import(".prisma/client").Prisma.Prisma__GardenClient<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         status: string;
@@ -19,19 +19,19 @@ export declare class GardensController {
     }, never, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     findAll(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         plants: {
-            name: string;
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             gardenId: string;
-            plantedDate: Date | null;
             species: string | null;
+            plantedDate: Date | null;
             healthNotes: string | null;
         }[];
     } & {
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         status: string;
@@ -44,10 +44,10 @@ export declare class GardensController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        recordedById: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        expenseDate: Date;
         description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        recordedById: string;
+        expenseDate: Date;
         receiptPhotoUrl: string | null;
         gardenId: string;
         plantId: string | null;
@@ -55,21 +55,21 @@ export declare class GardensController {
     }>;
     listExpenses(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         garden: {
-            name: string;
             id: string;
+            name: string;
         };
         plant: {
-            name: string;
             id: string;
+            name: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        recordedById: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        expenseDate: Date;
         description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        recordedById: string;
+        expenseDate: Date;
         receiptPhotoUrl: string | null;
         gardenId: string;
         plantId: string | null;
@@ -79,10 +79,10 @@ export declare class GardensController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        recordedById: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        expenseDate: Date;
         description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        recordedById: string;
+        expenseDate: Date;
         receiptPhotoUrl: string | null;
         gardenId: string;
         plantId: string | null;
@@ -90,19 +90,19 @@ export declare class GardensController {
     }>;
     findOne(user: AuthUser, id: string): Promise<{
         plants: {
-            name: string;
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             deletedAt: Date | null;
             gardenId: string;
-            plantedDate: Date | null;
             species: string | null;
+            plantedDate: Date | null;
             healthNotes: string | null;
         }[];
     } & {
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         status: string;
@@ -112,25 +112,25 @@ export declare class GardensController {
         healthScore: number;
     }>;
     addPlant(user: AuthUser, id: string, dto: CreatePlantDto): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         gardenId: string;
-        plantedDate: Date | null;
         species: string | null;
+        plantedDate: Date | null;
         healthNotes: string | null;
     }>;
     listPlants(user: AuthUser, id: string): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
         gardenId: string;
-        plantedDate: Date | null;
         species: string | null;
+        plantedDate: Date | null;
         healthNotes: string | null;
     }[]>;
 }

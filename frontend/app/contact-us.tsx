@@ -45,6 +45,15 @@ export default function ContactUsPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      document.title = 'Contact FarmsKing - Support, Grievance & Office Locations';
+      let link = document.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'canonical';
+        document.head.appendChild(link);
+      }
+      link.href = 'https://farmsking.in/contact-us';
+
       const saved = localStorage.getItem('farmsking_theme_mode');
       if (saved === 'night' || saved === 'day') setThemeMode(saved);
       const handleStorage = () => {
@@ -297,6 +306,44 @@ export default function ContactUsPage() {
                 <Text style={[styles.leadershipSub, isDay ? styles.leadershipSubDay : styles.leadershipSubNight]}>
                   FARMSKING TECHNOLOGIES PRIVATE LIMITED — Governed under statutory Ministry of Corporate Affairs (ROC Chandigarh) regulations.
                 </Text>
+              </View>
+            </View>
+
+            {/* Dedicated Statutory Grievance Redressal Desk */}
+            <View style={[styles.grievanceBox, isDay ? styles.grievanceBoxDay : styles.grievanceBoxNight]}>
+              <View style={styles.grievanceIconCircle}>
+                <Ionicons name="shield-checkmark" size={24} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.grievanceBadgeRow}>
+                  <Text style={styles.grievanceBadge}>STATUTORY COMPLIANCE DESK</Text>
+                  <Text style={styles.grievanceSlaBadge}>15-DAY STATUTORY RESOLUTION SLA</Text>
+                </View>
+                <Text style={[styles.grievanceOfficerName, isDay ? styles.grievanceOfficerNameDay : styles.grievanceOfficerNameNight]}>
+                  Er. Gagandeep Kaur
+                </Text>
+                <Text style={styles.grievanceOfficerRole}>
+                  Designated Grievance Redressal Officer & Statutory Director
+                </Text>
+                <Text style={[styles.grievanceMandate, isDay ? styles.grievanceMandateDay : styles.grievanceMandateNight]}>
+                  Appointed under the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021 and Consumer Protection (E-Commerce) Rules, 2020. Dedicated to resolving cultivator inquiries, consumer grievances, and data protection concerns.
+                </Text>
+                <View style={styles.grievanceContactRow}>
+                  <TouchableOpacity
+                    style={styles.grievanceContactPill}
+                    onPress={() => Linking.openURL('mailto:compliance@farmsking.in?subject=Statutory%20Grievance%20Filing')}
+                  >
+                    <Ionicons name="mail-outline" size={14} color="#059669" />
+                    <Text style={styles.grievanceContactText}>compliance@farmsking.in</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.grievanceContactPill}
+                    onPress={() => Linking.openURL('tel:9577622000')}
+                  >
+                    <Ionicons name="call-outline" size={14} color="#059669" />
+                    <Text style={styles.grievanceContactText}>+91 95776-22000 (Mon-Sat 10am-5pm)</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
 
@@ -752,4 +799,102 @@ const styles = StyleSheet.create({
   leaderDesc: { fontSize: 12, fontFamily: FONT.medium, lineHeight: 17 },
   leaderDescDay: { color: '#64748b' },
   leaderDescNight: { color: '#94a3b8' },
+
+  grievanceBox: {
+    flexDirection: 'row',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 16,
+    gap: 14,
+  },
+  grievanceBoxDay: {
+    backgroundColor: 'rgba(16,185,129,0.04)',
+    borderColor: 'rgba(16,185,129,0.22)',
+  },
+  grievanceBoxNight: {
+    backgroundColor: 'rgba(16,185,129,0.06)',
+    borderColor: 'rgba(52,211,153,0.25)',
+  },
+  grievanceIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  grievanceBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  grievanceBadge: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#047857',
+    letterSpacing: 0.5,
+    backgroundColor: '#ecfdf5',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  grievanceSlaBadge: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#0369a1',
+    letterSpacing: 0.5,
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  grievanceOfficerName: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    marginTop: 2,
+  },
+  grievanceOfficerNameDay: { color: '#0f172a' },
+  grievanceOfficerNameNight: { color: '#ffffff' },
+  grievanceOfficerRole: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#059669',
+    marginBottom: 6,
+  },
+  grievanceMandate: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    lineHeight: 18,
+    marginBottom: 10,
+  },
+  grievanceMandateDay: { color: '#475569' },
+  grievanceMandateNight: { color: '#cbd5e1' },
+  grievanceContactRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  grievanceContactPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(16,185,129,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.2)',
+  },
+  grievanceContactText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#059669',
+  },
 });

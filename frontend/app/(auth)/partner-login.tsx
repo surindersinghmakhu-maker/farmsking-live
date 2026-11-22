@@ -655,7 +655,7 @@ export default function PartnerLoginScreen() {
                         <Ionicons key={s} name="star" size={12} color="#facc15" />
                       ))}
                       <Text style={styles.ratingText}>4.9 / 5</Text>
-                      <Text style={styles.trustInlineText}> · Trusted by 5,000+ Agri Partners</Text>
+                      <Text style={styles.trustInlineText}> · Verified Agri Partner Network</Text>
                     </View>
                     <Text style={styles.corpAddressNotice}>
                       Regd. Office: Village Booh, Kapurthala - 144601, Punjab

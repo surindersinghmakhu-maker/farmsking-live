@@ -1090,6 +1090,29 @@ export default function AiDoctorScreen() {
                         <Text style={styles.whatsappBtnText}>Share Report</Text>
                       </TouchableOpacity>
                     </View>
+
+                    {/* ⚠️ Agricultural Safety Advisory & Expert Verification Notice */}
+                    <View
+                      style={{
+                        backgroundColor: '#fffbeb',
+                        borderWidth: 1,
+                        borderColor: '#fcd34d',
+                        borderRadius: 12,
+                        padding: 12,
+                        marginTop: 14,
+                        gap: 4,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="warning" size={16} color="#b45309" />
+                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#92400e' }}>
+                          Agricultural Safety Warning &amp; Expert Verification
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: '#78350f', lineHeight: 16 }}>
+                        AI pathology diagnostics provide optical preliminary assessment based on leaf imagery. Chemical spray dosages must adhere strictly to statutory label instructions and pre-harvest intervals (PHI). For severe field infections, verify with a certified agronomist or local Krishi Vigyan Kendra (KVK) before broad application.
+                      </Text>
+                    </View>
                   </View>
                 </View>
               ) : (

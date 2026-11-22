@@ -843,7 +843,7 @@ export default function LoginScreen() {
                       <Ionicons key={s} name="star" size={12} color="#facc15" />
                     ))}
                     <Text style={styles.ratingText}>4.9 / 5</Text>
-                    <Text style={styles.trustInlineText}> · Trusted by 50,000+ Farmers</Text>
+                    <Text style={styles.trustInlineText}> · Verified Cultivator Network</Text>
                   </View>
                   <Text style={styles.corpAddressNotice}>
                     Regd. Office: Village Booh, Kapurthala - 144601, Punjab

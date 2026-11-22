@@ -911,7 +911,7 @@ export default function ComplianceScreen() {
                     isDay ? styles.officerNameDay : styles.officerNameNight,
                   ]}
                 >
-                  Nodal Grievance &amp; Compliance Desk
+                  Er. Gagandeep Kaur (Designated Grievance Redressal Officer &amp; Director)
                 </Text>
                 <Text
                   style={[
@@ -919,7 +919,7 @@ export default function ComplianceScreen() {
                     isDay ? styles.officerRoleDay : styles.officerRoleNight,
                   ]}
                 >
-                  FARMSKING TECHNOLOGIES PRIVATE LIMITED • Regulatory Affairs
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED • Statutory Compliance Desk
                 </Text>
 
                 <View style={styles.officerDetailRow}>
@@ -934,7 +934,7 @@ export default function ComplianceScreen() {
                       isDay ? styles.officerDetailTextDay : styles.officerDetailTextNight,
                     ]}
                   >
-                    grievance@farmsking.in / farmskingindia@gmail.com
+                    compliance@farmsking.in / grievance@farmsking.in
                   </Text>
                 </View>
 
@@ -966,7 +966,7 @@ export default function ComplianceScreen() {
                       isDay ? styles.officerDetailTextDay : styles.officerDetailTextNight,
                     ]}
                   >
-                    Response SLA: Acknowledged within 48 hours • Resolved within statutory timelines
+                    Response SLA: Acknowledged within 24 hours • Resolved within 15 statutory days (Rule 3(2) IT Rules 2021)
                   </Text>
                 </View>
 

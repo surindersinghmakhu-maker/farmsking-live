@@ -44,7 +44,7 @@ const FAQS_DATA: FAQItem[] = [
     category: 'Crop Doctor & AI',
     icon: 'medkit-outline',
     question: 'Can I get a human agronomist second opinion on diagnosis?',
-    answer: 'Yes! After your initial AI scan, tap "Request Agronomist Review". A certified agricultural university specialist will inspect your diagnostic report and verify the chemical dosage within 30 minutes during field hours.',
+    answer: 'Yes! After your initial AI scan, tap "Request Agronomist Review". An ICAR protocol aligned certified agronomist will inspect your diagnostic report and verify the chemical dosage within 30 minutes during field hours.',
   },
   {
     id: 'f4',

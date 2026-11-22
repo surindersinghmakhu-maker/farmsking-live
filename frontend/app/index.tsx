@@ -521,7 +521,7 @@ const AI_DEMO_DATA = {
     shortName: 'Wheat',
     icon: '🌾',
     disease: 'Yellow Rust (Puccinia striiformis)',
-    confidence: '99.2%',
+    confidence: 'High Optical Match',
     severity: 'Stage 2 • Foliar Pustules Detected',
     remedy: 'Bio-Fungicide (Trichoderma viride 2.5g/L) + Cold-Pressed Neem Oil 1500 PPM',
     yieldImpact: '+18–22% Estimated Yield Recovery',
@@ -536,12 +536,12 @@ const AI_DEMO_DATA = {
     shortName: 'Paddy',
     icon: '🌱',
     disease: 'Bacterial Leaf Blight (Xanthomonas)',
-    confidence: '98.7%',
+    confidence: 'Early Foliar Match',
     severity: 'Stage 1 • Early Leaf Streaks',
     remedy: 'Copper Oxychloride 50% WP (2.5g/L) + Streptocycline (6g / 120L Water)',
     yieldImpact: '+20–25% Estimated Yield Protection',
     mandiPrice: '₹3,150 / Qtl',
-    status: 'Early Detection • 100% Curable',
+    status: 'Early Detection • Treatable',
     statusColor: '#10b981',
     leafBg: '#0f766e',
     accentColor: '#38bdf8',
@@ -551,7 +551,7 @@ const AI_DEMO_DATA = {
     shortName: 'Cotton',
     icon: '☁️',
     disease: 'Pink Bollworm (Pectinophora)',
-    confidence: '99.5%',
+    confidence: 'Targeted Pest Match',
     severity: 'Stage 2 • Early Larval Entry',
     remedy: 'Pheromone Funnel Traps (5/acre) + Beauveria bassiana 1kg/acre Foliar Spray',
     yieldImpact: '+30% Boll Retention Rate',
@@ -566,7 +566,7 @@ const AI_DEMO_DATA = {
     shortName: 'Mustard',
     icon: '🌼',
     disease: 'White Rust (Albugo candida)',
-    confidence: '98.9%',
+    confidence: 'Early Stage Match',
     severity: 'Stage 1 • White Pustules Underleaf',
     remedy: 'Mancozeb 75% WP @ 2g/L or Micronized Wettable Sulphur (3g/L)',
     yieldImpact: '+15–18% Oil Content Safeguard',
@@ -2651,21 +2651,21 @@ export default function PublicLandingPage() {
               </Text>
             </TouchableOpacity>
 
-            {/* Trust Stats Bar */}
+            {/* Trust Capabilities Bar (Empirical & Factual) */}
             <View style={[S.trustStatsBar, isDay && S.trustStatsBarDay, isMobile && { justifyContent: 'space-around', gap: 4, paddingTop: 4, marginBottom: 4 }]}>
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#059669' : '#a7f3d0' }, isMobile && { fontSize: 12 }]}>50,000+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>{t.cultivators}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#059669' : '#a7f3d0' }, isMobile && { fontSize: 12 }]}>Real-Time</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>APMC Mandi Rates</Text>
               </View>
               <View style={[S.statDivider, isDay && S.statDividerDay]} />
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#0284c7' : '#bae6fd' }, isMobile && { fontSize: 12 }]}>₹14.8 Cr+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>{t.traded}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#0284c7' : '#bae6fd' }, isMobile && { fontSize: 12 }]}>ICAR Aligned</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>Agronomic Protocols</Text>
               </View>
               <View style={[S.statDivider, isDay && S.statDividerDay]} />
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#d97706' : '#fde68a' }, isMobile && { fontSize: 12 }]}>1,200+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>{t.agronomists}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#d97706' : '#fde68a' }, isMobile && { fontSize: 12 }]}>ISO Standard</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>Quality &amp; Security</Text>
               </View>
             </View>
           </View>
@@ -2682,12 +2682,12 @@ export default function PublicLandingPage() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <View style={S.showcaseLiveDot} />
                   <Text style={[S.showcaseTopText, isDay && S.showcaseTopTextDay, isMobile && { fontSize: 9.5 }]}>
-                    {isMobile ? 'AI LIVE TELEMETRY' : 'AI SMART FARM • LIVE TELEMETRY'}
+                    {isMobile ? 'SATELLITE CANOPY TELEMETRY' : 'SATELLITE SPECTRAL TELEMETRY • CANOPY HEALTH'}
                   </Text>
                 </View>
                 <View style={[S.showcaseGpsBadge, isDay && S.showcaseGpsBadgeDay, isMobile && { paddingHorizontal: 5, paddingVertical: 2 }]}>
                   <Text style={[S.showcaseGpsText, isDay && S.showcaseGpsTextDay, isMobile && { fontSize: 8.5 }]}>
-                    {isMobile ? 'NDVI: 0.88' : 'NDVI CANOPY: 98% OPTIMAL'}
+                    {isMobile ? 'NDVI: 0.88 (Canopy)' : 'OPTICAL NDVI: 0.88 • HEALTHY CANOPY'}
                   </Text>
                 </View>
               </View>
@@ -2935,15 +2935,15 @@ export default function PublicLandingPage() {
                   <View style={S.overlayPulseDot} />
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={[S.overlayBadgeTitle, isDay && S.overlayBadgeTitleDay, isMobile && { fontSize: 10, lineHeight: 12 }]} numberOfLines={1}>
-                      Crop Health: 98.4% Optimal
+                      Vegetation Index: NDVI 0.84 • Healthy Canopy
                     </Text>
                     <Text style={[S.overlayBadgeSub, isDay && S.overlayBadgeSubDay, isMobile && { fontSize: 8, lineHeight: 10 }]} numberOfLines={1}>
-                      {isMobile ? 'Moisture: 42% • Soil Nitrogen: Balanced' : 'Moisture: 42% • Soil Nitrogen: Balanced • GPS Live'}
+                      {isMobile ? 'Optical Canopy Telemetry • Sentinel-2 Protocol' : 'Optical Canopy Telemetry • Multi-Spectral Remote Sensing'}
                     </Text>
                   </View>
                   <View style={[S.telemetrySignalBadge, isDay && S.telemetrySignalBadgeDay, isMobile && { paddingHorizontal: 4, paddingVertical: 1 }]}>
-                    <Ionicons name="wifi" size={isMobile ? 8 : 10} color={isDay ? '#047857' : '#a7f3d0'} />
-                    <Text style={[S.telemetrySignalText, isDay && S.telemetrySignalTextDay, isMobile && { fontSize: 7.5 }]}>AI Live</Text>
+                    <Ionicons name="scan-outline" size={isMobile ? 8 : 10} color={isDay ? '#047857' : '#a7f3d0'} />
+                    <Text style={[S.telemetrySignalText, isDay && S.telemetrySignalTextDay, isMobile && { fontSize: 7.5 }]}>Spectral</Text>
                   </View>
                 </View>
               </View>
@@ -2956,7 +2956,7 @@ export default function PublicLandingPage() {
           <View style={S.telemetryStripInner}>
             <View style={[S.telemetryStripGrid, isMobile && S.telemetryStripGridMobile]}>
               
-              {/* Metric 1: Satellite Acreage */}
+              {/* Metric 1: Satellite Spectral Telemetry */}
               <SpatialTiltCard
                 style={[S.telemetryMetricCard, isDay ? S.telemetryMetricCardDay : S.telemetryMetricCardNight, isMobile && S.telemetryMetricCardMobile]}
                 glowColor={isDay ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.35)'}
@@ -2965,13 +2965,13 @@ export default function PublicLandingPage() {
                 <View style={S.metricTopRow}>
                   <View style={[S.metricBadgePill, { backgroundColor: isDay ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.2)' }]}>
                     <View style={[S.pulseDot, { backgroundColor: '#10b981' }]} />
-                    <Text style={[S.metricBadgeText, { color: isDay ? '#047857' : '#34d399' }]}>LIVE SATELLITE</Text>
+                    <Text style={[S.metricBadgeText, { color: isDay ? '#047857' : '#34d399' }]}>SPECTRAL TELEMETRY</Text>
                   </View>
                   <Ionicons name="earth" size={18} color={isDay ? '#059669' : '#10b981'} />
                 </View>
-                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay]}>50,000+</Text>
-                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Acres Under Active Telemetry</Text>
-                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Continuous NDVI canopy density, soil moisture & weather radar sync</Text>
+                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay]}>Sentinel-2 / ISRO</Text>
+                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Satellite Optical Remote Sensing</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Continuous NDVI vegetation canopy density and multi-spectral index tracking</Text>
               </SpatialTiltCard>
 
               {/* Metric 2: APMC Mandis */}
@@ -2983,13 +2983,13 @@ export default function PublicLandingPage() {
                 <View style={S.metricTopRow}>
                   <View style={[S.metricBadgePill, { backgroundColor: isDay ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.2)' }]}>
                     <View style={[S.pulseDot, { backgroundColor: '#f59e0b' }]} />
-                    <Text style={[S.metricBadgeText, { color: isDay ? '#b45309' : '#fbbf24' }]}>DIRECT APMC</Text>
+                    <Text style={[S.metricBadgeText, { color: isDay ? '#b45309' : '#fbbf24' }]}>APMC YARDS</Text>
                   </View>
                   <Ionicons name="trending-up" size={18} color={isDay ? '#d97706' : '#f59e0b'} />
                 </View>
-                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#b45309' : '#fbbf24' }]}>50+ Mandis</Text>
-                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Real-Time Auction Price Stream</Text>
-                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Punjab, Haryana, Rajasthan & MP yard rates with 0% hidden middleman cuts</Text>
+                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#b45309' : '#fbbf24' }]}>Regional &amp; National</Text>
+                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Wholesale Market Price Stream</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Verified modal arrival prices across Punjab, Haryana, Rajasthan &amp; MP mandis</Text>
               </SpatialTiltCard>
 
               {/* Metric 3: AI Diagnosis Latency */}
@@ -3007,7 +3007,7 @@ export default function PublicLandingPage() {
                 </View>
                 <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#0284c7' : '#38bdf8' }]}>&lt; 5 Seconds</Text>
                 <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Instant AI Leaf Diagnosis</Text>
-                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Edge pathology vision model validated across 100,000+ field plant samples</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Multimodal vision model calibrated against standard plant pathology databases</Text>
               </SpatialTiltCard>
 
               {/* Metric 4: System Reliability */}
@@ -3023,9 +3023,9 @@ export default function PublicLandingPage() {
                   </View>
                   <Ionicons name="shield-checkmark" size={18} color={isDay ? '#7c3aed' : '#8b5cf6'} />
                 </View>
-                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#6d28d9' : '#c084fc' }]}>99.8%</Text>
-                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Agronomy Network Uptime</Text>
-                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Mission-critical advisory infrastructure with rapid-response agronomist desks</Text>
+                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#6d28d9' : '#c084fc' }]}>High Availability</Text>
+                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Cloud Service Architecture</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Mission-critical microservice infrastructure with automated health monitoring</Text>
               </SpatialTiltCard>
 
             </View>
@@ -3394,7 +3394,7 @@ export default function PublicLandingPage() {
               <View style={S.pillarFeatureList}>
                 <View style={S.pillarFeatureItem}>
                   <Ionicons name="checkmark-circle" size={12} color={isDay ? '#059669' : '#34d399'} />
-                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>100,000+ field pathology models</Text>
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>Calibrated plant pathology database</Text>
                 </View>
                 <View style={S.pillarFeatureItem}>
                   <Ionicons name="checkmark-circle" size={12} color={isDay ? '#059669' : '#34d399'} />
@@ -3610,7 +3610,7 @@ export default function PublicLandingPage() {
             </View>
             <View style={[S.allocTrustItem, isDay ? S.allocTrustItemDay : S.allocTrustItemNight]}>
               <Ionicons name="ribbon" size={15} color="#10b981" />
-              <Text style={[S.allocTrustText, isDay && S.allocTrustTextDay]}>ICAR &amp; State University Certified</Text>
+              <Text style={[S.allocTrustText, isDay && S.allocTrustTextDay]}>ICAR Protocol Aligned</Text>
             </View>
             <View style={[S.allocTrustItem, isDay ? S.allocTrustItemDay : S.allocTrustItemNight]}>
               <Ionicons name="chatbubbles" size={15} color="#8b5cf6" />
@@ -3618,7 +3618,7 @@ export default function PublicLandingPage() {
             </View>
             <View style={[S.allocTrustItem, isDay ? S.allocTrustItemDay : S.allocTrustItemNight]}>
               <Ionicons name="checkmark-done-circle" size={15} color="#f59e0b" />
-              <Text style={[S.allocTrustText, isDay && S.allocTrustTextDay]}>100% Free for Registered Users</Text>
+              <Text style={[S.allocTrustText, isDay && S.allocTrustTextDay]}>Transparent Milestone Advisory Plans</Text>
             </View>
           </View>
 
@@ -3713,7 +3713,7 @@ export default function PublicLandingPage() {
                     Assigned Certified Agronomist
                   </Text>
                   <Text style={[S.allocSpecialistRole, isDay && S.allocSpecialistRoleDay]}>
-                    ICAR / State Agricultural University Certified • Active in Your Region
+                    Certified Agronomist • ICAR Protocol Aligned
                   </Text>
                 </View>
                 <View style={S.allocVerifiedTag}>
@@ -3853,7 +3853,7 @@ export default function PublicLandingPage() {
               Experience AI Crop Doctor in Action
             </Text>
             <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay, isMobile && S.sectionSubheadMobile]}>
-              FarmsKing multimodal neural scanner detects foliar pathogens, tissue blight, and nutrient deficiencies in 0.8 seconds with 98%+ precision. Sign in free to scan your own crop leaves.
+              FarmsKing multimodal neural scanner identifies foliar pathogens, tissue blight, and nutrient symptoms through optical pattern recognition. Sign in free to scan your own crop leaves.
             </Text>
           </View>
 
@@ -3872,7 +3872,7 @@ export default function PublicLandingPage() {
               <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay]} />
               <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay]}>FIELD VALIDATED RESULTS</Text>
             </View>
-            <Text style={[S.sectionHeadline, isDay && S.sectionHeadlineDay]}>Trusted Across 50,000+ Acres</Text>
+            <Text style={[S.sectionHeadline, isDay && S.sectionHeadlineDay]}>Cultivator Field Success Stories</Text>
             <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay]}>
               Real experiences from progressive cultivators who rely on FarmsKing daily for crop decisions and market trade.
             </Text>

@@ -71,6 +71,9 @@ let AppSettingsController = class AppSettingsController {
     getPublicMasterData() {
         return this.appSettingsService.getPublicMasterData();
     }
+    getPublicPlatformMetrics() {
+        return this.appSettingsService.getPublicPlatformMetrics();
+    }
     getVisitorStats() {
         return this.appSettingsService.getVisitorStats();
     }
@@ -205,6 +208,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "getPublicMasterData", null);
+__decorate([
+    (0, common_1.Get)('public-platform-metrics'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AppSettingsController.prototype, "getPublicPlatformMetrics", null);
 __decorate([
     (0, common_1.Get)('visitor-stats'),
     __metadata("design:type", Function),

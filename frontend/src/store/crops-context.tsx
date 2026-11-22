@@ -89,6 +89,7 @@ export interface RegisteredCropField {
   harvestType?: HarvestType;
   irrigationType?: IrrigationType;
   plantCount?: number;
+  createdAt?: string;
 }
 
 export interface CropCompletionReview {
@@ -448,6 +449,7 @@ function toRegisteredCropField(
     harvestType: crop.harvestType,
     irrigationType: (crop.plot?.irrigationType as IrrigationType | null) ?? undefined,
     plantCount: crop.plantCount ?? undefined,
+    createdAt: crop.createdAt ? new Date(crop.createdAt).toISOString() : undefined,
   };
 }
 

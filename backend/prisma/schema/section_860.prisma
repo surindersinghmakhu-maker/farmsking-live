@@ -168,6 +168,7 @@ model AppSetting {
   freePlanMaxCrops                 Int      @default(3)
   farmerPlanExpiryWarningDays      Int      @default(7)
   farmerPlanGracePeriodDays        Int      @default(5)
+  cropDeletionWindowDays           Int      @default(7)
   maskPhoneNumbersBetweenUsers     Boolean  @default(true)
   defaultArhtiyaInterestRateAnnual Float    @default(18.0)
   mandiMarketFeePercent            Float    @default(2.0)

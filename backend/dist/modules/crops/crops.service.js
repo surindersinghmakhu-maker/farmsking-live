@@ -52,6 +52,7 @@ const plots_service_1 = require("../plots/plots.service");
 const farmer_plans_service_1 = require("../farmer-plans/farmer-plans.service");
 const advisor_assignment_service_1 = require("../advisor-assignment/advisor-assignment.service");
 const notifications_service_1 = require("../notifications/notifications.service");
+const app_settings_service_1 = require("../app-settings/app-settings.service");
 const crop_id_util_1 = require("../../common/utils/crop-id.util");
 const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
 const DATE_FIELDS = ['sowingDate', 'transplantDate', 'expectedHarvestDate', 'actualHarvestDate'];
@@ -81,12 +82,13 @@ function toDateFields(dto) {
     return result;
 }
 let CropsService = class CropsService {
-    constructor(prisma, plotsService, farmerPlansService, advisorAssignmentService, notificationsService) {
+    constructor(prisma, plotsService, farmerPlansService, advisorAssignmentService, notificationsService, appSettingsService) {
         this.prisma = prisma;
         this.plotsService = plotsService;
         this.farmerPlansService = farmerPlansService;
         this.advisorAssignmentService = advisorAssignmentService;
         this.notificationsService = notificationsService;
+        this.appSettingsService = appSettingsService;
     }
     async assertAdvanceProfileComplete(farmerId) {
         const farmer = await this.prisma.user.findUnique({
@@ -339,7 +341,18 @@ let CropsService = class CropsService {
         }
     }
     async remove(user, id) {
-        await this.findOneOrThrow(user, id);
+        const cropCycle = await this.findOneOrThrow(user, id);
+        const isGlobalAdmin = user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN;
+        if (!isGlobalAdmin) {
+            const settings = await this.appSettingsService.get();
+            const windowDays = Number(settings.cropDeletionWindowDays ?? 7);
+            const windowMs = windowDays * 24 * 60 * 60 * 1000;
+            const createdAtMs = new Date(cropCycle.createdAt).getTime();
+            const elapsedMs = Date.now() - createdAtMs;
+            if (elapsedMs > windowMs) {
+                throw new common_1.ForbiddenException(`Crops can only be deleted within ${windowDays} days of registration. This crop was registered on ${new Date(cropCycle.createdAt).toLocaleDateString('en-IN')}. Please contact support or complete the crop instead.`);
+            }
+        }
         return this.prisma.cropCycle.update({ where: { id }, data: { deletedAt: new Date() } });
     }
     async submitToAdvisor(user, id, dto) {
@@ -662,6 +675,7 @@ exports.CropsService = CropsService = __decorate([
         plots_service_1.PlotsService,
         farmer_plans_service_1.FarmerPlansService,
         advisor_assignment_service_1.AdvisorAssignmentService,
-        notifications_service_1.NotificationsService])
+        notifications_service_1.NotificationsService,
+        app_settings_service_1.AppSettingsService])
 ], CropsService);
 //# sourceMappingURL=crops.service.js.map

@@ -117,6 +117,14 @@ export default function SettingPlanOffersSetup() {
         advisorPlatformFeePercent: Number(appForm.advisorPlatformFeePercent ?? 10.0),
         advisorAdminFeePercent: Number(appForm.advisorAdminFeePercent ?? 10.0),
 
+        // Farmer Plan & Governance Settings
+        freePlanMaxCrops: Number(appForm.freePlanMaxCrops ?? 3),
+        farmerPlanExpiryWarningDays: Number(appForm.farmerPlanExpiryWarningDays ?? 7),
+        farmerPlanGracePeriodDays: Number(appForm.farmerPlanGracePeriodDays ?? 5),
+        cropDeletionWindowDays: Number(appForm.cropDeletionWindowDays ?? 7),
+        maskPhoneNumbersBetweenUsers: Boolean(appForm.maskPhoneNumbersBetweenUsers ?? true),
+        defaultArhtiyaInterestRateAnnual: Number(appForm.defaultArhtiyaInterestRateAnnual ?? 18.0),
+
         // Farmer Referral Rewards
         newUserSignupBonusAmount: Number(appForm.newUserSignupBonusAmount ?? 10),
         referralSignupBonusAmount: Number(appForm.referralSignupBonusAmount ?? 10),
@@ -385,6 +393,17 @@ export default function SettingPlanOffersSetup() {
                     onChangeText={(t) => updateAppField('farmerPlanGracePeriodDays', parseInt(t, 10) || 5)}
                   />
                   <Text style={{ fontSize: 10, color: subTextColor, marginTop: 2 }}>Days of full read/write access before hard-locking data</Text>
+                </View>
+
+                <View style={styles.fieldItem}>
+                  <Text style={[styles.label, { color: textColor }]}>Crop Deletion Window (Days After Creation)</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    keyboardType="numeric"
+                    value={String(appForm.cropDeletionWindowDays ?? 7)}
+                    onChangeText={(t) => updateAppField('cropDeletionWindowDays', parseInt(t, 10) || 7)}
+                  />
+                  <Text style={{ fontSize: 10, color: subTextColor, marginTop: 2 }}>Days after crop registration within which farmer can delete it (default: 7)</Text>
                 </View>
 
                 <View style={styles.fieldItem}>

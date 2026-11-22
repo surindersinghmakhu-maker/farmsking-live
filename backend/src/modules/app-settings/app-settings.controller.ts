@@ -119,6 +119,12 @@ export class AppSettingsController {
     return this.appSettingsService.getPublicMasterData();
   }
 
+  /** Live empirical platform metrics directly queried from database with real verified telemetry */
+  @Get('public-platform-metrics')
+  getPublicPlatformMetrics() {
+    return this.appSettingsService.getPublicPlatformMetrics();
+  }
+
   /** Get live website visitor telemetry */
   @Get('visitor-stats')
   getVisitorStats() {

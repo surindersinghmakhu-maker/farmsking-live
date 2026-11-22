@@ -256,7 +256,7 @@ export function MarketRatesCard() {
     };
   };
 
-  const userState = user?.state || data?.state || 'Punjab';
+  const userState = user?.state || data?.state || '';
 
   // Calculate 24h Min, Max & Avg for State level and National level for crops.
   // Calculate 24h Min, Max & Avg for State level and National level for active crops of logged in farmer.
@@ -994,7 +994,7 @@ export function MarketRatesCard() {
           {/* Table Header */}
           <View style={[styles.columnHeaderRow, { borderBottomColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
             <Text style={[styles.columnHeader, styles.cropColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('tabCrops', 'YOUR CROP')}</Text>
-            <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('stateMandi', 'LOCAL')} ({userState ? userState.toUpperCase() : 'PUNJAB'})</Text>
+            <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('stateMandi', 'LOCAL MANDI')}</Text>
             <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('nationalMandi', 'ALL INDIA')}</Text>
             <View style={styles.shareColumn} />
           </View>
@@ -1315,7 +1315,7 @@ export function MarketRatesCard() {
                     </View>
                     <View style={styles.widgetLocationPill}>
                       <Ionicons name="location" size={10} color="#34d399" />
-                      <Text style={styles.widgetLocationText}>{userState ? userState.toUpperCase() : 'PUNJAB'}</Text>
+                      <Text style={styles.widgetLocationText}>{userState ? userState.toUpperCase() : 'LOCAL'}</Text>
                     </View>
                   </View>
 

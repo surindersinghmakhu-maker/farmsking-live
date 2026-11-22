@@ -78,6 +78,7 @@ export declare class UpdateAppSettingsDto {
     freePlanMaxCrops?: number;
     farmerPlanExpiryWarningDays?: number;
     farmerPlanGracePeriodDays?: number;
+    cropDeletionWindowDays?: number;
     maskPhoneNumbersBetweenUsers?: boolean;
     defaultArhtiyaInterestRateAnnual?: number;
     mandiMarketFeePercent?: number;

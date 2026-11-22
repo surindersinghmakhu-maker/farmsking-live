@@ -12,6 +12,7 @@ const plots_module_1 = require("../plots/plots.module");
 const farmer_plans_module_1 = require("../farmer-plans/farmer-plans.module");
 const advisor_assignment_module_1 = require("../advisor-assignment/advisor-assignment.module");
 const notifications_module_1 = require("../notifications/notifications.module");
+const app_settings_module_1 = require("../app-settings/app-settings.module");
 const crops_controller_1 = require("./crops.controller");
 const crops_service_1 = require("./crops.service");
 let CropsModule = class CropsModule {
@@ -19,7 +20,7 @@ let CropsModule = class CropsModule {
 exports.CropsModule = CropsModule;
 exports.CropsModule = CropsModule = __decorate([
     (0, common_1.Module)({
-        imports: [plots_module_1.PlotsModule, farmer_plans_module_1.FarmerPlansModule, advisor_assignment_module_1.AdvisorAssignmentModule, notifications_module_1.NotificationsModule],
+        imports: [plots_module_1.PlotsModule, farmer_plans_module_1.FarmerPlansModule, advisor_assignment_module_1.AdvisorAssignmentModule, notifications_module_1.NotificationsModule, app_settings_module_1.AppSettingsModule],
         controllers: [crops_controller_1.CropsController],
         providers: [crops_service_1.CropsService],
         exports: [crops_service_1.CropsService],

@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class PublicInquiryDto {
   @IsString()
@@ -277,6 +277,12 @@ export class UpdateAppSettingsDto {
 
   @IsOptional()
   farmerPlanGracePeriodDays?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(365)
+  cropDeletionWindowDays?: number;
 
   @IsOptional()
   @IsBoolean()

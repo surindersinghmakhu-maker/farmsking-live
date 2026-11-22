@@ -13,6 +13,7 @@ import {
 } from '../farmer-plans/farmer-plans.service';
 import { AdvisorAssignmentService } from '../advisor-assignment/advisor-assignment.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { generateUniqueCropId } from '../../common/utils/crop-id.util';
 import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
@@ -58,6 +59,7 @@ export class CropsService {
     private readonly farmerPlansService: FarmerPlansService,
     private readonly advisorAssignmentService: AdvisorAssignmentService,
     private readonly notificationsService: NotificationsService,
+    private readonly appSettingsService: AppSettingsService,
   ) {}
 
   /** The farmer's Advance Profile (photo, spray tank size, soil/water type) — an advisor needs these to give useful advice. */
@@ -374,7 +376,23 @@ export class CropsService {
   }
 
   async remove(user: AuthUser, id: string) {
-    await this.findOneOrThrow(user, id);
+    const cropCycle = await this.findOneOrThrow(user, id);
+
+    const isGlobalAdmin = user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN;
+    if (!isGlobalAdmin) {
+      const settings = await this.appSettingsService.get();
+      const windowDays = Number(settings.cropDeletionWindowDays ?? 7);
+      const windowMs = windowDays * 24 * 60 * 60 * 1000;
+      const createdAtMs = new Date(cropCycle.createdAt).getTime();
+      const elapsedMs = Date.now() - createdAtMs;
+
+      if (elapsedMs > windowMs) {
+        throw new ForbiddenException(
+          `Crops can only be deleted within ${windowDays} days of registration. This crop was registered on ${new Date(cropCycle.createdAt).toLocaleDateString('en-IN')}. Please contact support or complete the crop instead.`
+        );
+      }
+    }
+
     return this.prisma.cropCycle.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 

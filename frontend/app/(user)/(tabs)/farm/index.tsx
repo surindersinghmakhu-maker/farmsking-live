@@ -491,6 +491,58 @@ export default function FarmListScreen() {
     }
   };
 
+  const cropDeletionWindowDays = Number(settings?.cropDeletionWindowDays ?? 7);
+
+  const getDaysRemainingForDeletion = (crop: RegisteredCropField) => {
+    if (!crop.createdAt) return cropDeletionWindowDays;
+    const createdMs = new Date(crop.createdAt).getTime();
+    if (isNaN(createdMs)) return cropDeletionWindowDays;
+    const elapsedMs = Date.now() - createdMs;
+    const windowMs = cropDeletionWindowDays * 24 * 60 * 60 * 1000;
+    const remainingMs = windowMs - elapsedMs;
+    if (remainingMs <= 0) return 0;
+    return Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+  };
+
+  const handleDeleteCrop = (crop: RegisteredCropField) => {
+    const daysLeft = getDaysRemainingForDeletion(crop);
+    if (daysLeft <= 0) {
+      const msg = `Crops can only be deleted within ${cropDeletionWindowDays} days of registration. This crop can no longer be deleted. You can mark it as Completed instead.`;
+      if (Platform.OS === 'web') {
+        window.alert(msg);
+      } else {
+        Alert.alert('Deletion Window Closed', msg);
+      }
+      return;
+    }
+
+    const confirmMsg = `Are you sure you want to delete "${crop.cropName}"? You have ${daysLeft} day(s) left in the deletion window. This action cannot be undone.`;
+    if (Platform.OS === 'web') {
+      if (window.confirm(confirmMsg)) {
+        removeCrop(crop.id).then(() => {
+          window.alert('✅ Crop deleted successfully!');
+        }).catch((err: any) => {
+          window.alert(err?.response?.data?.message || err?.message || 'Could not delete crop.');
+        });
+      }
+    } else {
+      Alert.alert('Delete Crop', confirmMsg, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            removeCrop(crop.id).then(() => {
+              Alert.alert('Success', 'Crop deleted successfully!');
+            }).catch((err: any) => {
+              Alert.alert('Error', err?.response?.data?.message || err?.message || 'Could not delete crop.');
+            });
+          },
+        },
+      ]);
+    }
+  };
+
   const requestCropStageChange = (
     item: RegisteredCropField,
     currentStage: CropStage,
@@ -1030,38 +1082,55 @@ export default function FarmListScreen() {
                     </Text>
                   </View>
 
-                  {/* Top Right Action: Edit Crop if Plantation stage, otherwise show Advisor Status Badge */}
-                  {isPlantationStage ? (
-                    <TouchableOpacity
-                      style={styles.editCropBadgeBtn}
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        tap();
-                        setEditingCrop(item);
-                        setIsCropModalOpen(true);
-                      }}
-                    >
-                      <Ionicons name="pencil" size={12} color="#0284c7" />
-                      <Text style={styles.editCropBadgeText}>{t('editCrop', 'Edit Crop')}</Text>
-                    </TouchableOpacity>
-                  ) : isAdvisorHired ? (
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
-                      activeOpacity={0.8}
-                      onPress={() => handleOpenDoctorDialog(item, advisorName)}
-                    >
-                      <Ionicons name="medical" size={9.5} color="#15803d" />
-                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
-                        🩺 {t('doctorAssigned', 'Doctor Hired')}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
-                        🩺 {t('advisorProfile', 'Self-Managed')}
-                      </Text>
-                    </View>
-                  )}
+                  {/* Top Right Action: Edit Crop if Plantation stage, Deletion if within window, and Advisor Status Badge */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {isPlantationStage ? (
+                      <TouchableOpacity
+                        style={styles.editCropBadgeBtn}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          tap();
+                          setEditingCrop(item);
+                          setIsCropModalOpen(true);
+                        }}
+                      >
+                        <Ionicons name="pencil" size={12} color="#0284c7" />
+                        <Text style={styles.editCropBadgeText}>{t('editCrop', 'Edit Crop')}</Text>
+                      </TouchableOpacity>
+                    ) : null}
+
+                    {getDaysRemainingForDeletion(item) > 0 ? (
+                      <TouchableOpacity
+                        style={[styles.editCropBadgeBtn, { backgroundColor: '#fef2f2', borderColor: '#fecaca' }]}
+                        activeOpacity={0.8}
+                        onPress={() => handleDeleteCrop(item)}
+                      >
+                        <Ionicons name="trash-outline" size={11} color="#dc2626" />
+                        <Text style={[styles.editCropBadgeText, { color: '#dc2626' }]}>
+                          Delete ({getDaysRemainingForDeletion(item)}d)
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+
+                    {isAdvisorHired ? (
+                      <TouchableOpacity
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
+                        activeOpacity={0.8}
+                        onPress={() => handleOpenDoctorDialog(item, advisorName)}
+                      >
+                        <Ionicons name="medical" size={9.5} color="#15803d" />
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
+                          🩺 {t('doctorAssigned', 'Doctor Hired')}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : !isPlantationStage ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
+                          🩺 {t('advisorProfile', 'Self-Managed')}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
                 </View>
 
                 {/* Row 2: Subcategory & Variety Name, Sown Date */}

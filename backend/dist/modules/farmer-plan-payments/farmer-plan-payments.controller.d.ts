@@ -11,20 +11,18 @@ export declare class FarmerPlanPaymentsController {
         upiLink: string;
         cashfreeSessionId: string | null;
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
         };
         id: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
         farmerId: string;
-        daysGranted: number;
+        requestedAt: Date;
         rejectionReason: string | null;
-        advisorKingId: string | null;
-        doctorKingId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -34,24 +32,24 @@ export declare class FarmerPlanPaymentsController {
         screenshotUrl: string | null;
         selectedDoctorId: string | null;
         selectedAdvisorId: string | null;
+        doctorKingId: string | null;
+        advisorKingId: string | null;
     }>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
         };
     } & {
         id: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
         farmerId: string;
-        daysGranted: number;
+        requestedAt: Date;
         rejectionReason: string | null;
-        advisorKingId: string | null;
-        doctorKingId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -61,24 +59,24 @@ export declare class FarmerPlanPaymentsController {
         screenshotUrl: string | null;
         selectedDoctorId: string | null;
         selectedAdvisorId: string | null;
+        doctorKingId: string | null;
+        advisorKingId: string | null;
     })[]>;
     listPending(): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
         };
     } & {
         id: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
         farmerId: string;
-        daysGranted: number;
+        requestedAt: Date;
         rejectionReason: string | null;
-        advisorKingId: string | null;
-        doctorKingId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -88,24 +86,24 @@ export declare class FarmerPlanPaymentsController {
         screenshotUrl: string | null;
         selectedDoctorId: string | null;
         selectedAdvisorId: string | null;
+        doctorKingId: string | null;
+        advisorKingId: string | null;
     })[]>;
     submit(user: AuthUser, id: string, dto: SubmitFarmerPlanPaymentDto): Promise<({
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
         };
     } & {
         id: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
         farmerId: string;
-        daysGranted: number;
+        requestedAt: Date;
         rejectionReason: string | null;
-        advisorKingId: string | null;
-        doctorKingId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -115,54 +113,54 @@ export declare class FarmerPlanPaymentsController {
         screenshotUrl: string | null;
         selectedDoctorId: string | null;
         selectedAdvisorId: string | null;
+        doctorKingId: string | null;
+        advisorKingId: string | null;
     }) | {
         isAutoActivated: boolean;
         coupon: {
             id: string;
             createdAt: Date;
-            code: string;
-            expiresAt: Date | null;
-            createdById: string;
+            category: import(".prisma/client").$Enums.PlanCouponCategory;
+            assignedAdvisorId: string | null;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             daysGranted: number;
-            assignedAdvisorId: string | null;
-            category: import(".prisma/client").$Enums.PlanCouponCategory;
-            assignedFarmerId: string | null;
-            assignedBusinessPartnerId: string | null;
+            doctorKingId: string | null;
+            advisorKingId: string | null;
+            createdById: string;
+            code: string;
+            isUsed: boolean;
+            usedAt: Date | null;
+            expiresAt: Date | null;
+            generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
             doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
+            adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+            adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
             includeMembership: boolean;
             includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
             includedMembershipDays: number | null;
-            advisorKingId: string | null;
-            isUsed: boolean;
-            usedAt: Date | null;
-            usedByFarmerId: string | null;
-            generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
-            adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-            adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
             createdByRole: import(".prisma/client").$Enums.Role | null;
             payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
             payoutRecipientId: string | null;
-            doctorKingId: string | null;
+            assignedFarmerId: string | null;
+            assignedBusinessPartnerId: string | null;
+            usedByFarmerId: string | null;
         };
         plan: any;
         newEndDate: any;
         advisorHired: boolean;
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
         };
         id: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
         farmerId: string;
-        daysGranted: number;
+        requestedAt: Date;
         rejectionReason: string | null;
-        advisorKingId: string | null;
-        doctorKingId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -172,6 +170,8 @@ export declare class FarmerPlanPaymentsController {
         screenshotUrl: string | null;
         selectedDoctorId: string | null;
         selectedAdvisorId: string | null;
+        doctorKingId: string | null;
+        advisorKingId: string | null;
     }>;
     confirm(user: AuthUser, id: string): Promise<{
         plan: any;
@@ -182,21 +182,19 @@ export declare class FarmerPlanPaymentsController {
         sleptPlanCreated: boolean;
         request: {
             farmer: {
+                name: string;
+                mobile: string;
                 id: string;
                 kingId: string | null;
-                mobile: string;
-                name: string;
             };
         } & {
             id: string;
-            amount: import("@prisma/client/runtime/library").Decimal;
             status: import(".prisma/client").$Enums.PlanPaymentStatus;
-            requestedAt: Date;
             farmerId: string;
-            daysGranted: number;
+            requestedAt: Date;
             rejectionReason: string | null;
-            advisorKingId: string | null;
-            doctorKingId: string | null;
+            amount: import("@prisma/client/runtime/library").Decimal;
+            daysGranted: number;
             utr: string | null;
             submittedAt: Date | null;
             confirmedAt: Date | null;
@@ -206,53 +204,53 @@ export declare class FarmerPlanPaymentsController {
             screenshotUrl: string | null;
             selectedDoctorId: string | null;
             selectedAdvisorId: string | null;
+            doctorKingId: string | null;
+            advisorKingId: string | null;
         };
         coupon: {
             id: string;
             createdAt: Date;
-            code: string;
-            expiresAt: Date | null;
-            createdById: string;
+            category: import(".prisma/client").$Enums.PlanCouponCategory;
+            assignedAdvisorId: string | null;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             daysGranted: number;
-            assignedAdvisorId: string | null;
-            category: import(".prisma/client").$Enums.PlanCouponCategory;
-            assignedFarmerId: string | null;
-            assignedBusinessPartnerId: string | null;
+            doctorKingId: string | null;
+            advisorKingId: string | null;
+            createdById: string;
+            code: string;
+            isUsed: boolean;
+            usedAt: Date | null;
+            expiresAt: Date | null;
+            generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
             doctorFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
+            adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
+            adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
             includeMembership: boolean;
             includedMembershipPlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan | null;
             includedMembershipDays: number | null;
-            advisorKingId: string | null;
-            isUsed: boolean;
-            usedAt: Date | null;
-            usedByFarmerId: string | null;
-            generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
-            adminPlatformFeePercent: import("@prisma/client/runtime/library").Decimal | null;
-            adminPlatformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
             createdByRole: import(".prisma/client").$Enums.Role | null;
             payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
             payoutRecipientId: string | null;
-            doctorKingId: string | null;
+            assignedFarmerId: string | null;
+            assignedBusinessPartnerId: string | null;
+            usedByFarmerId: string | null;
         };
     }>;
     reject(user: AuthUser, id: string, dto: RejectFarmerPlanPaymentDto): Promise<{
         farmer: {
+            name: string;
+            mobile: string;
             id: string;
             kingId: string | null;
-            mobile: string;
-            name: string;
         };
     } & {
         id: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
         farmerId: string;
-        daysGranted: number;
+        requestedAt: Date;
         rejectionReason: string | null;
-        advisorKingId: string | null;
-        doctorKingId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -262,5 +260,7 @@ export declare class FarmerPlanPaymentsController {
         screenshotUrl: string | null;
         selectedDoctorId: string | null;
         selectedAdvisorId: string | null;
+        doctorKingId: string | null;
+        advisorKingId: string | null;
     }>;
 }

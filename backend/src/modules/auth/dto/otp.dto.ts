@@ -7,10 +7,10 @@ export class SendLoginOtpDto {
   @IsString()
   mobile: string;
 
-  @ApiPropertyOptional({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] })
+  @ApiPropertyOptional({ description: 'Login portal side: CLIENT, PARTNER, or ADMIN', enum: ['CLIENT', 'PARTNER', 'ADMIN'] })
   @IsOptional()
-  @IsIn(['CLIENT', 'PARTNER'])
-  portal?: 'CLIENT' | 'PARTNER';
+  @IsIn(['CLIENT', 'PARTNER', 'ADMIN'])
+  portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
 
   @ApiPropertyOptional({ description: 'Terms of service accepted' })
   @IsOptional()
@@ -29,10 +29,10 @@ export class VerifyLoginOtpDto {
   @IsString()
   otp: string;
 
-  @ApiPropertyOptional({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] })
+  @ApiPropertyOptional({ description: 'Login portal side: CLIENT, PARTNER, or ADMIN', enum: ['CLIENT', 'PARTNER', 'ADMIN'] })
   @IsOptional()
-  @IsIn(['CLIENT', 'PARTNER'])
-  portal?: 'CLIENT' | 'PARTNER';
+  @IsIn(['CLIENT', 'PARTNER', 'ADMIN'])
+  portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
 
   @ApiPropertyOptional({ description: 'Terms of service accepted' })
   @IsOptional()
@@ -120,10 +120,10 @@ export class CompleteOtpRegistrationDto {
   @IsString()
   role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
 
-  @ApiPropertyOptional({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] })
+  @ApiPropertyOptional({ description: 'Login portal side: CLIENT, PARTNER, or ADMIN', enum: ['CLIENT', 'PARTNER', 'ADMIN'] })
   @IsOptional()
-  @IsIn(['CLIENT', 'PARTNER'])
-  portal?: 'CLIENT' | 'PARTNER';
+  @IsIn(['CLIENT', 'PARTNER', 'ADMIN'])
+  portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
 
   @ApiPropertyOptional({ description: 'Terms of service accepted' })
   @IsOptional()

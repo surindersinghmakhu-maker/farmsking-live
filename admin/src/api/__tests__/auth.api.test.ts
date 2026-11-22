@@ -25,6 +25,7 @@ describe('Admin Auth API', () => {
     expect(apiClient.post).toHaveBeenCalledWith('/auth/login', {
       mobile: '9872066901',
       password: 'securePassword123',
+      portal: 'ADMIN',
     });
     expect(response.token).toBe('fake-admin-jwt');
     expect(response.user.role).toBe('ADMIN');

@@ -161,7 +161,7 @@ export function pickBestPrimaryRole(roles: Role[]): Role {
 
 export function evaluatePortalEligibility(
   user: { role: Role; roles?: Role[] | null; deactivatedRoles?: Role[] | null } | null,
-  portal?: 'CLIENT' | 'PARTNER',
+  portal?: 'CLIENT' | 'PARTNER' | 'ADMIN',
 ): { allowed: boolean; reason?: string } {
   if (!user) {
     if (portal === 'PARTNER') {
@@ -171,10 +171,28 @@ export function evaluatePortalEligibility(
           'Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support to register, or switch to User Login.',
       };
     }
+    if (portal === 'ADMIN') {
+      return {
+        allowed: false,
+        reason: 'Staff account required to sign in to the Admin Portal.',
+      };
+    }
     return { allowed: true };
   }
 
   const activeRoles = getActiveRolesList(user);
+
+  // Security Guard for Admin Portal
+  if (portal === 'ADMIN') {
+    const isStaff = activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r));
+    if (!isStaff) {
+      return {
+        allowed: false,
+        reason: 'This account does not have Admin or Staff permissions to access the Admin Portal.',
+      };
+    }
+    return { allowed: true };
+  }
 
   // Security Guard: Dedicated Admin/Staff accounts cannot enter via Client portal or unspecified portal
   if (!portal || portal === 'CLIENT') {

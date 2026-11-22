@@ -203,7 +203,7 @@ export default function Root({ children }: PropsWithChildren) {
               "aggregateRating": {
                 "@type": "AggregateRating",
                 "ratingValue": "4.9",
-                "ratingCount": "14200",
+                "ratingCount": "120",
                 "bestRating": "5",
                 "worstRating": "1"
               },

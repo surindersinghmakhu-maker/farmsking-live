@@ -2135,12 +2135,12 @@ export default function PublicLandingPage() {
                   4.9/5
                 </Text>
                 <Text style={[S.ratingReviewsCount, isDay ? S.ratingReviewsCountDay : S.ratingReviewsCountNight, { fontSize: isMobile ? 8.5 : 9.5 }]}>
-                  {isMobile ? '(14.2k)' : '(14,200+ Reviews)'}
+                  {isMobile ? '(Verified)' : '(Verified Network)'}
                 </Text>
                 <View style={[S.socialProofDivider, isDay ? S.socialProofDividerDay : S.socialProofDividerNight, { marginHorizontal: isMobile ? 2 : 3 }]} />
                 <Ionicons name="shield-checkmark" size={isMobile ? 10 : 12} color={isDay ? '#059669' : '#34d399'} />
                 <Text style={[S.socialProofText, isDay ? S.socialProofTextDay : S.socialProofTextNight, { fontSize: isMobile ? 9 : 10.5 }]} numberOfLines={1}>
-                  {isMobile ? '48k+ Cultivators' : `Trusted by ${userRegion.farmerCount} Cultivators Across India`}
+                  {platformMetrics ? `${platformMetrics.cultivatorsCount}+ Cultivators Across India` : 'Verified Cultivator Network Across India'}
                 </Text>
               </View>
 
@@ -2990,7 +2990,7 @@ export default function PublicLandingPage() {
                   {platformMetrics ? (platformMetrics.activeAcres > 0 ? `${platformMetrics.activeAcres.toFixed(1)}+` : '39.5+') : '39.5+'}
                 </Text>
                 <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Acres Under Active Telemetry</Text>
-                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Continuous NDVI canopy density, soil moisture &amp; weather radar sync</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Continuous Sentinel-2 foliar canopy density &amp; multi-spectral vegetation indices</Text>
               </SpatialTiltCard>
 
               {/* Metric 2: APMC Mandis */}
@@ -4506,7 +4506,7 @@ export default function PublicLandingPage() {
                     <Ionicons name="trending-up" size={20} color="#eab308" />
                   </View>
                   <Text style={[S.appModuleTitle, isDay && S.appModuleTitleDay]}>Mandi Radar</Text>
-                  <Text style={[S.appModuleDesc, isDay && S.appModuleDescDay]}>250+ Live APMCs</Text>
+                  <Text style={[S.appModuleDesc, isDay && S.appModuleDescDay]}>{platformMetrics ? `${platformMetrics.mandiCount}+ APMC Mandis` : 'Live APMC Mandis'}</Text>
                 </TouchableOpacity>
 
                 {/* 6: Knowledge & Support */}

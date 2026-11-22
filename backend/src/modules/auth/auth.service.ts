@@ -925,7 +925,7 @@ export class AuthService {
 
   private assertPortalAllowed(
     user: { role: Role; roles?: Role[] | null; deactivatedRoles?: Role[] | null } | null,
-    portal?: 'CLIENT' | 'PARTNER',
+    portal?: 'CLIENT' | 'PARTNER' | 'ADMIN',
   ) {
     const check = evaluatePortalEligibility(user, portal);
     if (!check.allowed) {
@@ -936,7 +936,7 @@ export class AuthService {
   private async assertPortalAccessOrPartnerStatus(
     cleanMobile: string,
     user: any,
-    portal: 'CLIENT' | 'PARTNER' | undefined,
+    portal: 'CLIENT' | 'PARTNER' | 'ADMIN' | undefined,
     includeEditableAppOnProof: boolean,
   ) {
     const check = evaluatePortalEligibility(user, portal);
@@ -2316,7 +2316,7 @@ export class AuthService {
   }
 
   /** Step 1: Send 6-digit OTP for login / passwordless registration */
-  async sendLoginOtp(mobile: string, portal?: 'CLIENT' | 'PARTNER') {
+  async sendLoginOtp(mobile: string, portal?: 'CLIENT' | 'PARTNER' | 'ADMIN') {
     const rawDigits = mobile.replace(/\D/g, '');
     const cleanMobile = rawDigits.slice(-10);
     if (cleanMobile.length !== 10) {
@@ -2444,7 +2444,7 @@ export class AuthService {
   async verifyLoginOtp(
     mobile: string,
     otp: string,
-    portal?: 'CLIENT' | 'PARTNER',
+    portal?: 'CLIENT' | 'PARTNER' | 'ADMIN',
     meta?: { ipAddress?: string; userAgent?: string },
   ) {
     const rawDigits = mobile.replace(/\D/g, '');
@@ -2534,7 +2534,7 @@ export class AuthService {
     mobile: string;
     name?: string;
     role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
-    portal?: 'CLIENT' | 'PARTNER';
+    portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
     termsAccepted?: boolean;
   }) {
     if (dto.portal === 'PARTNER') {

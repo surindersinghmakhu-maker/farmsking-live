@@ -36,7 +36,7 @@ export async function registerFarmer(payload: RegisterPayload): Promise<AuthResp
 }
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
-  const { data } = await apiClient.post<AuthResponse>('/auth/login', payload);
+  const { data } = await apiClient.post<AuthResponse>('/auth/login', { ...payload, portal: 'ADMIN' });
   return data;
 }
 
@@ -104,12 +104,12 @@ export async function verifyMobileLinkOtpApi(payload: { mobile: string; otp: str
 }
 
 export async function sendLoginOtpApi(mobile: string): Promise<{ success: boolean; message: string; devOtp?: string }> {
-  const { data } = await apiClient.post<{ success: boolean; message: string; devOtp?: string }>('/auth/send-login-otp', { mobile });
+  const { data } = await apiClient.post<{ success: boolean; message: string; devOtp?: string }>('/auth/send-login-otp', { mobile, portal: 'ADMIN' });
   return data;
 }
 
 export async function verifyLoginOtpApi(payload: { mobile: string; otp: string }): Promise<AuthResponse> {
-  const { data } = await apiClient.post<AuthResponse>('/auth/verify-login-otp', payload);
+  const { data } = await apiClient.post<AuthResponse>('/auth/verify-login-otp', { ...payload, portal: 'ADMIN' });
   return data;
 }
 

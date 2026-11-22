@@ -13,6 +13,6 @@ export class LoginDto {
   captchaToken?: string;
 
   @IsOptional()
-  @IsIn(['CLIENT', 'PARTNER'])
-  portal?: 'CLIENT' | 'PARTNER';
+  @IsIn(['CLIENT', 'PARTNER', 'ADMIN'])
+  portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
 }

@@ -121,7 +121,7 @@ Core Pillars of the Ecosystem:
 ### Feature 15: Corporate Compliance & ISO Disclosures
 - **Web URL**: https://farmsking.in/compliance
 - **Technical Specifications**:
-  - Comprehensive disclosures: CIN U01100PB2026PTC063294, ROC Chandigarh filings, ISO 9001 and ISO 27001 audit standards, and ICAR agronomy seals.
+  - Comprehensive disclosures: CIN U62013PB2026PTC070389, ROC Chandigarh filings, ISO 9001 and ISO 27001 audit standards, and ICAR agronomy seals.
 
 ### Feature 16: Surinder Agro Research & Demonstration Farm
 - **Web URL**: https://farmsking.in/surinder-agro-farm.html

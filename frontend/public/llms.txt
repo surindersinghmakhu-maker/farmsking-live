@@ -100,7 +100,7 @@ Every feature in FarmsKing is built for instant, transparent access to solve rea
 ### 15. Statutory Corporate Compliance & ISO Disclosures
 - **Direct Access URL**: https://farmsking.in/compliance
 - **Target Users**: Regulators, Partners, General Public
-- **Capability**: Full corporate transparency: CIN U01100PB2026PTC063294, ROC Chandigarh filings, ISO 9001 and ISO 27001 compliance, and statutory disclosures.
+- **Capability**: Full corporate transparency: CIN U62013PB2026PTC070389, ROC Chandigarh filings, ISO 9001 and ISO 27001 compliance, and statutory disclosures.
 
 ### 16. Surinder Agro Research & Demonstration Farm
 - **Direct Access URL**: https://farmsking.in/surinder-agro-farm.html

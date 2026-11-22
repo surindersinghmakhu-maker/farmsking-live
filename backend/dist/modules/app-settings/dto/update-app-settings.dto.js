@@ -371,9 +371,9 @@ __decorate([
 ], UpdateAppSettingsDto.prototype, "farmerPlanGracePeriodDays", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    IsInt(),
-    Min(0),
-    Max(365),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(365),
     __metadata("design:type", Number)
 ], UpdateAppSettingsDto.prototype, "cropDeletionWindowDays", void 0);
 __decorate([

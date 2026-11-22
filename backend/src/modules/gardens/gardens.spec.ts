@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GardensService } from './gardens.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { GardenerPlansService } from '../gardener-plans/gardener-plans.service';
+import { AiChatService } from '../ai-chat/ai-chat.service';
 import { GardenerSubscriptionPlan, GardenType, PlantCareType, Role } from '@prisma/client';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AuthUser } from '../../common/types/auth-user.type';
@@ -62,12 +63,27 @@ describe('GardensService (Phase 2 Comprehensive Test Suite)', () => {
     getEffectivePlan: jest.fn().mockResolvedValue({ plan: GardenerSubscriptionPlan.FREE }),
   };
 
+  const mockAiChatService = {
+    diagnoseLeaf: jest.fn().mockResolvedValue({
+      cropRecognized: true,
+      cropName: 'Monstera (Monstera deliciosa)',
+      diseaseName: 'Root Rot & Overwatering Chlorosis',
+      category: 'FUNGAL',
+      severity: 'HIGH',
+      confidenceScore: 97.5,
+      organicRemedy: 'Prune dead roots and apply cinnamon powder.',
+      firstAidSpray: 'Diluted Hydrogen Peroxide 3% Root Drench',
+      dosageInstructions: 'Mix 1 part 3% H2O2 with 4 parts water.',
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GardensService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: GardenerPlansService, useValue: mockPlansService },
+        { provide: AiChatService, useValue: mockAiChatService },
       ],
     }).compile();
 
@@ -221,6 +237,38 @@ describe('GardensService (Phase 2 Comprehensive Test Suite)', () => {
           { diseaseName: 'Leaf Spot' },
         ),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should diagnose leaf in domestic garden mode and record diagnosis', async () => {
+      mockPrisma.aiCreditLedger.findUnique.mockResolvedValue({
+        userId: mockUser.id,
+        monthlyQuota: 5,
+        usedThisMonth: 1,
+        bonusCredits: 0,
+        resetDate: new Date(Date.now() + 10000000),
+      });
+      mockPrisma.plantDiagnosis.create.mockResolvedValue({
+        id: 'diag-1',
+        detectedIssue: 'Monstera (Monstera deliciosa): Root Rot & Overwatering Chlorosis',
+      });
+      mockPrisma.aiCreditLedger.update.mockResolvedValue({
+        userId: mockUser.id,
+        monthlyQuota: 5,
+        usedThisMonth: 2,
+        bonusCredits: 0,
+        resetDate: new Date(Date.now() + 10000000),
+      });
+
+      const res = await service.diagnoseAndRecord(mockUser, {
+        leafPhotoUrl: 'https://example.com/monstera.jpg',
+      });
+
+      expect(mockAiChatService.diagnoseLeaf).toHaveBeenCalledWith(
+        'https://example.com/monstera.jpg',
+        'GARDEN',
+      );
+      expect(res.diagnosis.detectedIssue).toContain('Root Rot');
+      expect(mockPrisma.aiCreditLedger.update).toHaveBeenCalled();
     });
   });
 });

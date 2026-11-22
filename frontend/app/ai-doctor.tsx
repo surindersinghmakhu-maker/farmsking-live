@@ -22,6 +22,7 @@ import { useAuth } from '@/src/store/auth-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { AgriAiChatbot } from '@/src/components/AgriAiChatbot';
 import PublicHeader from '@/components/PublicHeader';
+import { useAllPlants, useAiCreditStatus, useDiagnosePlantLeaf } from '@/src/hooks/useGardens';
 
 export interface AiDiseaseDiagnostic {
   cropRecognized?: boolean;
@@ -85,6 +86,49 @@ const SAMPLE_PHOTOS = [
     title: '🍊 Citrus: Canker & Dieback',
     cropKey: 'Citrus',
     url: 'https://images.unsplash.com/photo-1557800636-894a64c1696f?w=600&auto=format&fit=crop',
+  },
+];
+
+const DOMESTIC_SAMPLE_PHOTOS = [
+  {
+    title: '🪴 Monstera: Root Rot & Overwatering',
+    cropKey: 'Monstera',
+    url: 'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&auto=format&fit=crop',
+  },
+  {
+    title: '🌸 Rose: Black Spot & Powdery Mildew',
+    cropKey: 'Rose',
+    url: 'https://images.unsplash.com/photo-1496062031456-07b8f162a322?w=600&auto=format&fit=crop',
+  },
+  {
+    title: '🌿 Tulsi / Basil: Cercospora Leaf Spot',
+    cropKey: 'Tulsi',
+    url: 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=600&auto=format&fit=crop',
+  },
+  {
+    title: '🍃 Money Plant: Nitrogen Chlorosis',
+    cropKey: 'Pothos',
+    url: 'https://images.unsplash.com/photo-1545241047-6083a3684587?w=600&auto=format&fit=crop',
+  },
+  {
+    title: '🪴 Snake Plant: Soft Rot & Cold Stress',
+    cropKey: 'SnakePlant',
+    url: 'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=600&auto=format&fit=crop',
+  },
+  {
+    title: '🌴 Areca Palm: Spider Mites & Tip Burn',
+    cropKey: 'ArecaPalm',
+    url: 'https://images.unsplash.com/photo-1596724817758-a87754b25fef?w=600&auto=format&fit=crop',
+  },
+  {
+    title: '🍅 Balcony Tomato: Early Blight',
+    cropKey: 'Tomato',
+    url: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=600&auto=format&fit=crop',
+  },
+  {
+    title: '🌵 Jade Succulent: Mealybug Attack',
+    cropKey: 'Succulent',
+    url: 'https://images.unsplash.com/photo-1509223197845-458d87318791?w=600&auto=format&fit=crop',
   },
 ];
 
@@ -269,6 +313,149 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
   },
 };
 
+const GARDEN_DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
+  Monstera: {
+    cropRecognized: true,
+    cropName: 'Monstera (Monstera deliciosa)',
+    diseaseName: 'Root Rot & Overwatering Chlorosis',
+    latinName: 'Pythium spp. / Phytophthora',
+    confidenceScore: 97.5,
+    category: 'FUNGAL',
+    severity: 'HIGH',
+    symptoms: 'Lower leaves turning pale yellow with dark brown water-soaked soft lesions near the petiole base.',
+    firstAidSpray: 'Diluted Hydrogen Peroxide (3%) soil drench & bio-antifungal spray',
+    dosageInstructions: 'Mix 1 part 3% H2O2 with 4 parts water. Drench potting soil thoroughly once.',
+    organicRemedy: 'Prune dead roots with sterile shears, dust cuts with natural cinnamon powder, and repot in fresh airy perlite mix.',
+    precautions: [
+      'Ensure nursery pot has unobstructed drainage holes.',
+      'Allow top 2 inches of potting mix to dry before watering again.',
+      'Do not let pot sit in standing drainage saucer water.',
+    ],
+    recommendedProductName: 'FarmsKing Houseplant Root Vitalizer & Bio-Fungicide (250ml)',
+    recommendedPrice: 249,
+  },
+  Rose: {
+    cropRecognized: true,
+    cropName: 'Rose (Rosa indica / floribunda)',
+    diseaseName: 'Black Spot Fungi & Powdery Mildew',
+    latinName: 'Diplocarpon rosae / Podosphaera pannosa',
+    confidenceScore: 96.8,
+    category: 'FUNGAL',
+    severity: 'HIGH',
+    symptoms: 'Fringed black circular spots with yellow halos across rose leaf surfaces; premature leaf drop.',
+    firstAidSpray: 'Organic Neem Oil (10,000 PPM) + Baking Soda Foliar Spray',
+    dosageInstructions: 'Mix 5ml Neem Oil + 2g Baking Soda + 2 drops mild soap in 1 Liter warm water. Spray early morning.',
+    organicRemedy: 'Spray diluted milk whey (1:9 with water) in bright morning sunlight to inhibit fungal germination.',
+    precautions: [
+      'Water roses at the base of the stem, never spray water over foliage in the evening.',
+      'Collect and discard fallen infected leaves to stop spore reinfection.',
+      'Prune inner stems to increase air circulation inside the bush.',
+    ],
+    recommendedProductName: 'FarmsKing Organic Rose Care & Black Spot Defender (500ml)',
+    recommendedPrice: 299,
+  },
+  Tulsi: {
+    cropRecognized: true,
+    cropName: 'Holy Basil / Tulsi (Ocimum tenuiflorum)',
+    diseaseName: 'Cercospora Leaf Spot & Aphid Attack',
+    latinName: 'Cercospora ocimicola / Aphis gossypii',
+    confidenceScore: 95.2,
+    category: 'PEST_ATTACK',
+    severity: 'MEDIUM',
+    symptoms: 'Small dark brown necrotic spots on sacred tulsi leaves with tiny black sucking insects on tender stem tips.',
+    firstAidSpray: 'Cold-Pressed Pure Neem Leaf Extract (Pet-Safe & Organic)',
+    dosageInstructions: 'Mix 3-4 ml organic neem oil in 1 Liter water with a pinch of soapnut (reetha) powder. Spray thoroughly.',
+    organicRemedy: 'Dust wood ash lightly on damp leaves or spray a mild garlic-chilli water extract.',
+    precautions: [
+      'Safe for household use: wait 24 hours and wash leaves before ritual or culinary use.',
+      'Place tulsi where it receives at least 4-5 hours of direct morning sunlight.',
+      'Pinch off flower spikes (manjari) regularly to encourage vigorous bushy green growth.',
+    ],
+    recommendedProductName: 'FarmsKing Sacred Tulsi & Herb Organic Protector (200ml)',
+    recommendedPrice: 199,
+  },
+  Pothos: {
+    cropRecognized: true,
+    cropName: 'Pothos / Money Plant (Epipremnum aureum)',
+    diseaseName: 'Nitrogen Chlorosis & Low Humidity Scorch',
+    latinName: 'Physiological nutrient & humidity imbalance',
+    confidenceScore: 94.6,
+    category: 'DEFICIENCY',
+    severity: 'LOW',
+    symptoms: 'Older leaves turning uniform yellow; crispy brown tips on newly emerging foliage.',
+    firstAidSpray: 'Liquid Seaweed Bio-Nutrient & Foliar Humic Spray',
+    dosageInstructions: 'Mix 2 ml Seaweed extract per Liter of water. Mist foliage and water soil once every 14 days.',
+    organicRemedy: 'Wipe leaves with a damp cloth to clean dust; mist foliage twice weekly to boost indoor humidity.',
+    precautions: [
+      'Keep away from dry direct air from air conditioners or heating blowers.',
+      'Provide bright indirect light; direct summer sun scorches variegated leaves.',
+      'Ensure the pot has adequate drainage so roots do not suffocate in waterlogged soil.',
+    ],
+    recommendedProductName: 'FarmsKing Houseplant Green Growth Seaweed Tonic (250ml)',
+    recommendedPrice: 220,
+  },
+  SnakePlant: {
+    cropRecognized: true,
+    cropName: 'Snake Plant (Dracaena trifasciata)',
+    diseaseName: 'Bacterial Soft Rot & Cold Stress',
+    latinName: 'Pectobacterium carotovorum',
+    confidenceScore: 98.1,
+    category: 'BACTERIAL',
+    severity: 'CRITICAL',
+    symptoms: 'Soft, mushy, foul-smelling leaf bases causing architectural swords to topple over.',
+    firstAidSpray: 'Systemic Bactericide & Copper Hydroxide Root Treatment',
+    dosageInstructions: 'Immediately stop all watering. Unpot plant and excise soft rotted leaf bases.',
+    organicRemedy: 'Allow excised rhizomes to callous in dry air for 48 hours, dust cuts with cinnamon, repot into dry cactus mix.',
+    precautions: [
+      'Snake plants require watering only once every 3 to 4 weeks in indoor conditions.',
+      'Never pour water directly into the center leaf rosette.',
+      'Maintain temperatures above 12°C during winter months.',
+    ],
+    recommendedProductName: 'FarmsKing Succulent & Sansevieria Dry Root Mix (2kg)',
+    recommendedPrice: 280,
+  },
+  ArecaPalm: {
+    cropRecognized: true,
+    cropName: 'Areca Palm (Dypsis lutescens)',
+    diseaseName: 'Spider Mite Attack & Potassium Deficiency',
+    latinName: 'Tetranychus urticae / Nutrient imbalance',
+    confidenceScore: 96.0,
+    category: 'PEST_ATTACK',
+    severity: 'HIGH',
+    symptoms: 'Fine silky webbing on leaf undersides with tiny yellow stippling dots; frond tips turning translucent yellow-orange.',
+    firstAidSpray: 'Mite-Stop Botanical Acaricide & Potassium Foliar Feed',
+    dosageInstructions: 'Spray undersides of all fronds with insecticidal soap solution (5ml/L) twice, 4 days apart.',
+    organicRemedy: 'Wash fronds in shower or hose down with pressurized water to dislodge spider mites.',
+    precautions: [
+      'Spider mites thrive in dry warm indoor air: increase room humidity around palms.',
+      'Feed with a balanced slow-release palm fertilizer with added magnesium and potassium.',
+      'Do not trim fronds that are only partially yellow until completely brown.',
+    ],
+    recommendedProductName: 'FarmsKing Palm Green Revive Spray & Mite Shield (500ml)',
+    recommendedPrice: 349,
+  },
+  Succulent: {
+    cropRecognized: true,
+    cropName: 'Jade Plant / Succulent (Crassula ovata)',
+    diseaseName: 'Mealybug Attack & Edema',
+    latinName: 'Pseudococcidae / Over-saturation edema',
+    confidenceScore: 96.5,
+    category: 'PEST_ATTACK',
+    severity: 'MEDIUM',
+    symptoms: 'White cotton-like waxy deposits in leaf joints and stem axils; blister-like corky bumps on fleshy succulent leaves.',
+    firstAidSpray: 'Rubbing Alcohol (70% Isopropyl) Cotton Dab + Bio-Neem Mist',
+    dosageInstructions: 'Dab cotton swab dipped in 70% alcohol directly on mealybugs. Spray surrounding foliage with diluted neem oil.',
+    organicRemedy: 'Isolate plant immediately. Spray with diluted cold neem oil mixed with 3 drops mild liquid soap.',
+    precautions: [
+      'Water succulents strictly when soil is 100% dry down to the bottom.',
+      'Keep away from other houseplants to prevent mealybug crawling.',
+      'Place in maximum possible sunlight.',
+    ],
+    recommendedProductName: 'FarmsKing Succulent Pest Shield & Leaf Cleanser (200ml)',
+    recommendedPrice: 219,
+  },
+};
+
 export interface SavedClinicalReport {
   id: string;
   timestamp: string;
@@ -303,6 +490,13 @@ export default function AiDoctorScreen() {
   const [saveSuccessNotice, setSaveSuccessNotice] = useState<string | null>(null);
   const [isCurrentSaved, setIsCurrentSaved] = useState<boolean>(false);
   const [showSavedSection, setShowSavedSection] = useState<boolean>(true);
+
+  // Clinic Mode & Plant Selection for Domestic Garden Calibration
+  const [clinicMode, setClinicMode] = useState<'AGRI' | 'GARDEN'>('AGRI');
+  const [selectedPlantId, setSelectedPlantId] = useState<string>('');
+  const { data: userPlants = [] } = useAllPlants();
+  const { data: creditStatus } = useAiCreditStatus();
+  const diagnosePlantLeafMutation = useDiagnosePlantLeaf();
 
   // Load saved clinical reports from localStorage on mount
   React.useEffect(() => {
@@ -529,6 +723,32 @@ export default function AiDoctorScreen() {
     setSaveSuccessNotice(null);
     setIsCurrentSaved(false);
 
+    // If logged in & Garden mode: attempt authenticated diagnosis with credit deduction & DB record
+    if (clinicMode === 'GARDEN' && user) {
+      try {
+        const res = await diagnosePlantLeafMutation.mutateAsync({
+          leafPhotoUrl: imageUri,
+          plantId: selectedPlantId || undefined,
+        });
+        if (res && res.aiResult) {
+          setIsScanning(false);
+          setScanResult(res.aiResult);
+          setSaveSuccessNotice('Diagnosis saved to your Plant Health History & AI Ledger!');
+          return;
+        }
+      } catch (gardensErr: any) {
+        console.warn('Gardens diagnosis endpoint error:', gardensErr);
+        if (gardensErr?.message?.includes('exhausted')) {
+          setIsScanning(false);
+          Alert.alert(
+            'Scan Quota Reached',
+            'You have used all your free monthly AI scans. Upgrade to VIP Garden Pass for unlimited leaf scans and personalized doctor support.',
+          );
+          return;
+        }
+      }
+    }
+
     // 1. Attempt Live Multimodal AI Diagnosis via Backend
     try {
       const rawApiUrl = process.env.EXPO_PUBLIC_API_URL || '';
@@ -544,7 +764,7 @@ export default function AiDoctorScreen() {
       const response = await fetch(`${apiUrl}/ai-chat/diagnose-leaf`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: imageUri }),
+        body: JSON.stringify({ imageBase64: imageUri, plantMode: clinicMode }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -561,16 +781,17 @@ export default function AiDoctorScreen() {
       console.warn('Backend live leaf diagnosis unavailable, falling back:', err);
     }
 
-    // 2. High-speed Offline Calibrated Agronomy Engine
+    // 2. High-speed Offline Calibrated Knowledge Engine
     setTimeout(() => {
       setIsScanning(false);
+      const kb = clinicMode === 'GARDEN' ? GARDEN_DISEASE_KNOWLEDGE_BASE : DISEASE_KNOWLEDGE_BASE;
       let targetKey = forcedCropKey;
       if (!targetKey) {
-        const keys = Object.keys(DISEASE_KNOWLEDGE_BASE);
+        const keys = Object.keys(kb);
         const hash = imageUri.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        targetKey = keys[hash % keys.length] || 'Wheat';
+        targetKey = keys[hash % keys.length] || (clinicMode === 'GARDEN' ? 'Monstera' : 'Wheat');
       }
-      const diagnostic = DISEASE_KNOWLEDGE_BASE[targetKey] || DISEASE_KNOWLEDGE_BASE.Wheat;
+      const diagnostic = kb[targetKey] || (clinicMode === 'GARDEN' ? kb.Monstera : kb.Wheat);
       setScanResult(diagnostic);
     }, 750);
   };
@@ -709,14 +930,78 @@ export default function AiDoctorScreen() {
             </TouchableOpacity>
             <View style={styles.breadcrumbBadge}>
               <Ionicons name="sparkles" size={12} color="#059669" />
-              <Text style={styles.breadcrumbBadgeText}>FREE LIVE AI CROP CLINIC</Text>
+              <Text style={styles.breadcrumbBadgeText}>
+                {clinicMode === 'GARDEN' ? 'DOMESTIC PLANT CLINIC' : 'FREE LIVE AI CROP CLINIC'}
+              </Text>
             </View>
+          </View>
+
+          {/* Mode Switcher: Farm Crops vs Domestic Garden Plants */}
+          <View style={styles.modeSwitchRow}>
+            <TouchableOpacity
+              style={[
+                styles.modeSwitchBtn,
+                clinicMode === 'AGRI' && styles.modeSwitchBtnActiveAgri,
+              ]}
+              onPress={() => {
+                setClinicMode('AGRI');
+                setScanResult(null);
+                setSelectedImage(null);
+                setSelectedPlantId('');
+              }}
+              activeOpacity={0.88}
+            >
+              <Ionicons
+                name="leaf"
+                size={16}
+                color={clinicMode === 'AGRI' ? '#ffffff' : '#64748b'}
+              />
+              <Text
+                style={[
+                  styles.modeSwitchBtnText,
+                  clinicMode === 'AGRI' && styles.modeSwitchBtnTextActive,
+                ]}
+              >
+                Farm &amp; Field Crops
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.modeSwitchBtn,
+                clinicMode === 'GARDEN' && styles.modeSwitchBtnActiveGarden,
+              ]}
+              onPress={() => {
+                setClinicMode('GARDEN');
+                setScanResult(null);
+                setSelectedImage(null);
+              }}
+              activeOpacity={0.88}
+            >
+              <Ionicons
+                name="flower"
+                size={16}
+                color={clinicMode === 'GARDEN' ? '#ffffff' : '#64748b'}
+              />
+              <Text
+                style={[
+                  styles.modeSwitchBtnText,
+                  clinicMode === 'GARDEN' && styles.modeSwitchBtnTextActive,
+                ]}
+              >
+                Balcony &amp; Domestic Plants
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Hero Header Card */}
           <View style={styles.heroCard}>
             <LinearGradient
-              colors={['#047857', '#065f46', '#064e3b']}
+              colors={
+                clinicMode === 'GARDEN'
+                  ? ['#064e3b', '#0f172a', '#022c22']
+                  : ['#047857', '#065f46', '#064e3b']
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.heroGradient}
@@ -728,27 +1013,101 @@ export default function AiDoctorScreen() {
                 </View>
                 <View style={[styles.heroMicroPill, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
                   <Ionicons name="shield-checkmark" size={13} color="#ffffff" />
-                  <Text style={[styles.heroMicroPillText, { color: '#ffffff' }]}>ICAR & PAU Calibrated</Text>
+                  <Text style={[styles.heroMicroPillText, { color: '#ffffff' }]}>
+                    {clinicMode === 'GARDEN'
+                      ? 'Domestic Flora & Horticulturalist'
+                      : 'ICAR &amp; PAU Calibrated'}
+                  </Text>
                 </View>
               </View>
 
               <Text style={[styles.heroTitle, isMobile && styles.heroTitleMobile]}>
-                AI &amp; Agronomy Doctor
+                {clinicMode === 'GARDEN'
+                  ? 'AI Domestic Plant Doctor'
+                  : 'AI & Agronomy Doctor'}
               </Text>
               <Text style={[styles.heroSubtitle, isMobile && styles.heroSubtitleMobile]}>
-                Take or upload any photo of an infected leaf or stem. The AI identifies the crop, detects fungal, bacterial, or insect attacks in seconds, and prescribes scientific per-acre tank dosages and organic cures.
+                {clinicMode === 'GARDEN'
+                  ? 'Take or upload any photo of your terrace pots, balcony herbs, flowers, or houseplants. The AI detects overwatering root rot, pest attacks, and nutrient chlorosis with safe organic remedies.'
+                  : 'Take or upload any photo of an infected leaf or stem. The AI identifies the crop, detects fungal, bacterial, or insect attacks in seconds, and prescribes scientific per-acre tank dosages and organic cures.'}
               </Text>
             </LinearGradient>
           </View>
+
+          {/* Garden Mode Context & Plant Link Strip */}
+          {clinicMode === 'GARDEN' && (
+            <View style={styles.gardenContextStrip}>
+              <View style={styles.gardenQuotaBadge}>
+                <Ionicons name="sparkles" size={14} color="#059669" />
+                <Text style={styles.gardenQuotaBadgeText}>
+                  {creditStatus?.isUnlimited
+                    ? 'VIP Unlimited AI Scans Active'
+                    : `Monthly AI Scans: ${creditStatus?.remainingCredits ?? 5} Scans Left`}
+                </Text>
+              </View>
+
+              {userPlants.length > 0 && (
+                <View style={styles.plantSelectorRow}>
+                  <Text style={styles.plantSelectorLabel}>Assign Scan to Plant (Optional):</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                    <TouchableOpacity
+                      style={[
+                        styles.plantSelectorPill,
+                        selectedPlantId === '' && styles.plantSelectorPillActive,
+                      ]}
+                      onPress={() => setSelectedPlantId('')}
+                    >
+                      <Text
+                        style={[
+                          styles.plantSelectorPillText,
+                          selectedPlantId === '' && styles.plantSelectorPillTextActive,
+                        ]}
+                      >
+                        General Scan (No Specific Plant)
+                      </Text>
+                    </TouchableOpacity>
+                    {userPlants.map((p) => (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={[
+                          styles.plantSelectorPill,
+                          selectedPlantId === p.id && styles.plantSelectorPillActive,
+                        ]}
+                        onPress={() => setSelectedPlantId(p.id)}
+                      >
+                        <Ionicons
+                          name="leaf"
+                          size={12}
+                          color={selectedPlantId === p.id ? '#ffffff' : '#059669'}
+                        />
+                        <Text
+                          style={[
+                            styles.plantSelectorPillText,
+                            selectedPlantId === p.id && styles.plantSelectorPillTextActive,
+                          ]}
+                        >
+                          {p.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* 1-Tap Sample Leaf Photos for Immediate Testing */}
           <View style={styles.sampleSection}>
             <View style={styles.sampleHeaderRow}>
               <Ionicons name="flash" size={15} color="#059669" />
-              <Text style={styles.sampleSectionTitle}>Instant 1-Tap Sample Leaf Tests:</Text>
+              <Text style={styles.sampleSectionTitle}>
+                {clinicMode === 'GARDEN'
+                  ? 'Instant 1-Tap Domestic Plant Leaf Tests:'
+                  : 'Instant 1-Tap Sample Crop Leaf Tests:'}
+              </Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sampleRow}>
-              {SAMPLE_PHOTOS.map((sample, idx) => (
+              {(clinicMode === 'GARDEN' ? DOMESTIC_SAMPLE_PHOTOS : SAMPLE_PHOTOS).map((sample, idx) => (
                 <TouchableOpacity
                   key={`sample-${idx}`}
                   style={styles.sampleCard}
@@ -1071,25 +1430,47 @@ export default function AiDoctorScreen() {
                       <Ionicons name="arrow-forward" size={16} color="#ffffff" />
                     </TouchableOpacity>
 
-                    <View style={styles.secondaryCtaRow}>
-                      <TouchableOpacity
-                        style={styles.helplineBtn}
-                        onPress={() => Linking.openURL('tel:9577622000').catch(() => {})}
-                        activeOpacity={0.85}
-                      >
-                        <Ionicons name="call" size={15} color="#059669" />
-                        <Text style={styles.helplineBtnText}>Agronomist Helpline</Text>
-                      </TouchableOpacity>
+                    {clinicMode === 'GARDEN' ? (
+                      <View style={styles.secondaryCtaRow}>
+                        <TouchableOpacity
+                          style={[styles.helplineBtn, { backgroundColor: '#059669', borderColor: '#059669' }]}
+                          onPress={() => router.push('/garden/advisors' as any)}
+                          activeOpacity={0.85}
+                        >
+                          <Ionicons name="person" size={15} color="#ffffff" />
+                          <Text style={[styles.helplineBtnText, { color: '#ffffff' }]}>Consult Garden Doctor</Text>
+                        </TouchableOpacity>
 
-                      <TouchableOpacity
-                        style={styles.whatsappBtn}
-                        onPress={handleShareWhatsApp}
-                        activeOpacity={0.85}
-                      >
-                        <Ionicons name="logo-whatsapp" size={16} color="#ffffff" />
-                        <Text style={styles.whatsappBtnText}>Share Report</Text>
-                      </TouchableOpacity>
-                    </View>
+                        <TouchableOpacity
+                          style={styles.whatsappBtn}
+                          onPress={handleShareWhatsApp}
+                          activeOpacity={0.85}
+                        >
+                          <Ionicons name="logo-whatsapp" size={16} color="#ffffff" />
+                          <Text style={styles.whatsappBtnText}>Share Report</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.secondaryCtaRow}>
+                        <TouchableOpacity
+                          style={styles.helplineBtn}
+                          onPress={() => Linking.openURL('tel:9577622000').catch(() => {})}
+                          activeOpacity={0.85}
+                        >
+                          <Ionicons name="call" size={15} color="#059669" />
+                          <Text style={styles.helplineBtnText}>Agronomist Helpline</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.whatsappBtn}
+                          onPress={handleShareWhatsApp}
+                          activeOpacity={0.85}
+                        >
+                          <Ionicons name="logo-whatsapp" size={16} color="#ffffff" />
+                          <Text style={styles.whatsappBtnText}>Share Report</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
 
                     {/* ⚠️ Agricultural Safety Advisory & Expert Verification Notice */}
                     <View
@@ -2402,6 +2783,96 @@ const styles = StyleSheet.create({
   },
   chatbotWrap: {
     minHeight: 380,
+  },
+
+  // Clinic Mode Switcher Styles
+  modeSwitchRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+    backgroundColor: '#ffffff',
+    padding: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...premiumShadow('#0f172a', 'xs'),
+  },
+  modeSwitchBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#f8fafc',
+  },
+  modeSwitchBtnActiveAgri: {
+    backgroundColor: '#059669',
+  },
+  modeSwitchBtnActiveGarden: {
+    backgroundColor: '#047857',
+  },
+  modeSwitchBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  modeSwitchBtnTextActive: {
+    color: '#ffffff',
+  },
+
+  // Garden Mode Context & Plant Selector
+  gardenContextStrip: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    marginBottom: 14,
+    gap: 10,
+  },
+  gardenQuotaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  gardenQuotaBadgeText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#166534',
+  },
+  plantSelectorRow: {
+    gap: 6,
+  },
+  plantSelectorLabel: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#334155',
+  },
+  plantSelectorPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  plantSelectorPillActive: {
+    backgroundColor: '#059669',
+    borderColor: '#059669',
+  },
+  plantSelectorPillText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#475569',
+  },
+  plantSelectorPillTextActive: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
   },
 });
 

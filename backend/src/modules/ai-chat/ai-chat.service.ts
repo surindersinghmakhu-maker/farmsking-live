@@ -31,6 +31,10 @@ export class DiagnoseLeafDto {
   @IsNotEmpty()
   @MaxLength(8_000_000)
   imageBase64: string;
+
+  @IsOptional()
+  @IsIn(['AGRI', 'GARDEN'])
+  plantMode?: 'AGRI' | 'GARDEN';
 }
 
 export interface LeafDiagnosisResult {
@@ -332,9 +336,9 @@ CRITICAL INSTRUCTIONS:
     }
   }
 
-  async diagnoseLeaf(imageBase64: string): Promise<LeafDiagnosisResult> {
+  async diagnoseLeaf(imageBase64: string, plantMode: 'AGRI' | 'GARDEN' = 'AGRI'): Promise<LeafDiagnosisResult> {
     if (!imageBase64 || typeof imageBase64 !== 'string') {
-      return this.getFallbackDiagnosis();
+      return this.getFallbackDiagnosis('', plantMode);
     }
 
     let mimeType = 'image/jpeg';
@@ -345,7 +349,7 @@ CRITICAL INSTRUCTIONS:
       if (parts.length === 2) {
         const candidateMime = parts[0].replace('data:', '').trim().toLowerCase();
         if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(candidateMime)) {
-          return this.getFallbackDiagnosis();
+          return this.getFallbackDiagnosis('', plantMode);
         }
         mimeType = candidateMime;
         rawBase64 = parts[1];
@@ -364,7 +368,7 @@ CRITICAL INSTRUCTIONS:
 
     if (geminiKey) {
       const models = ['gemini-3.5-flash', 'gemini-3.8-flash'];
-      const prompt = `You are FarmsKing Expert Plant Pathologist & AI Agronomy Doctor for Indian Farmers.
+      const agriPrompt = `You are FarmsKing Expert Plant Pathologist & AI Agronomy Doctor for Indian Farmers.
 Analyze this leaf / plant photo in high detail.
 Determine:
 1. CROP IDENTIFICATION:
@@ -382,7 +386,7 @@ Determine:
    - "severity": One of ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
    - "confidenceScore": Confidence number between 75.0 and 99.5
    - "symptoms": 1-2 sentence description of identified visible leaf spots, pustules, lesions, or curling.
-3. TREATMENT & SPRAY PRESCRIPTION (ALWAYS provide treatment, regardless of whether crop was specifically identified!):
+3. TREATMENT & SPRAY PRESCRIPTION:
    - "firstAidSpray": Specific recommended chemical or scientific spray active ingredient (e.g. "Mancozeb 75% WP or Propiconazole 25% EC")
    - "dosageInstructions": Calibrated per-acre tank dosage instructions (e.g. "Mix 400g per acre in 200 Liters of water. Spray evenly during calm morning hours.")
    - "organicRemedy": Natural organic bio-control remedy (e.g. "Spray 5% Neem Seed Kernel Extract (NSKE) or Trichoderma viride @ 1kg/acre")
@@ -390,7 +394,7 @@ Determine:
    - "recommendedProductName": Market product name suitable for farmer purchase (e.g. "Mancozeb 75% WP Protective Fungicide (500g)")
    - "recommendedPrice": Reasonable estimated price in INR (number, e.g. 380)
 
-Respond strictly in valid JSON format matching this structure without any markdown backticks or commentary:
+Respond strictly in valid JSON format matching this structure:
 {
   "cropRecognized": true,
   "cropName": "Wheat (Triticum aestivum)",
@@ -407,6 +411,54 @@ Respond strictly in valid JSON format matching this structure without any markdo
   "recommendedProductName": "Tilt 25% EC Propiconazole (200ml)",
   "recommendedPrice": 380
 }`;
+
+      const gardenPrompt = `You are FarmsKing Expert Domestic Plant Doctor & Urban Horticulturalist for Home, Balcony & Terrace Gardens.
+Analyze this domestic houseplant, balcony pot, or home garden leaf photo in high detail.
+Determine:
+1. BOTANICAL IDENTIFICATION:
+   - Identify common urban/domestic plants (e.g., Monstera Deliciosa, Snake Plant / Sansevieria, Pothos / Money Plant, Peace Lily, Areca Palm, Ficus, Rubber Tree, Rose, Hibiscus, Marigold, Holy Basil / Tulsi, Mint, Coriander, Lemon, Aloe Vera, Jade Plant, Echeveria Succulent, Petunia, Ferns, Bougainvillea, Balcony Tomato, Chilli).
+   - If recognized, set:
+     "cropRecognized": true,
+     "cropName": "<Common Name> (<Botanical Name>)" e.g. "Monstera (Monstera deliciosa)" or "Rose (Rosa indica)"
+   - If not recognizable:
+     "cropRecognized": false,
+     "cropName": "Domestic Houseplant / Ornamental Foliage"
+2. DISORDER / PATHOLOGY:
+   - Identify houseplant disorders: Overwatering & Root Rot, Under-watering & Dehydration, Low Humidity Crispy Leaf Tips, Sunburn / Foliar Scorch, Spider Mites (fine webbing/stippling), Mealybugs (cottony white wax), Scale Insects, Aphids, Powdery Mildew, Black Spot, Nutrient Chlorosis (Nitrogen/Iron), Edema, Cold Shock.
+   - "diseaseName": Clear scientific condition name in English (e.g. "Root Rot & Overwatering Chlorosis", "Black Spot Fungi", "Spider Mite Infestation", "Low Humidity Leaf Tip Burn", "Mealybug Attack", "Healthy Houseplant Foliage")
+   - "latinName": Pathogen or causative agent (e.g. "Pythium spp.", "Diplocarpon rosae", "Tetranychus urticae", "Pseudococcidae", "Physiological")
+   - "category": One of ["FUNGAL", "BACTERIAL", "VIRAL", "PEST_ATTACK", "DEFICIENCY", "HEALTHY"]
+   - "severity": One of ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+   - "confidenceScore": Confidence number between 75.0 and 99.5
+   - "symptoms": 1-2 sentence description of visible domestic pot foliage symptoms.
+3. SAFE DOMESTIC TREATMENT & PRESCRIPTION:
+   - Provide safe, pet-friendly and child-safe household remedies!
+   - "firstAidSpray": Specific targeted houseplant spray (e.g. "Cold-Pressed Neem Oil Spray (5ml/L) + Mild Castile Soap Wash" or "Diluted Hydrogen Peroxide 3% Root Drench")
+   - "dosageInstructions": Step-by-step application instructions for potted plants.
+   - "organicRemedy": Natural household remedy (e.g. "Dust cinnamon powder on cut stems as natural antifungal; wipe leaves with damp neem solution; reduce watering to once per 7 days")
+   - "precautions": Array of 3 key precautions in English.
+   - "recommendedProductName": Suitable domestic garden product (e.g. "FarmsKing BioNeem Houseplant Protection Spray (250ml)")
+   - "recommendedPrice": Reasonable estimated price in INR (number, e.g. 249)
+
+Respond strictly in valid JSON format matching this structure:
+{
+  "cropRecognized": true,
+  "cropName": "Monstera (Monstera deliciosa)",
+  "diseaseName": "Root Rot & Overwatering Chlorosis",
+  "latinName": "Pythium spp. / Physiological stress",
+  "category": "FUNGAL",
+  "severity": "HIGH",
+  "confidenceScore": 97.5,
+  "symptoms": "Lower leaves turning pale yellow with dark brown water-soaked soft lesions near the petiole base.",
+  "firstAidSpray": "Diluted Hydrogen Peroxide (3%) soil drench & bio-antifungal spray",
+  "dosageInstructions": "Mix 1 part 3% H2O2 with 4 parts water. Drench potting soil thoroughly once.",
+  "organicRemedy": "Prune black rotted roots with sterile shears, dust cuts with natural cinnamon powder, and repot in fresh airy perlite mix.",
+  "precautions": ["Ensure nursery pot has unobstructed drainage holes", "Allow top 2 inches of potting mix to dry before watering again", "Do not let pot sit in standing drainage saucer water"],
+  "recommendedProductName": "FarmsKing Houseplant Root Vitalizer & Bio-Fungicide (250ml)",
+  "recommendedPrice": 249
+}`;
+
+      const prompt = plantMode === 'GARDEN' ? gardenPrompt : agriPrompt;
 
       for (const model of models) {
         try {
@@ -472,11 +524,134 @@ Respond strictly in valid JSON format matching this structure without any markdo
       }
     }
 
-    return this.getFallbackDiagnosis(rawBase64);
+    return this.getFallbackDiagnosis(rawBase64, plantMode);
   }
 
-  private getFallbackDiagnosis(hashSeed = ''): LeafDiagnosisResult {
-    const fallbackCatalog: LeafDiagnosisResult[] = [
+  private getFallbackDiagnosis(hashSeed = '', plantMode: 'AGRI' | 'GARDEN' = 'AGRI'): LeafDiagnosisResult {
+    const fallbackGardenCatalog: LeafDiagnosisResult[] = [
+      {
+        cropRecognized: true,
+        cropName: 'Monstera (Monstera deliciosa)',
+        diseaseName: 'Root Rot & Overwatering Chlorosis',
+        latinName: 'Pythium spp. / Phytophthora',
+        category: 'FUNGAL',
+        severity: 'HIGH',
+        confidenceScore: 97.5,
+        symptoms: 'Lower leaves turning pale yellow with dark brown water-soaked soft lesions near the petiole base.',
+        firstAidSpray: 'Diluted Hydrogen Peroxide (3%) soil drench & bio-antifungal spray',
+        dosageInstructions: 'Mix 1 part 3% H2O2 with 4 parts water. Drench potting soil thoroughly once.',
+        organicRemedy: 'Prune black rotted roots with sterile shears, dust cuts with natural cinnamon powder, and repot in fresh airy perlite mix.',
+        precautions: [
+          'Ensure nursery pot has unobstructed drainage holes.',
+          'Allow top 2 inches of potting mix to dry before watering again.',
+          'Do not let pot sit in standing drainage saucer water.',
+        ],
+        recommendedProductName: 'FarmsKing Houseplant Root Vitalizer & Bio-Fungicide (250ml)',
+        recommendedPrice: 249,
+      },
+      {
+        cropRecognized: true,
+        cropName: 'Rose (Rosa indica / floribunda)',
+        diseaseName: 'Black Spot Fungi & Powdery Mildew',
+        latinName: 'Diplocarpon rosae / Podosphaera pannosa',
+        category: 'FUNGAL',
+        severity: 'HIGH',
+        confidenceScore: 96.8,
+        symptoms: 'Fringed black circular spots with yellow halos across rose leaf surfaces; premature leaf drop.',
+        firstAidSpray: 'Organic Neem Oil (10,000 PPM) + Baking Soda Foliar Spray',
+        dosageInstructions: 'Mix 5ml Neem Oil + 2g Baking Soda + 2 drops mild soap in 1 Liter warm water. Spray early morning.',
+        organicRemedy: 'Spray diluted milk whey (1:9 with water) in bright morning sunlight to inhibit fungal germination.',
+        precautions: [
+          'Water roses at the base of the stem, never spray water over foliage in the evening.',
+          'Collect and discard fallen infected leaves to stop spore reinfection.',
+          'Prune inner stems to increase air circulation inside the bush.',
+        ],
+        recommendedProductName: 'FarmsKing Organic Rose Care & Black Spot Defender (500ml)',
+        recommendedPrice: 299,
+      },
+      {
+        cropRecognized: true,
+        cropName: 'Holy Basil / Tulsi (Ocimum tenuiflorum)',
+        diseaseName: 'Cercospora Leaf Spot & Aphid Attack',
+        latinName: 'Cercospora ocimicola / Aphis gossypii',
+        category: 'PEST_ATTACK',
+        severity: 'MEDIUM',
+        confidenceScore: 95.2,
+        symptoms: 'Small dark brown necrotic spots on sacred tulsi leaves with tiny black sucking insects on tender stem tips.',
+        firstAidSpray: 'Cold-Pressed Pure Neem Leaf Extract (Pet-Safe & Organic)',
+        dosageInstructions: 'Mix 3-4 ml organic neem oil in 1 Liter water with a pinch of soapnut (reetha) powder. Spray thoroughly.',
+        organicRemedy: 'Dust wood ash lightly on damp leaves or spray a mild garlic-chilli water extract.',
+        precautions: [
+          'Safe for household use: wait 24 hours and wash leaves before ritual or culinary use.',
+          'Place tulsi where it receives at least 4-5 hours of direct morning sunlight.',
+          'Pinch off flower spikes (manjari) regularly to encourage vigorous bushy green growth.',
+        ],
+        recommendedProductName: 'FarmsKing Sacred Tulsi & Herb Organic Protector (200ml)',
+        recommendedPrice: 199,
+      },
+      {
+        cropRecognized: true,
+        cropName: 'Pothos / Money Plant (Epipremnum aureum)',
+        diseaseName: 'Nitrogen Chlorosis & Low Humidity Scorch',
+        latinName: 'Physiological nutrient & humidity imbalance',
+        category: 'DEFICIENCY',
+        severity: 'LOW',
+        confidenceScore: 94.6,
+        symptoms: 'Older leaves turning uniform yellow; crispy brown tips on newly emerging foliage.',
+        firstAidSpray: 'Liquid Seaweed Bio-Nutrient & Foliar Humic Spray',
+        dosageInstructions: 'Mix 2 ml Seaweed extract per Liter of water. Mist foliage and water soil once every 14 days.',
+        organicRemedy: 'Wipe leaves with a damp cloth to clean dust; mist foliage twice weekly to boost indoor humidity.',
+        precautions: [
+          'Keep away from dry direct air from air conditioners or heating blowers.',
+          'Provide bright indirect light; direct summer sun scorches variegated leaves.',
+          'Ensure the pot has adequate drainage so roots do not suffocate in waterlogged soil.',
+        ],
+        recommendedProductName: 'FarmsKing Houseplant Green Growth Seaweed Tonic (250ml)',
+        recommendedPrice: 220,
+      },
+      {
+        cropRecognized: true,
+        cropName: 'Snake Plant (Dracaena trifasciata)',
+        diseaseName: 'Bacterial Soft Rot & Cold Stress',
+        latinName: 'Pectobacterium carotovorum',
+        category: 'BACTERIAL',
+        severity: 'CRITICAL',
+        confidenceScore: 98.1,
+        symptoms: 'Soft, mushy, foul-smelling leaf bases causing architectural swords to topple over.',
+        firstAidSpray: 'Systemic Bactericide & Copper Hydroxide Root Treatment',
+        dosageInstructions: 'Immediately stop all watering. Unpot plant and excise soft rotted leaf bases.',
+        organicRemedy: 'Allow excised rhizomes to callous in dry air for 48 hours, dust cuts with cinnamon, repot into dry cactus mix.',
+        precautions: [
+          'Snake plants require watering only once every 3 to 4 weeks in indoor conditions.',
+          'Never pour water directly into the center leaf rosette.',
+          'Maintain temperatures above 12°C during winter months.',
+        ],
+        recommendedProductName: 'FarmsKing Succulent & Sansevieria Dry Root Mix (2kg)',
+        recommendedPrice: 280,
+      },
+      {
+        cropRecognized: true,
+        cropName: 'Areca Palm (Dypsis lutescens)',
+        diseaseName: 'Spider Mite Attack & Potassium Deficiency',
+        latinName: 'Tetranychus urticae / Nutrient imbalance',
+        category: 'PEST_ATTACK',
+        severity: 'HIGH',
+        confidenceScore: 96.0,
+        symptoms: 'Fine silky webbing on leaf undersides with tiny yellow stippling dots; frond tips turning translucent yellow-orange.',
+        firstAidSpray: 'Mite-Stop Botanical Acaricide & Potassium Foliar Feed',
+        dosageInstructions: 'Spray undersides of all fronds with insecticidal soap solution (5ml/L) twice, 4 days apart.',
+        organicRemedy: 'Wash fronds in shower or hose down with pressurized water to dislodge spider mites.',
+        precautions: [
+          'Spider mites thrive in dry warm indoor air: increase room humidity around palms.',
+          'Feed with a balanced slow-release palm fertilizer with added magnesium and potassium.',
+          'Do not trim fronds that are only partially yellow until completely brown.',
+        ],
+        recommendedProductName: 'FarmsKing Palm Green Revive Spray & Mite Shield (500ml)',
+        recommendedPrice: 349,
+      },
+    ];
+
+    const fallbackAgriCatalog: LeafDiagnosisResult[] = [
       {
         cropRecognized: true,
         cropName: 'Wheat (Triticum aestivum)',
@@ -599,7 +774,8 @@ Respond strictly in valid JSON format matching this structure without any markdo
       },
     ];
 
+    const catalog = plantMode === 'GARDEN' ? fallbackGardenCatalog : fallbackAgriCatalog;
     const hash = hashSeed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return fallbackCatalog[hash % fallbackCatalog.length];
+    return catalog[hash % catalog.length];
   }
 }

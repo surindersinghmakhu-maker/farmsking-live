@@ -184,3 +184,41 @@ export async function listGardenPlants(id: string): Promise<Plant[]> {
   const { data } = await apiClient.get<Plant[]>(`/gardens/${id}/plants`);
   return data;
 }
+
+export interface PlantDiagnosisRecord {
+  id: string;
+  gardenerId: string;
+  plantId?: string | null;
+  leafPhotoUrl: string;
+  detectedIssue: string;
+  category: string;
+  confidence: string;
+  organicRemedy: string;
+  chemicalRemedy?: string | null;
+  preventiveCare?: string | null;
+  expertConsultationId?: string | null;
+  createdAt: string;
+  plant?: { id: string; name: string; locationType?: string | null };
+}
+
+export interface DiagnosePlantLeafResponse {
+  aiResult: any;
+  diagnosis: PlantDiagnosisRecord;
+  creditStatus: AiCreditStatus;
+}
+
+export async function diagnosePlantLeaf(payload: {
+  leafPhotoUrl: string;
+  plantId?: string;
+  leafDescription?: string;
+}): Promise<DiagnosePlantLeafResponse> {
+  const { data } = await apiClient.post<DiagnosePlantLeafResponse>('/gardens/diagnose', payload);
+  return data;
+}
+
+export async function listPlantDiagnoses(plantId?: string): Promise<PlantDiagnosisRecord[]> {
+  const { data } = await apiClient.get<PlantDiagnosisRecord[]>('/gardens/diagnoses', {
+    params: { plantId: plantId || undefined },
+  });
+  return data;
+}

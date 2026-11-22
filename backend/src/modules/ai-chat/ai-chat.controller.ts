@@ -14,8 +14,8 @@ export class AiChatController {
   }
 
   @Post('diagnose-leaf')
-  @Throttle({ default: { limit: 6, ttl: 60000 } })
+  @Throttle({ default: { limit: 12, ttl: 60000 } })
   async diagnoseLeaf(@Body() body: DiagnoseLeafDto) {
-    return this.aiChatService.diagnoseLeaf(body.imageBase64);
+    return this.aiChatService.diagnoseLeaf(body.imageBase64, body.plantMode);
   }
 }

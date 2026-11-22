@@ -121,3 +121,26 @@ export function useLogPlantHealth() {
     },
   });
 }
+
+export function useDiagnosePlantLeaf() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { leafPhotoUrl: string; plantId?: string; leafDescription?: string }) =>
+      api.diagnosePlantLeaf(payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['ai-credit-status'] });
+      queryClient.invalidateQueries({ queryKey: ['plant-diagnoses'] });
+      if (variables.plantId) {
+        queryClient.invalidateQueries({ queryKey: ['plant-details', variables.plantId] });
+        queryClient.invalidateQueries({ queryKey: ['all-plants'] });
+      }
+    },
+  });
+}
+
+export function usePlantDiagnoses(plantId?: string) {
+  return useQuery({
+    queryKey: ['plant-diagnoses', plantId],
+    queryFn: () => api.listPlantDiagnoses(plantId),
+  });
+}

@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { GardenerSubscriptionPlan, GardenType, PlantCareType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { GardenerPlansService, FREE_PLAN_MAX_PLANTS } from '../gardener-plans/gardener-plans.service';
+import { AiChatService } from '../ai-chat/ai-chat.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { hasActiveRole } from '../../common/utils/auth-user.util';
 import { CreateGardenDto } from './dto/create-garden.dto';
@@ -19,6 +20,7 @@ export class GardensService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gardenerPlansService: GardenerPlansService,
+    private readonly aiChatService: AiChatService,
   ) {}
 
   create(user: AuthUser, dto: CreateGardenDto) {
@@ -275,6 +277,66 @@ export class GardensService {
     };
   }
 
+  async diagnoseAndRecord(user: AuthUser, dto: DiagnosePlantDto) {
+    const creditStatus = await this.getAiCreditStatus(user);
+    if (creditStatus.remainingCredits <= 0 && !creditStatus.isUnlimited) {
+      throw new ForbiddenException(
+        'You have exhausted your monthly free AI plant doctor scans. Upgrade to VIP Garden Pass for unlimited diagnoses.',
+      );
+    }
+
+    const aiResult = await this.aiChatService.diagnoseLeaf(dto.leafPhotoUrl, 'GARDEN');
+
+    const diagnosis = await this.prisma.plantDiagnosis.create({
+      data: {
+        gardenerId: user.id,
+        plantId: dto.plantId || null,
+        leafPhotoUrl: dto.leafPhotoUrl,
+        detectedIssue: `${aiResult.cropName}: ${aiResult.diseaseName}`,
+        category: aiResult.category || 'FUNGAL',
+        confidence: `${aiResult.confidenceScore || 95}%`,
+        organicRemedy: aiResult.organicRemedy || 'Ensure balanced watering and adequate indirect sunlight.',
+        chemicalRemedy: aiResult.firstAidSpray || null,
+        preventiveCare: `${aiResult.dosageInstructions || ''} | ${aiResult.symptoms || ''}`,
+      },
+    });
+
+    await this.prisma.aiCreditLedger.update({
+      where: { userId: user.id },
+      data: { usedThisMonth: { increment: 1 } },
+    });
+
+    if (dto.plantId) {
+      const isHealthy = aiResult.category === 'HEALTHY';
+      const status = isHealthy ? 'HEALTHY' : aiResult.severity === 'CRITICAL' ? 'CRITICAL' : 'NEEDS_CARE';
+      await this.prisma.$transaction([
+        this.prisma.plant.update({
+          where: { id: dto.plantId },
+          data: {
+            healthStatus: status,
+            photoUrl: dto.leafPhotoUrl,
+          },
+        }),
+        this.prisma.plantHealthLog.create({
+          data: {
+            plantId: dto.plantId,
+            photoUrl: dto.leafPhotoUrl,
+            conditionStatus: status,
+            notes: `${aiResult.diseaseName} detected by AI Plant Doctor (${aiResult.confidenceScore}% confidence). ${aiResult.organicRemedy}`,
+          },
+        }),
+      ]);
+    }
+
+    const updatedCreditStatus = await this.getAiCreditStatus(user);
+
+    return {
+      aiResult,
+      diagnosis,
+      creditStatus: updatedCreditStatus,
+    };
+  }
+
   async recordPlantDiagnosis(user: AuthUser, dto: DiagnosePlantDto, aiResult: any) {
     const creditStatus = await this.getAiCreditStatus(user);
     if (creditStatus.remainingCredits <= 0 && !creditStatus.isUnlimited) {
@@ -303,6 +365,20 @@ export class GardensService {
     });
 
     return diagnosis;
+  }
+
+  listDiagnoses(user: AuthUser, plantId?: string) {
+    const isAdmin = hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN);
+    return this.prisma.plantDiagnosis.findMany({
+      where: {
+        ...(isAdmin ? {} : { gardenerId: user.id }),
+        ...(plantId ? { plantId } : {}),
+      },
+      include: {
+        plant: { select: { id: true, name: true, locationType: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async addExpense(user: AuthUser, dto: CreateGardenExpenseDto) {

@@ -73,6 +73,17 @@ export class GardensController {
     return this.gardensService.getAiCreditStatus(user);
   }
 
+  // ── AI Plant Doctor Diagnosis ──
+  @Post('diagnose')
+  diagnosePlant(@CurrentUser() user: AuthUser, @Body() dto: DiagnosePlantDto) {
+    return this.gardensService.diagnoseAndRecord(user, dto);
+  }
+
+  @Get('diagnoses')
+  listDiagnoses(@CurrentUser() user: AuthUser, @Query('plantId') plantId?: string) {
+    return this.gardensService.listDiagnoses(user, plantId);
+  }
+
   // ── Garden Expenses ──
   @Post('expenses')
   addExpense(@CurrentUser() user: AuthUser, @Body() dto: CreateGardenExpenseDto) {

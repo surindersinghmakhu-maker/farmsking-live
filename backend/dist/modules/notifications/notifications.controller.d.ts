@@ -7,12 +7,12 @@ export declare class NotificationsController {
         id: string;
         createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
-        body: string;
-        type: import(".prisma/client").$Enums.NotificationType;
         title: string;
-        userId: string;
+        type: import(".prisma/client").$Enums.NotificationType;
+        body: string;
         isRead: boolean;
         readAt: Date | null;
+        userId: string;
     }[]>;
     getUnreadCount(user: AuthUser): Promise<{
         count: number;
@@ -21,12 +21,12 @@ export declare class NotificationsController {
         id: string;
         createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
-        body: string;
-        type: import(".prisma/client").$Enums.NotificationType;
         title: string;
-        userId: string;
+        type: import(".prisma/client").$Enums.NotificationType;
+        body: string;
         isRead: boolean;
         readAt: Date | null;
+        userId: string;
     }>;
     markAllRead(user: AuthUser): Promise<{
         success: boolean;

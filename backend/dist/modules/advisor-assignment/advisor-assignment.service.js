@@ -130,13 +130,43 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
                                 },
                             },
                         },
+                        gardens: {
+                            include: {
+                                plants: {
+                                    where: { deletedAt: null },
+                                    include: {
+                                        schedules: { orderBy: { nextDueDate: 'asc' } },
+                                        healthLogs: { orderBy: { loggedAt: 'desc' }, take: 10 },
+                                        diagnoses: { orderBy: { createdAt: 'desc' }, take: 5 },
+                                    },
+                                },
+                                schedules: { orderBy: { nextDueDate: 'asc' } },
+                            },
+                        },
+                        plants: {
+                            where: { gardenId: null, deletedAt: null },
+                            include: {
+                                schedules: { orderBy: { nextDueDate: 'asc' } },
+                                healthLogs: { orderBy: { loggedAt: 'desc' }, take: 10 },
+                                diagnoses: { orderBy: { createdAt: 'desc' }, take: 5 },
+                            },
+                        },
                     }),
             },
         });
         if (!farmer) {
             throw new common_1.NotFoundException('Farmer not found.');
         }
-        return { farmer: { ...farmer, farms: farmer.farms ?? [] }, assignment, isExpired };
+        return {
+            farmer: {
+                ...farmer,
+                farms: farmer.farms ?? [],
+                gardens: farmer.gardens ?? [],
+                plants: farmer.plants ?? [],
+            },
+            assignment,
+            isExpired,
+        };
     }
     async getDoctorRatingStats(advisorIds) {
         if (!advisorIds.length)

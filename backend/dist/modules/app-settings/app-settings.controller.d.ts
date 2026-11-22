@@ -28,6 +28,7 @@ export declare class AppSettingsController {
         upiId: string | null;
         createdAt: Date;
         updatedAt: Date;
+        updatedById: string | null;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
@@ -50,20 +51,16 @@ export declare class AppSettingsController {
         gardenMaintenanceMode: boolean;
         walletMaintenanceMode: boolean;
         trainerMaintenanceMode: boolean;
+        allowDirectPlatformSales: boolean;
         freeTrialEnabled: boolean;
         freeTrialDays: number;
         freeTrialPlan: string;
+        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
         gardenExpertPlatformFeePercent: number;
-        advisorPlatformFeePercent: number;
-        advisorAdminFeePercent: number;
         gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
         gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
-        allowDirectPlatformSales: boolean;
-        withdrawalPlatformFeePercent: number;
-        withdrawalGstPercent: number;
-        walletUsagePlatformFeePercent: number;
-        walletUsageGstPercent: number;
-        walletTaxEnabled: boolean;
+        advisorPlatformFeePercent: number;
+        advisorAdminFeePercent: number;
         cropCareInstallmentStage1Percent: number;
         cropCareInstallmentStage2Percent: number;
         cropCareInstallmentStage3Percent: number;
@@ -81,8 +78,11 @@ export declare class AppSettingsController {
         defaultArhtiyaInterestRateAnnual: number;
         mandiMarketFeePercent: number;
         mandiRdfPercent: number;
-        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
-        updatedById: string | null;
+        withdrawalPlatformFeePercent: number;
+        withdrawalGstPercent: number;
+        walletUsagePlatformFeePercent: number;
+        walletUsageGstPercent: number;
+        walletTaxEnabled: boolean;
     }>;
     getSeo(): Promise<{
         seoTitle: any;
@@ -97,6 +97,7 @@ export declare class AppSettingsController {
         upiId: string | null;
         createdAt: Date;
         updatedAt: Date;
+        updatedById: string | null;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
@@ -119,20 +120,16 @@ export declare class AppSettingsController {
         gardenMaintenanceMode: boolean;
         walletMaintenanceMode: boolean;
         trainerMaintenanceMode: boolean;
+        allowDirectPlatformSales: boolean;
         freeTrialEnabled: boolean;
         freeTrialDays: number;
         freeTrialPlan: string;
+        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
         gardenExpertPlatformFeePercent: number;
-        advisorPlatformFeePercent: number;
-        advisorAdminFeePercent: number;
         gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
         gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
-        allowDirectPlatformSales: boolean;
-        withdrawalPlatformFeePercent: number;
-        withdrawalGstPercent: number;
-        walletUsagePlatformFeePercent: number;
-        walletUsageGstPercent: number;
-        walletTaxEnabled: boolean;
+        advisorPlatformFeePercent: number;
+        advisorAdminFeePercent: number;
         cropCareInstallmentStage1Percent: number;
         cropCareInstallmentStage2Percent: number;
         cropCareInstallmentStage3Percent: number;
@@ -150,8 +147,11 @@ export declare class AppSettingsController {
         defaultArhtiyaInterestRateAnnual: number;
         mandiMarketFeePercent: number;
         mandiRdfPercent: number;
-        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
-        updatedById: string | null;
+        withdrawalPlatformFeePercent: number;
+        withdrawalGstPercent: number;
+        walletUsagePlatformFeePercent: number;
+        walletUsageGstPercent: number;
+        walletTaxEnabled: boolean;
     }>;
     getIntegrations(): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
     requestAdminActionOtp(user: AuthUser): Promise<{
@@ -254,7 +254,7 @@ export declare class AppSettingsController {
         } | undefined;
         backup: {
             autoBackupEnabled: boolean | undefined;
-            frequency: "DAILY" | "WEEKLY" | "MONTHLY" | undefined;
+            frequency: "MONTHLY" | "DAILY" | "WEEKLY" | undefined;
             storageTarget: "R2_AND_LOCAL" | "R2_ONLY" | "LOCAL_ONLY" | undefined;
             retentionDays: number | undefined;
             lastBackupTimestamp: string | undefined;
@@ -400,7 +400,7 @@ export declare class PublicContactController {
         } | undefined;
         backup: {
             autoBackupEnabled: boolean | undefined;
-            frequency: "DAILY" | "WEEKLY" | "MONTHLY" | undefined;
+            frequency: "MONTHLY" | "DAILY" | "WEEKLY" | undefined;
             storageTarget: "R2_AND_LOCAL" | "R2_ONLY" | "LOCAL_ONLY" | undefined;
             retentionDays: number | undefined;
             lastBackupTimestamp: string | undefined;

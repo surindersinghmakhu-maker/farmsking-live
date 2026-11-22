@@ -6,11 +6,11 @@ export declare class VoiceCallController {
     private readonly voiceCallService;
     constructor(voiceCallService: VoiceCallService);
     scheduleGroupCall(user: AuthUser, dto: ScheduleGroupCallDto): Promise<{
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
         hostId: string;
         scheduledAt: Date | null;
@@ -48,11 +48,11 @@ export declare class VoiceCallController {
             leftAt: Date | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
         hostId: string;
         scheduledAt: Date | null;
@@ -74,11 +74,11 @@ export declare class VoiceCallController {
             specialization: string | null;
         };
     } & {
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
         hostId: string;
         scheduledAt: Date | null;
@@ -117,11 +117,11 @@ export declare class VoiceCallController {
                 leftAt: Date | null;
             })[];
         } & {
+            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             title: string;
-            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             channelName: string;
             hostId: string;
             scheduledAt: Date | null;
@@ -163,11 +163,11 @@ export declare class VoiceCallController {
                 leftAt: Date | null;
             })[];
         } & {
+            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             title: string;
-            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             channelName: string;
             hostId: string;
             scheduledAt: Date | null;
@@ -212,11 +212,11 @@ export declare class VoiceCallController {
             leftAt: Date | null;
         })[];
     } & {
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         title: string;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
         hostId: string;
         scheduledAt: Date | null;

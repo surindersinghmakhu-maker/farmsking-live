@@ -8,9 +8,9 @@ export declare class SatelliteService {
         id: string;
         createdAt: Date;
         plotId: string;
+        healthStatus: string;
         scanDate: Date;
         meanNdvi: number;
-        healthStatus: string;
         tileLayerUrl: string;
         redZoneAlerts: import("@prisma/client/runtime/library").JsonValue | null;
     }>;

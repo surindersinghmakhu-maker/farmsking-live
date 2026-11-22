@@ -67,7 +67,7 @@ export class GardensService {
 
   async addPlant(user: AuthUser, gardenIdOrNull: string | undefined | null, dto: CreatePlantDto) {
     const effectiveGardenId = gardenIdOrNull || dto.gardenId || null;
-    let garden = null;
+    let garden: any = null;
 
     if (effectiveGardenId) {
       garden = await this.findOneOrThrow(user, effectiveGardenId);
@@ -242,7 +242,8 @@ export class GardensService {
     });
 
     const { plan } = await this.gardenerPlansService.getEffectivePlan(user.id);
-    const quota = plan === GardenerSubscriptionPlan.PREMIUM ? PREMIUM_GARDENER_MONTHLY_AI_SCANS : FREE_GARDENER_MONTHLY_AI_SCANS;
+    const isProOrVip = plan === GardenerSubscriptionPlan.VIP || plan === GardenerSubscriptionPlan.PRO;
+    const quota = isProOrVip ? PREMIUM_GARDENER_MONTHLY_AI_SCANS : FREE_GARDENER_MONTHLY_AI_SCANS;
 
     if (!ledger) {
       ledger = await this.prisma.aiCreditLedger.create({
@@ -274,7 +275,7 @@ export class GardensService {
       bonusCredits: ledger.bonusCredits,
       remainingCredits: remaining,
       resetDate: ledger.resetDate,
-      isUnlimited: plan === GardenerSubscriptionPlan.PREMIUM,
+      isUnlimited: plan === GardenerSubscriptionPlan.VIP,
     };
   }
 
@@ -512,10 +513,27 @@ export class GardensService {
       ? new Date(dto.nextDueDate)
       : new Date(Date.now() + (dto.intervalDays || 1) * 86400000);
 
+    let effectivePlantId = dto.plantId;
+    if (!effectivePlantId && dto.gardenId) {
+      const firstPlant = await this.prisma.plant.findFirst({
+        where: { gardenId: dto.gardenId, deletedAt: null },
+      });
+      if (firstPlant) effectivePlantId = firstPlant.id;
+    }
+    if (!effectivePlantId) {
+      const anyPlant = await this.prisma.plant.findFirst({
+        where: { gardenerId: dto.gardenerId, deletedAt: null },
+      });
+      if (anyPlant) effectivePlantId = anyPlant.id;
+    }
+    if (!effectivePlantId) {
+      throw new BadRequestException('A target plant must be registered before prescribing care routines.');
+    }
+
     const schedule = await this.prisma.plantCareSchedule.create({
       data: {
         gardenerId: dto.gardenerId,
-        plantId: dto.plantId || null,
+        plantId: effectivePlantId,
         gardenId: dto.gardenId || null,
         careType: dto.careType,
         title: dto.title,

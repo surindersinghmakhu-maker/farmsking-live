@@ -145,10 +145,10 @@ export declare class BasicPlanCouponsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            startDate: Date;
-            endDate: Date | null;
             farmerId: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+            startDate: Date;
+            endDate: Date | null;
             expiredAt: Date | null;
             couponId: string | null;
         };

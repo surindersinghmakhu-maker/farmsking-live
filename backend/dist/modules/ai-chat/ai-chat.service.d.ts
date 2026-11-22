@@ -12,6 +12,7 @@ export declare class AiChatRequestDto {
 }
 export declare class DiagnoseLeafDto {
     imageBase64: string;
+    plantMode?: 'AGRI' | 'GARDEN';
 }
 export interface LeafDiagnosisResult {
     cropRecognized: boolean;
@@ -38,6 +39,6 @@ export declare class AiChatService {
         answer: string;
         isFarming: boolean;
     }>;
-    diagnoseLeaf(imageBase64: string): Promise<LeafDiagnosisResult>;
+    diagnoseLeaf(imageBase64: string, plantMode?: 'AGRI' | 'GARDEN'): Promise<LeafDiagnosisResult>;
     private getFallbackDiagnosis;
 }

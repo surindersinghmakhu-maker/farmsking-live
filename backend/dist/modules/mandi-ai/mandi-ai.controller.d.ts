@@ -6,16 +6,16 @@ export declare class MandiAIController {
     get30DayPricePrediction(cropName?: string, mandiName?: string): Promise<{
         id: string;
         createdAt: Date;
-        mandiName: string;
         cropName: string;
+        confidenceScore: number;
+        mandiName: string;
         predictedDate: Date;
         predictedPrice: import("@prisma/client/runtime/library").Decimal;
-        confidenceScore: number;
     }[]>;
     createPriceLockContract(user: AuthUser, dto: CreatePriceLockDto): Promise<{
+        status: string;
         id: string;
         createdAt: Date;
-        status: string;
         farmerId: string;
         cropName: string;
         buyerId: string;
@@ -35,9 +35,9 @@ export declare class MandiAIController {
             name: string;
         };
     } & {
+        status: string;
         id: string;
         createdAt: Date;
-        status: string;
         farmerId: string;
         cropName: string;
         buyerId: string;

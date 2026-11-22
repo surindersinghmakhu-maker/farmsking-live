@@ -62,10 +62,10 @@ export declare class ComplianceController {
                 panNumber: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                grossAmount: import("@prisma/client/runtime/library").Decimal;
-                netAmount: import("@prisma/client/runtime/library").Decimal;
                 financialYear: string;
+                grossAmount: import("@prisma/client/runtime/library").Decimal;
                 tdsAmount: import("@prisma/client/runtime/library").Decimal;
+                netAmount: import("@prisma/client/runtime/library").Decimal;
                 quarter: string;
                 deducteeId: string;
                 deducteeName: string;
@@ -83,12 +83,12 @@ export declare class ComplianceController {
         };
         gstr8Count: number;
         gstr8Reports: {
-            year: number;
-            month: number;
+            status: string;
             id: string;
             createdAt: Date;
-            status: string;
+            year: number;
             sellerStoreId: string;
+            month: number;
             totalGrossSales: import("@prisma/client/runtime/library").Decimal;
             totalSalesReturn: import("@prisma/client/runtime/library").Decimal;
             netTaxableValue: import("@prisma/client/runtime/library").Decimal;
@@ -99,15 +99,15 @@ export declare class ComplianceController {
         }[];
         invoices: {
             id: string;
-            gstAmount: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
-            grossAmount: import("@prisma/client/runtime/library").Decimal;
             tcsAmount: import("@prisma/client/runtime/library").Decimal;
             commissionGstAmount: import("@prisma/client/runtime/library").Decimal;
             invoiceNumber: string;
-            financialYear: string;
             invoiceType: import(".prisma/client").$Enums.InvoiceType;
+            financialYear: string;
+            grossAmount: import("@prisma/client/runtime/library").Decimal;
             netTaxableAmount: import("@prisma/client/runtime/library").Decimal;
+            gstAmount: import("@prisma/client/runtime/library").Decimal;
             cgstAmount: import("@prisma/client/runtime/library").Decimal;
             sgstAmount: import("@prisma/client/runtime/library").Decimal;
             igstAmount: import("@prisma/client/runtime/library").Decimal;
@@ -172,14 +172,14 @@ export declare class ComplianceController {
             };
         };
         statutoryRecords: {
+            status: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            updatedById: string | null;
-            title: string;
-            status: string;
             notes: string | null;
+            title: string;
             category: string;
+            updatedById: string | null;
             dueDate: Date | null;
             authority: string | null;
             referenceNo: string | null;
@@ -191,14 +191,14 @@ export declare class ComplianceController {
     exportGstr8Csv(month?: string, year?: string): Promise<string>;
     exportTdsCsv(section?: string): Promise<string>;
     listRecords(): Promise<{
+        status: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        updatedById: string | null;
-        title: string;
-        status: string;
         notes: string | null;
+        title: string;
         category: string;
+        updatedById: string | null;
         dueDate: Date | null;
         authority: string | null;
         referenceNo: string | null;
@@ -207,14 +207,14 @@ export declare class ComplianceController {
         documentUrl: string | null;
     }[]>;
     createRecord(user: AuthUser, dto: CreateComplianceRecordDto): Promise<{
+        status: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        updatedById: string | null;
-        title: string;
-        status: string;
         notes: string | null;
+        title: string;
         category: string;
+        updatedById: string | null;
         dueDate: Date | null;
         authority: string | null;
         referenceNo: string | null;
@@ -223,14 +223,14 @@ export declare class ComplianceController {
         documentUrl: string | null;
     }>;
     updateRecord(user: AuthUser, id: string, dto: UpdateComplianceRecordDto): Promise<{
+        status: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        updatedById: string | null;
-        title: string;
-        status: string;
         notes: string | null;
+        title: string;
         category: string;
+        updatedById: string | null;
         dueDate: Date | null;
         authority: string | null;
         referenceNo: string | null;

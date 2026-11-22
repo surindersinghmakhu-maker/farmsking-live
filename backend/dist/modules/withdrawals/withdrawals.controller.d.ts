@@ -7,19 +7,19 @@ export declare class WithdrawalsController {
     constructor(withdrawalsService: WithdrawalsService);
     create(user: AuthUser, dto: CreateWithdrawalDto): Promise<void>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
+        status: import(".prisma/client").$Enums.WithdrawalStatus;
         id: string;
+        notes: string | null;
+        requestedAt: Date;
+        platformExpense: boolean;
         businessPartnerId: string;
+        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         requestedAmount: import("@prisma/client/runtime/library").Decimal;
         approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
         platformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         netPayableAmount: import("@prisma/client/runtime/library").Decimal | null;
-        platformExpense: boolean;
-        status: import(".prisma/client").$Enums.WithdrawalStatus;
-        requestedAt: Date;
         processedAt: Date | null;
         processedById: string | null;
-        notes: string | null;
     }[]>;
     listAll(): Promise<{
         partnerWallet: {
@@ -39,48 +39,48 @@ export declare class WithdrawalsController {
             bankAccountNumber: string | null;
             bankIfsc: string | null;
         };
+        status: import(".prisma/client").$Enums.WithdrawalStatus;
         id: string;
+        notes: string | null;
+        requestedAt: Date;
+        platformExpense: boolean;
         businessPartnerId: string;
+        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         requestedAmount: import("@prisma/client/runtime/library").Decimal;
         approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
         platformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         netPayableAmount: import("@prisma/client/runtime/library").Decimal | null;
-        platformExpense: boolean;
-        status: import(".prisma/client").$Enums.WithdrawalStatus;
-        requestedAt: Date;
         processedAt: Date | null;
         processedById: string | null;
-        notes: string | null;
     }[]>;
     approve(user: AuthUser, id: string, dto: ApproveWithdrawalDto): Promise<{
         platformFeeAmount: number;
         gstAmount: number;
         netPayableAmount: number;
+        status: import(".prisma/client").$Enums.WithdrawalStatus;
         id: string;
+        notes: string | null;
+        requestedAt: Date;
+        platformExpense: boolean;
         businessPartnerId: string;
         requestedAmount: import("@prisma/client/runtime/library").Decimal;
         approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
-        platformExpense: boolean;
-        status: import(".prisma/client").$Enums.WithdrawalStatus;
-        requestedAt: Date;
         processedAt: Date | null;
         processedById: string | null;
-        notes: string | null;
     }>;
     reject(user: AuthUser, id: string, notes?: string): Promise<{
+        status: import(".prisma/client").$Enums.WithdrawalStatus;
         id: string;
+        notes: string | null;
+        requestedAt: Date;
+        platformExpense: boolean;
         businessPartnerId: string;
+        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         requestedAmount: import("@prisma/client/runtime/library").Decimal;
         approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
         platformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
-        gstAmount: import("@prisma/client/runtime/library").Decimal | null;
         netPayableAmount: import("@prisma/client/runtime/library").Decimal | null;
-        platformExpense: boolean;
-        status: import(".prisma/client").$Enums.WithdrawalStatus;
-        requestedAt: Date;
         processedAt: Date | null;
         processedById: string | null;
-        notes: string | null;
     }>;
 }

@@ -73,7 +73,7 @@ async function main() {
 
   console.log('\n[Group 2: Partner Accounts -> Portal: PARTNER]');
   for (const acc of partners) {
-    await sleep(250);
+    await sleep(600);
     const res = await postJson('/auth/login', {
       mobile: acc.phone,
       password: 'Test@1234',
@@ -99,12 +99,13 @@ async function main() {
 
   console.log('\n[Group 3: Client Accounts -> Portal: CLIENT via OTP 123456]');
   for (const acc of clients) {
-    await sleep(350);
-    await postJson('/auth/send-login-otp', { mobile: acc.phone });
-    await sleep(150);
+    await sleep(600);
+    await postJson('/auth/send-login-otp', { mobile: acc.phone, portal: 'CLIENT' });
+    await sleep(300);
     const res = await postJson('/auth/verify-login-otp', {
       mobile: acc.phone,
-      code: '123456',
+      otp: '123456',
+      portal: 'CLIENT',
     });
     if (res.status === 200 || res.status === 201) {
       console.log(`✅ [PASS] ${acc.name} (${acc.phone}): Verified OTP as ${res.data.user.role} (${res.data.user.name})`);

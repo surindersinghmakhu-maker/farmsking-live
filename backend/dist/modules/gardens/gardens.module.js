@@ -10,6 +10,7 @@ exports.GardensModule = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_module_1 = require("../prisma/prisma.module");
 const gardener_plans_module_1 = require("../gardener-plans/gardener-plans.module");
+const ai_chat_module_1 = require("../ai-chat/ai-chat.module");
 const gardens_service_1 = require("./gardens.service");
 const gardens_controller_1 = require("./gardens.controller");
 let GardensModule = class GardensModule {
@@ -17,7 +18,7 @@ let GardensModule = class GardensModule {
 exports.GardensModule = GardensModule;
 exports.GardensModule = GardensModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, gardener_plans_module_1.GardenerPlansModule],
+        imports: [prisma_module_1.PrismaModule, gardener_plans_module_1.GardenerPlansModule, ai_chat_module_1.AiChatModule],
         controllers: [gardens_controller_1.GardensController],
         providers: [gardens_service_1.GardensService],
     })

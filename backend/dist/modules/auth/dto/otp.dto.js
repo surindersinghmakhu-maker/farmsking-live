@@ -22,9 +22,9 @@ __decorate([
     __metadata("design:type", String)
 ], SendLoginOtpDto.prototype, "mobile", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT, PARTNER, or ADMIN', enum: ['CLIENT', 'PARTNER', 'ADMIN'] }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
+    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER', 'ADMIN']),
     __metadata("design:type", String)
 ], SendLoginOtpDto.prototype, "portal", void 0);
 __decorate([
@@ -49,9 +49,9 @@ __decorate([
     __metadata("design:type", String)
 ], VerifyLoginOtpDto.prototype, "otp", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT, PARTNER, or ADMIN', enum: ['CLIENT', 'PARTNER', 'ADMIN'] }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
+    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER', 'ADMIN']),
     __metadata("design:type", String)
 ], VerifyLoginOtpDto.prototype, "portal", void 0);
 __decorate([
@@ -161,9 +161,9 @@ __decorate([
     __metadata("design:type", String)
 ], CompleteOtpRegistrationDto.prototype, "role", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT, PARTNER, or ADMIN', enum: ['CLIENT', 'PARTNER', 'ADMIN'] }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
+    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER', 'ADMIN']),
     __metadata("design:type", String)
 ], CompleteOtpRegistrationDto.prototype, "portal", void 0);
 __decorate([

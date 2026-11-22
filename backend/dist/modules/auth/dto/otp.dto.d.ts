@@ -1,12 +1,12 @@
 export declare class SendLoginOtpDto {
     mobile: string;
-    portal?: 'CLIENT' | 'PARTNER';
+    portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
     termsAccepted?: boolean;
 }
 export declare class VerifyLoginOtpDto {
     mobile: string;
     otp: string;
-    portal?: 'CLIENT' | 'PARTNER';
+    portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
     termsAccepted?: boolean;
 }
 export declare class SendWhatsAppOtpDto {
@@ -33,7 +33,7 @@ export declare class CompleteOtpRegistrationDto {
     mobile: string;
     name?: string;
     role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
-    portal?: 'CLIENT' | 'PARTNER';
+    portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
     termsAccepted?: boolean;
 }
 export declare class SendMobileOtpDto {

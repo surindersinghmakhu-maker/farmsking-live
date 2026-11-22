@@ -29,7 +29,7 @@ __decorate([
 ], LoginDto.prototype, "captchaToken", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
+    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER', 'ADMIN']),
     __metadata("design:type", String)
 ], LoginDto.prototype, "portal", void 0);
 //# sourceMappingURL=login.dto.js.map

@@ -407,7 +407,7 @@ export declare class AuthService {
     }>;
     private findActiveUserByMobile;
     private ensureLabourWorkerProvisioned;
-    sendLoginOtp(mobile: string, portal?: 'CLIENT' | 'PARTNER'): Promise<{
+    sendLoginOtp(mobile: string, portal?: 'CLIENT' | 'PARTNER' | 'ADMIN'): Promise<{
         success: boolean;
         isNewUser: boolean;
         waSent: boolean;
@@ -415,7 +415,7 @@ export declare class AuthService {
         message: string;
         devOtp: string | undefined;
     }>;
-    verifyLoginOtp(mobile: string, otp: string, portal?: 'CLIENT' | 'PARTNER', meta?: {
+    verifyLoginOtp(mobile: string, otp: string, portal?: 'CLIENT' | 'PARTNER' | 'ADMIN', meta?: {
         ipAddress?: string;
         userAgent?: string;
     }): Promise<{
@@ -444,7 +444,7 @@ export declare class AuthService {
         mobile: string;
         name?: string;
         role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
-        portal?: 'CLIENT' | 'PARTNER';
+        portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
         termsAccepted?: boolean;
     }): Promise<{
         accessToken: string;

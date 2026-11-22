@@ -41,7 +41,7 @@ Core Pillars of the Ecosystem:
 ### Feature 1: AI Crop Doctor & Leaf Pathology Engine
 - **Web URLs**: https://farmsking.in/ai-doctor | https://farmsking.in/crop-disease-scanner
 - **Technical Specifications**:
-  - Model Architecture: Multimodal Convolutional Vision Transformer trained on 250,000+ verified leaf disease images across 50+ crop varieties.
+  - Model Architecture: Multimodal Convolutional Vision Transformer calibrated on verified ICAR and open plant pathology visual datasets across 50+ crop varieties.
   - Inference Latency: <820 milliseconds on edge cloud infrastructure.
   - Diagnostic Scope: Fungal leaf blights, powdery/downy mildews, rusts, bacterial cankers, viral mosaic patterns, and macro/micronutrient deficiencies (Nitrogen, Zinc, Iron, Magnesium).
   - Treatment Delivery: Dual-path treatment plan providing both ICAR-calibrated chemical sprays and 100% organic/biological remedies.

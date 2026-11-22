@@ -21,7 +21,7 @@ export declare function evaluatePortalEligibility(user: {
     role: Role;
     roles?: Role[] | null;
     deactivatedRoles?: Role[] | null;
-} | null, portal?: 'CLIENT' | 'PARTNER'): {
+} | null, portal?: 'CLIENT' | 'PARTNER' | 'ADMIN'): {
     allowed: boolean;
     reason?: string;
 };

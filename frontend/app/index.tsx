@@ -2206,6 +2206,170 @@ export default function PublicLandingPage() {
               {t.heroSub}
             </Text>
 
+            {/* ══ 3 CORE PILLARS & FAST-ACTION CONSOLE ══ */}
+            <View
+              style={[
+                {
+                  flexDirection: isDesktop ? 'row' : 'column',
+                  gap: isMobile ? 8 : 10,
+                  marginBottom: isMobile ? 12 : 16,
+                  width: '100%',
+                },
+              ]}
+            >
+              {/* Pillar 1: AI Crop Doctor */}
+              <TouchableOpacity
+                activeOpacity={0.88}
+                onPress={() => router.push('/ai-doctor' as any)}
+                style={[
+                  {
+                    flex: isDesktop ? 1 : undefined,
+                    padding: isMobile ? 10 : 12,
+                    borderRadius: RADIUS.lg,
+                    borderWidth: 1,
+                    borderColor: isDay ? 'rgba(16, 185, 129, 0.35)' : 'rgba(52, 211, 153, 0.3)',
+                    backgroundColor: isDay ? 'rgba(255, 255, 255, 0.85)' : 'rgba(15, 23, 42, 0.75)',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                  },
+                  Platform.OS === 'web' ? ({ backdropFilter: 'blur(10px)', cursor: 'pointer' } as any) : {},
+                ]}
+              >
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    backgroundColor: isDay ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.25)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="scan" size={20} color={isDay ? '#059669' : '#34d399'} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isDay ? '#0f172a' : '#f8fafc' }}>
+                      AI Crop Doctor
+                    </Text>
+                    <View style={{ backgroundColor: isDay ? '#dcfce7' : 'rgba(16, 185, 129, 0.2)', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: isDay ? '#15803d' : '#34d399' }}>Instant Free</Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: isDay ? '#475569' : '#94a3b8' }} numberOfLines={1}>
+                    Scan leaf for disease diagnosis & remedies
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={isDay ? '#059669' : '#34d399'} />
+              </TouchableOpacity>
+
+              {/* Pillar 2: Live APMC Mandi Rates */}
+              <TouchableOpacity
+                activeOpacity={0.88}
+                onPress={() => {
+                  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    const el = document.getElementById('mandi-rates');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                style={[
+                  {
+                    flex: isDesktop ? 1 : undefined,
+                    padding: isMobile ? 10 : 12,
+                    borderRadius: RADIUS.lg,
+                    borderWidth: 1,
+                    borderColor: isDay ? 'rgba(6, 182, 212, 0.35)' : 'rgba(56, 189, 248, 0.3)',
+                    backgroundColor: isDay ? 'rgba(255, 255, 255, 0.85)' : 'rgba(15, 23, 42, 0.75)',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                  },
+                  Platform.OS === 'web' ? ({ backdropFilter: 'blur(10px)', cursor: 'pointer' } as any) : {},
+                ]}
+              >
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    backgroundColor: isDay ? 'rgba(6, 182, 212, 0.15)' : 'rgba(56, 189, 248, 0.25)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="trending-up" size={20} color={isDay ? '#0891b2' : '#38bdf8'} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isDay ? '#0f172a' : '#f8fafc' }}>
+                      Live Mandi Rates
+                    </Text>
+                    <View style={{ backgroundColor: isDay ? '#cffafe' : 'rgba(56, 189, 248, 0.2)', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: isDay ? '#0e7490' : '#38bdf8' }}>APMC Realtime</Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: isDay ? '#475569' : '#94a3b8' }} numberOfLines={1}>
+                    Daily modal prices across 50+ crops
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={isDay ? '#0891b2' : '#38bdf8'} />
+              </TouchableOpacity>
+
+              {/* Pillar 3: Farm Bahi-Khata & Accounts */}
+              <TouchableOpacity
+                activeOpacity={0.88}
+                onPress={() => {
+                  if (user) {
+                    router.push('/(user)/(tabs)' as any);
+                  } else {
+                    router.push('/(auth)/login' as any);
+                  }
+                }}
+                style={[
+                  {
+                    flex: isDesktop ? 1 : undefined,
+                    padding: isMobile ? 10 : 12,
+                    borderRadius: RADIUS.lg,
+                    borderWidth: 1,
+                    borderColor: isDay ? 'rgba(245, 158, 11, 0.35)' : 'rgba(251, 191, 36, 0.3)',
+                    backgroundColor: isDay ? 'rgba(255, 255, 255, 0.85)' : 'rgba(15, 23, 42, 0.75)',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                  },
+                  Platform.OS === 'web' ? ({ backdropFilter: 'blur(10px)', cursor: 'pointer' } as any) : {},
+                ]}
+              >
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    backgroundColor: isDay ? 'rgba(245, 158, 11, 0.15)' : 'rgba(251, 191, 36, 0.25)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="receipt" size={20} color={isDay ? '#d97706' : '#fbbf24'} />
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isDay ? '#0f172a' : '#f8fafc' }}>
+                      Farm Bahi-Khata
+                    </Text>
+                    <View style={{ backgroundColor: isDay ? '#fef3c7' : 'rgba(251, 191, 36, 0.2)', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: isDay ? '#b45309' : '#fbbf24' }}>Kisan Account</Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: isDay ? '#475569' : '#94a3b8' }} numberOfLines={1}>
+                    Cultivation logs, labor & daily expense ledger
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={isDay ? '#d97706' : '#fbbf24'} />
+              </TouchableOpacity>
+            </View>
+
             {/* ══ COMPACT 4D MANDI DIRECTORY TELEMETRY WIDGET ══ */}
             <View nativeID="mandi-rates" {...(Platform.OS === 'web' ? ({ id: 'mandi-rates' } as any) : {})} />
             <SpatialTiltCard

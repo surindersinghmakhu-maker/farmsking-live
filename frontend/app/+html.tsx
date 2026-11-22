@@ -54,11 +54,11 @@ export default function Root({ children }: PropsWithChildren) {
         {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvPcjQP-UuD3FKtdXKH2o9DZik2o" />
         <meta name="description" content="FarmsKing (farmsking.in) is India's premier Smart Farming platform. Smart Farming. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India." />
-        <meta name="keywords" content="FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab" />
+        <meta name="keywords" content="FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Village Booh, Kapurthala, Punjab" />
         
         {/* Geospatial Indexing for Local & National Search */}
         <meta name="geo.region" content="IN-PB" />
-        <meta name="geo.placename" content="Makhu, Goindwal Sahib, Punjab, India" />
+        <meta name="geo.placename" content="Makhu, Village Booh, Kapurthala, Punjab, India" />
         <meta name="geo.position" content="31.1400;75.3400" />
         <meta name="ICBM" content="31.1400, 75.3400" />
 

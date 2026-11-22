@@ -228,23 +228,43 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             <Text style={[styles.greetingText, isLight && { color: '#64748b' }]}>{greeting}</Text>
             <Text style={[styles.nameText, isLight && { color: '#0f172a' }]} numberOfLines={1}>{profileName}</Text>
 
-            {/* 🏷️ Role Tag Badge directly under user's name */}
-            <View
-              style={[
-                styles.roleTagPill,
-                isLight && {
-                  backgroundColor: 'rgba(22, 163, 74, 0.10)',
-                  borderColor: 'rgba(234, 179, 8, 0.35)',
-                },
-                isDarkTheme && {
-                  backgroundColor: 'rgba(56, 189, 248, 0.12)',
-                  borderColor: 'rgba(56, 189, 248, 0.35)',
-                },
-              ]}
-            >
-              <Text style={[styles.roleTagText, isLight && { color: '#16a34a' }, isDarkTheme && { color: '#38bdf8' }]}>
-                {roleMeta.icon} {roleMeta.label}
-              </Text>
+            {/* 🏷️ Role Tag Badge & Live API Status Indicator directly under user's name */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+              <View
+                style={[
+                  styles.roleTagPill,
+                  isLight && {
+                    backgroundColor: 'rgba(22, 163, 74, 0.10)',
+                    borderColor: 'rgba(234, 179, 8, 0.35)',
+                  },
+                  isDarkTheme && {
+                    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                    borderColor: 'rgba(56, 189, 248, 0.35)',
+                  },
+                ]}
+              >
+                <Text style={[styles.roleTagText, isLight && { color: '#16a34a' }, isDarkTheme && { color: '#38bdf8' }]}>
+                  {roleMeta.icon} {roleMeta.label}
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.roleTagPill,
+                  {
+                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                    borderColor: 'rgba(16, 185, 129, 0.35)',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                  },
+                ]}
+              >
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981' }} />
+                <Text style={[styles.roleTagText, { color: '#10b981', fontSize: 10 }]}>
+                  API Active
+                </Text>
+              </View>
             </View>
 
             {subtitle && currentRole !== 'FARMER' ? <Text style={[styles.subtitleText, isLight && { color: '#059669' }]}>{subtitle}</Text> : null}

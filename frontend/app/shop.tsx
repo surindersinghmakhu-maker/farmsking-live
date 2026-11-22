@@ -6521,7 +6521,7 @@ const styles = StyleSheet.create({
   cardBadgeRow: { position: 'absolute', top: 8, left: 8, zIndex: 10 },
   certifiedTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef3c7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#fcd34d' },
   certifiedTagText: { fontSize: 8.5, fontFamily: FONT.extraBold, color: '#b45309' },
-  productImage: { width: '100%', height: 135, borderRadius: RADIUS.md },
+  productImage: { width: '100%', height: 135, aspectRatio: 1, backgroundColor: '#f8fafc', borderRadius: RADIUS.md },
   productImagePlaceholder: { backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' },
   cardContent: { gap: 4, flex: 1, justifyContent: 'space-between' },
   productCategoryTag: { fontSize: 9.5, fontFamily: FONT.bold, color: '#059669', textTransform: 'uppercase' },

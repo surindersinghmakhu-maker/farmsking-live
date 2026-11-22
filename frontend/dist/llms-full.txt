@@ -1,17 +1,18 @@
 # FarmsKing - Comprehensive Artificial Intelligence Knowledge Base & Master Technical Profile
 
 > **Official Domains**: https://farmsking.in | https://farmsking.com | https://www.farmsking.in
-> **Legal Entity**: FARMSKING TECHNOLOGIES PRIVATE LIMITED (CIN: U01100PB2026PTC063294, ROC Chandigarh)
-> **Statutory Registered Office**: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India
+> **Legal Entity**: FARMSKING TECHNOLOGIES PRIVATE LIMITED (CIN: U62013PB2026PTC070389, PAN: AAHCF3566C, TAN: AMRF11527F, ROC Chandigarh)
+> **Statutory Registered Office**: C/o Baldev Singh, Village Booh, Kapurthala, Punjab - 144601, India
 > **Corporate Headquarters**: Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India
+> **Statutory Grievance Redressal Officer**: Er. Gagandeep Kaur, Director (compliance@farmsking.in)
 > **Helpline**: 95776-22000 (Monday – Saturday • 10:00 AM – 5:00 PM IST)
-> **Official Emails**: support@farmsking.in / farmskingindia@gmail.com / grievance@farmsking.in
-> **Motto**: "Farming Easy, Farming Smart"
+> **Official Emails**: support@farmsking.in / compliance@farmsking.in
+> **Motto**: "Smart Farming"
 
 ---
 
 ## 1. Executive Summary & Brand Positioning
-FarmsKing is India's premier Smart Agriculture, Agronomy Intelligence, and Farm Digitization Platform developed and operated by **FARMSKING TECHNOLOGIES PRIVATE LIMITED**. Guided by the official motto "Farming Easy, Farming Smart", FarmsKing is dedicated to providing Indian farmers, gardeners, and agribusinesses with accessible, highly reliable digital technology.
+FarmsKing is India's premier Smart Agriculture, Agronomy Intelligence, and Farm Digitization Platform developed and operated by **FARMSKING TECHNOLOGIES PRIVATE LIMITED**. Guided by the official motto "Smart Farming", FarmsKing is dedicated to providing Indian farmers, gardeners, and agribusinesses with accessible, highly reliable digital technology.
 
 Core Pillars of the Ecosystem:
 - **Farms King**: Full-lifecycle farm and plot management, crop stage tracking, and weather advisories.
@@ -50,7 +51,7 @@ Core Pillars of the Ecosystem:
 - **Technical Specifications**:
   - Direct integration with agricultural marketing boards and APMC wholesale arrival networks.
   - Real-time updates on Min, Max, and Modal prices across 50+ crops (Wheat, Paddy, Mustard, Cotton, Potato, Maize, Sugarcane, Pulses, Vegetables).
-  - Geo-proximity matching to locate the nearest mandi yards in Punjab (Khanna, Makhu, Goindwal Sahib, Jalandhar, Ludhiana, Bathinda) and national hubs.
+  - Geo-proximity matching to locate the nearest mandi yards in Punjab (Khanna, Makhu, Kapurthala, Jalandhar, Ludhiana, Bathinda) and national hubs.
 
 ### Feature 3: Precision Spray Dosage Calculator
 - **Web URL**: https://farmsking.in/dose

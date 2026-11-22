@@ -27,7 +27,7 @@ export default function Root({ children }: PropsWithChildren) {
         {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />
         <meta name="description" content="FarmsKing (farmsking.in / www.farmsking.in) is India's leading Smart Farming & Crop Advisory Platform. AI crop intelligence, disease diagnosis, APMC mandi rates, satellite telemetry & farmer accounting." />
-        <meta name="keywords" content="FarmsKing, www.farmsking.in, farmsking.in, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, Crop Disease Scan, Reverse Sowing Engine, Live Mandi Rates, Goindwal Sahib, Makhu, Punjab" />
+        <meta name="keywords" content="FarmsKing, www.farmsking.in, farmsking.in, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, Crop Disease Scan, Reverse Sowing Engine, Live Mandi Rates, Village Booh, Kapurthala, Makhu, Punjab" />
         
         {/* OpenGraph & Social Cards */}
         <meta property="og:site_name" content="FarmsKing Smart Agriculture Platform" />
@@ -141,7 +141,7 @@ export default function Root({ children }: PropsWithChildren) {
                   "name": "Where is FarmsKing registered and headquartered?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "The Statutory Registered Office is located at VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India. The Corporate Headquarters and Operational Office is located at Makhu, Ferozepur, Punjab - 142044, India."
+                    "text": "The Statutory Registered Office is located at C/o Baldev Singh, Village Booh, Kapurthala, Punjab - 144601, India. The Corporate Headquarters and Operational Office is located at Makhu, Ferozepur, Punjab - 142044, India."
                   }
                 },
                 {

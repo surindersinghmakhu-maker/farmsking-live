@@ -13,7 +13,6 @@
         "FarmsKing India",
         "FarmsKing Farmers",
         "Smart Farming",
-        "Farming Easy Farming Smart",
         "Garden King",
         "Nature King",
         "AI King",
@@ -24,6 +23,8 @@
       "logo": "https://farmsking.in/brand_logo.png",
       "image": "https://farmsking.in/brand_logo.png",
       "slogan": "Smart Farming",
+      "identifier": "U62013PB2026PTC070389",
+      "taxID": "AAHCF3566C",
       "description": "FARMSKING TECHNOLOGIES PRIVATE LIMITED (farmsking.in) is India's leading Smart Farming Platform & Agriculture App. Delivering real-time multimodal AI Crop Doctor leaf diagnosis (<820ms), live APMC mandi wholesale rates across 50+ crops, satellite telemetry (NDVI/EVI), 100% genuine organic bio-inputs, and transparent farmer accounting.",
       "telephone": "+91-95776-22000",
       "email": "support@farmsking.in",
@@ -31,10 +32,10 @@
       "address": [
         {
           "@type": "PostalAddress",
-          "streetAddress": "VPO Goindwal Sahib, Tehsil Khadur Sahib",
-          "addressLocality": "Goindwal Sahib, District Tarn Taran",
+          "streetAddress": "C/o Baldev Singh, Village Booh",
+          "addressLocality": "Village Booh, District Kapurthala",
           "addressRegion": "Punjab",
-          "postalCode": "143422",
+          "postalCode": "144601",
           "addressCountry": "IN"
         },
         {

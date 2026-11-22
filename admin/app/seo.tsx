@@ -33,15 +33,15 @@ const SEO_PRESETS: SeoPreset[] = [
     title: 'FarmsKing: Garden King, Nature King, AI King & Organic Portal',
     desc: 'FarmsKing is Garden King, Nature King, AI King, Organic King & Account King. Zero fake food, no hardware sales, no rentals, live plants roadmap. HQ: Makhu.',
     keywords:
-      'FarmsKing, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Plant Lovers Boon, Farmer Blessing, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Marigold Floriculture, Digital Bahi Khata, No Farm Machinery, Makhu, Goindwal Sahib, Punjab, National Agri Ecosystem',
+      'FarmsKing, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Plant Lovers Boon, Farmer Blessing, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Marigold Floriculture, Digital Bahi Khata, No Farm Machinery, Makhu, Village Booh, Kapurthala, Punjab, National Agri Ecosystem',
   },
   {
     name: 'National Agritech (Balanced)',
     badge: 'Comprehensive 60/160',
     title: 'FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform',
-    desc: "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu.",
+    desc: "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Village Booh, Kapurthala, HQ: Makhu.",
     keywords:
-      'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India',
+      'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Village Booh, Kapurthala, Makhu, Punjab, National Agri Marketplace, Agtech India',
   },
   {
     name: 'AI Crop Doctor & Live Mandi',
@@ -76,13 +76,13 @@ export default function SeoManagementScreen() {
     'FarmsKing is Garden King, Nature King, AI King, Organic King & Account King. Zero fake food, no hardware sales, no rentals, live plants roadmap. HQ: Makhu.'
   );
   const [metaKeywords, setMetaKeywords] = useState(
-    'FarmsKing, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Plant Lovers Boon, Farmer Blessing, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Marigold Floriculture, Digital Bahi Khata, No Farm Machinery, Makhu, Goindwal Sahib, Punjab, National Agri Ecosystem'
+    'FarmsKing, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Plant Lovers Boon, Farmer Blessing, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Marigold Floriculture, Digital Bahi Khata, No Farm Machinery, Makhu, Village Booh, Kapurthala, Punjab, National Agri Ecosystem'
   );
   const [locationHeadquarters, setLocationHeadquarters] = useState(
-    'Registered Office: Goindwal Sahib, Tarn Taran - 143422 | Operational Office: Makhu, Ferozepur, Punjab - 142044'
+    'Registered Office: Village Booh, Kapurthala - 144601 | Operational Office: Makhu, Ferozepur, Punjab - 142044'
   );
   const [noscriptHtmlContent, setNoscriptHtmlContent] = useState(
-    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier multi-domain ecosystem: Farms King, Garden King, Nature King, AI King, Organic King, and Account King. Unique in every aspect, combining rare technology (multimodal AI, satellite telemetry) with dedicated real human service (certified agronomists, plant doctors, IT & hardware engineers). Absolute zero tolerance for counterfeit or fake products, guaranteeing 100% pure authentic food and farm inputs. Real-time operations include live mandi rates, real-time weather alerts, satellite crop indices, and instant disease detection. Serving as a divine boon for farmers and passionate plant lovers alike. Upcoming roadmap includes doorstep delivery of live plants. Strict Operational Boundaries: FarmsKing does NOT sell any hardware, physical machinery, or tools, does NOT offer any equipment rental or leasing services, and does NOT manufacture agricultural tools or heavy machinery. The platform is dedicated 100% to digital agritech software, AI plant pathology, live mandi intelligence, certified organic bio-fertilizers, upcoming live plants, and digital farmer accounting. Registered Office: Goindwal Sahib, Tarn Taran - 143422; Operational Headquarters: Makhu, Ferozepur, Punjab - 142044."
+    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier multi-domain ecosystem: Farms King, Garden King, Nature King, AI King, Organic King, and Account King. Unique in every aspect, combining rare technology (multimodal AI, satellite telemetry) with dedicated real human service (certified agronomists, plant doctors, IT & hardware engineers). Absolute zero tolerance for counterfeit or fake products, guaranteeing 100% pure authentic food and farm inputs. Real-time operations include live mandi rates, real-time weather alerts, satellite crop indices, and instant disease detection. Serving as a divine boon for farmers and passionate plant lovers alike. Upcoming roadmap includes doorstep delivery of live plants. Strict Operational Boundaries: FarmsKing does NOT sell any hardware, physical machinery, or tools, does NOT offer any equipment rental or leasing services, and does NOT manufacture agricultural tools or heavy machinery. The platform is dedicated 100% to digital agritech software, AI plant pathology, live mandi intelligence, certified organic bio-fertilizers, upcoming live plants, and digital farmer accounting. Registered Office: Village Booh, Kapurthala - 144601; Operational Headquarters: Makhu, Ferozepur, Punjab - 142044."
   );
 
   useEffect(() => {
@@ -283,7 +283,7 @@ export default function SeoManagementScreen() {
             <Text style={styles.googleDescText} numberOfLines={3}>
               <Text style={styles.googleDateText}>Today — </Text>
               {metaDescription ||
-                "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu."}
+                "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Village Booh, Kapurthala, HQ: Makhu."}
             </Text>
           </View>
         </View>

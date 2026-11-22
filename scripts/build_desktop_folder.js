@@ -121,13 +121,13 @@ const nocHtml = getHtmlTemplate(
 
   <p>Respected Sir / Madam,</p>
 
-  <p>I, <strong>BAKHSHISH SINGH</strong>, resident of Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab, India, do hereby solemnly affirm, declare, and certify as under:</p>
+  <p>I, <strong>BAKHSHISH SINGH</strong>, resident of Village Booh, Kapurthala, Tehsil Khadoor Sahib, District Tarn Taran, Punjab, India, do hereby solemnly affirm, declare, and certify as under:</p>
 
   <p><strong>1. Absolute Possession & Lawful Authority:</strong> That I am the lawful owner / authorized occupant in possession of the commercial premises situated at:</p>
   
   <div class="highlight-box">
     <strong>M/s GURU NANAK COMPUTER ACADEMY</strong><br>
-    NEAR CO-OPERATIVE BANK, GOINDWAL SAHIB,<br>
+    NEAR CO-OPERATIVE BANK, Village Booh, Kapurthala,<br>
     TEHSIL: KHADOOR SAHIB, DISTRICT: TARN TARAN,<br>
     STATE: PUNJAB, INDIA — PIN CODE: 143422.
   </div>
@@ -147,7 +147,7 @@ const nocHtml = getHtmlTemplate(
     <tr>
       <td style="width: 50%;">
         <strong>Date:</strong> 20 / 10 / 2026<br>
-        <strong>Place:</strong> Goindwal Sahib, Tarn Taran (Punjab)<br><br>
+        <strong>Place:</strong> Village Booh, Kapurthala, Tarn Taran (Punjab)<br><br>
         <strong>Attachments:</strong><br>
         1. BSNL Bill (Dated: 03-OCT-2026)<br>
         2. PAN Card of Bakhshish Singh<br>
@@ -177,7 +177,7 @@ function makeDir2Doc(name, fatherName, address, email, mobile, pan, dob, filenam
     The Board of Directors / Promoters,<br>
     <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong><br>
     (Under Incorporation | MCA SRN: AC6979718)<br>
-    Registered Office: Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422.</p>
+    Registered Office: Near Co-operative Bank, Village Booh, Kapurthala, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422.</p>
 
     <p><strong>SUBJECT: CONSENT TO ACT AS DIRECTOR OF FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong></p>
 
@@ -238,7 +238,7 @@ function makeDir2Doc(name, fatherName, address, email, mobile, pan, dob, filenam
           children: [new TextRun({ text: '(Pursuant to Section 152(5) of the Companies Act, 2013 & Rule 8)', italics: true, size: 18 })]
         }),
         new Paragraph({ children: [new TextRun({ text: 'TO, The Board of Directors / Promoters, FARMSKING TECHNOLOGIES PRIVATE LIMITED', bold: true, size: 20 })] }),
-        new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: 'Registered Office: Near Co-operative Bank, Goindwal Sahib, Tarn Taran, Punjab - 143422', size: 18 })] }),
+        new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: 'Registered Office: Near Co-operative Bank, Village Booh, Kapurthala, Tarn Taran, Punjab - 143422', size: 18 })] }),
         new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: 'I, ' + name + ', hereby give my consent to act as Director of FARMSKING TECHNOLOGIES PRIVATE LIMITED pursuant to sub-section (5) of Section 152 of the Companies Act, 2013 and certify that I am not disqualified to become a Director under the Companies Act, 2013.', size: 20 })] }),
         new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: '1. Name: ' + name, size: 20 })] }),
         new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: "2. Father's Name: " + fatherName, size: 20 })] }),
@@ -336,7 +336,7 @@ const inc9Html = getHtmlTemplate(
   </table>
 
   <p><strong>Date:</strong> 20 / 10 / 2026<br>
-  <strong>Place:</strong> Goindwal Sahib, Punjab, India</p>
+  <strong>Place:</strong> Village Booh, Kapurthala, Punjab, India</p>
   `
 );
 htmlToPdf(inc9Html, path.join(targetFolder, '05_INC_9_Declaration_All_Subscribers_Directors.pdf'));
@@ -422,7 +422,7 @@ const motiveHtml = getHtmlTemplate(
     <tr><td><strong>Service Request Number (SRN)</strong></td><td><strong>AC6979718</strong> (Filing Date: 20-OCT-2026)</td></tr>
     <tr><td><strong>Class / Category</strong></td><td>Private Company Limited by Shares (Non-government Company)</td></tr>
     <tr><td><strong>Primary Industrial Codes (NIC)</strong></td><td><strong>62013</strong> (Software/Web Platform) & <strong>01619</strong> (Agricultural Support Services)</td></tr>
-    <tr><td><strong>Registered Office</strong></td><td>Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422</td></tr>
+    <tr><td><strong>Registered Office</strong></td><td>Near Co-operative Bank, Village Booh, Kapurthala, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422</td></tr>
     <tr><td><strong>Utility Service Proof</strong></td><td>BSNL Telephone/Fiber Tax Invoice (NDCPB2621596357, Dated 03-OCT-2026)</td></tr>
     <tr><td><strong>Designated Corporate Bank</strong></td><td>ICICI Bank / HDFC Bank Current Account via AGILE-PRO-S</td></tr>
   </table>
@@ -483,7 +483,7 @@ const motiveDoc = new Document({
       new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: '1. Surinder Singh: 87,000 Shares (87.00%) — Supreme Controlling Owner (>75% Veto Control)', bold: true, size: 20 })] }),
       new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: '2. Bakshish Singh: 10,000 Shares (10.00%) — Executive Director (DIN & DSC Holder)', bold: true, size: 20 })] }),
       new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: '3. Gagandeep Kaur: 3,000 Shares (3.00%) — Executive Director (DIN & DSC Holder)', bold: true, size: 20 })] }),
-      new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: 'Registered Office: Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422', size: 18 })] }),
+      new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: 'Registered Office: Near Co-operative Bank, Village Booh, Kapurthala, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422', size: 18 })] }),
       new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: 'Utility Bill: BSNL Fiber/Telephone Invoice dated 03-OCT-2026', size: 18 })] })
     ]
   }]

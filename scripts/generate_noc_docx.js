@@ -230,7 +230,7 @@ const doc = new Document({
               font: 'Arial',
             }),
             new TextRun({
-              text: ', resident of Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab, India, do hereby solemnly affirm, declare, and certify as under:',
+              text: ', resident of Village Booh, Kapurthala, Tehsil Khadoor Sahib, District Tarn Taran, Punjab, India, do hereby solemnly affirm, declare, and certify as under:',
               size: 20,
               font: 'Arial',
             }),
@@ -286,7 +286,7 @@ const doc = new Document({
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: 'NEAR CO-OPERATIVE BANK, GOINDWAL SAHIB,',
+                          text: 'NEAR CO-OPERATIVE BANK, Village Booh, Kapurthala,',
                           size: 20,
                           font: 'Arial',
                         }),
@@ -497,7 +497,7 @@ const doc = new Document({
                       spacing: { after: 40 },
                       children: [
                         new TextRun({
-                          text: 'Place: Goindwal Sahib, Tarn Taran (Punjab)',
+                          text: 'Place: Village Booh, Kapurthala, Tarn Taran (Punjab)',
                           bold: true,
                           size: 20,
                           font: 'Arial',

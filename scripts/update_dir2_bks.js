@@ -60,7 +60,7 @@ const dir2Html = `<!DOCTYPE html>
 The Board of Directors / Promoters,<br>
 <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong><br>
 (Under Incorporation | MCA SRN: AC6979718)<br>
-Registered Office: Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422.</p>
+Registered Office: Near Co-operative Bank, Village Booh, Kapurthala, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422.</p>
 
 <p><strong>SUBJECT: CONSENT TO ACT AS DIRECTOR OF FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong></p>
 
@@ -132,7 +132,7 @@ const doc = new Document({
       new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'FORM DIR-2 — CONSENT TO ACT AS DIRECTOR', bold: true, size: 24, color: '1B5E20' })] }),
       new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({ text: '(Pursuant to Section 152(5) of the Companies Act, 2013 & Rule 8)', italics: true, size: 18 })] }),
       new Paragraph({ children: [new TextRun({ text: 'TO, The Board of Directors / Promoters, FARMSKING TECHNOLOGIES PRIVATE LIMITED', bold: true, size: 20 })] }),
-      new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: 'Registered Office: Near Co-operative Bank, Goindwal Sahib, Tarn Taran, Punjab - 143422', size: 18 })] }),
+      new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: 'Registered Office: Near Co-operative Bank, Village Booh, Kapurthala, Tarn Taran, Punjab - 143422', size: 18 })] }),
       new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: 'I, ' + name + ', S/o ' + fatherName + ', resident of ' + address + ', hereby give my consent to act as Director of FARMSKING TECHNOLOGIES PRIVATE LIMITED pursuant to sub-section (5) of Section 152 of the Companies Act, 2013 and certify that I am not disqualified to become a Director under the Companies Act, 2013.', size: 20 })] }),
       new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: '1. Full Name: ' + name, bold: true, size: 20 })] }),
       new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: "2. Father's Name: " + fatherName, bold: true, size: 20 })] }),

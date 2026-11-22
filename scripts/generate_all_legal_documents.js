@@ -196,13 +196,13 @@ const nocHtml = getLegalHtmlTemplate(
 
   <p>Respected Sir / Madam,</p>
 
-  <p>I, <strong>BAKHSHISH SINGH</strong> (Son of <strong>KASHMIR SINGH</strong>), residing at Village Amritpur, Tehsil Sultanpur Lodhi, District Kapurthala, Punjab - 144628, and carrying on business at Goindwal Sahib, District Tarn Taran, Punjab, do hereby solemnly affirm, declare, and state as under:</p>
+  <p>I, <strong>BAKHSHISH SINGH</strong> (Son of <strong>KASHMIR SINGH</strong>), residing at Village Amritpur, Tehsil Sultanpur Lodhi, District Kapurthala, Punjab - 144628, and carrying on business at Village Booh, Kapurthala, District Tarn Taran, Punjab, do hereby solemnly affirm, declare, and state as under:</p>
 
   <p><strong>1. Lawful Possession & Absolute Authority:</strong> That I am the absolute and lawful owner / authorized occupant in vacant and legal possession of the commercial premises situated at:</p>
 
   <div class="highlight-box">
     <strong>M/s GURU NANAK COMPUTER ACADEMY</strong><br>
-    NEAR CO-OPERATIVE BANK, GOINDWAL SAHIB,<br>
+    NEAR CO-OPERATIVE BANK, Village Booh, Kapurthala,<br>
     TEHSIL: KHADOOR SAHIB, DISTRICT: TARN TARAN,<br>
     STATE: PUNJAB, INDIA — PIN CODE: 143422.
   </div>
@@ -222,7 +222,7 @@ const nocHtml = getLegalHtmlTemplate(
     <tr>
       <td style="width: 55%;">
         <strong>Date:</strong> 22 / 10 / 2026<br>
-        <strong>Place:</strong> Goindwal Sahib, Tarn Taran (Punjab)<br><br>
+        <strong>Place:</strong> Village Booh, Kapurthala, Tarn Taran (Punjab)<br><br>
         <strong>Attached Statutory Evidence:</strong><br>
         1. BSNL Fiber Tax Invoice (A/c: 1024846990, Dated: 03-OCT-2026)<br>
         2. PAN Card of Bakhshish Singh ('CNNPS4562F')<br>
@@ -305,13 +305,13 @@ const nocDoc = new Document({
       new Paragraph({ spacing: { before: 140, after: 60 }, children: [new TextRun({ text: 'TO, The Registrar of Companies (ROC), Punjab & Chandigarh / CRC Manesar, MCA, India.', bold: true, size: 20 })] }),
       new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: 'SUBJECT: NO OBJECTION CERTIFICATE FOR REGISTERED OFFICE OF FARMSKING TECHNOLOGIES PRIVATE LIMITED (SRN: AC6979718)', bold: true, size: 20, color: '0D47A1' })] }),
       new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: 'I, BAKHSHISH SINGH, resident of Village Amritpur, Tehsil Sultanpur Lodhi, District Kapurthala, Punjab - 144628, do hereby solemnly declare and state as under:', size: 20 })] }),
-      new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: '1. Lawful Possession: That I am the lawful owner in possession of commercial premises situated at M/s Guru Nanak Computer Academy, Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422.', size: 20 })] }),
+      new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: '1. Lawful Possession: That I am the lawful owner in possession of commercial premises situated at M/s Guru Nanak Computer Academy, Near Co-operative Bank, Village Booh, Kapurthala, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422.', size: 20 })] }),
       new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: '2. Grant of NOC: That I have NO OBJECTION to FARMSKING TECHNOLOGIES PRIVATE LIMITED using the aforesaid premises as its REGISTERED OFFICE.', size: 20, bold: true })] }),
       new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: '3. Display of Name Board: I permit the company to display its name board and CIN outside the premises as per Section 12(3).', size: 20 })] }),
       new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: '4. Banking & Registrations: I permit the use of this address for PAN, TAN, GSTIN, MSME, and ICICI Bank Makhu Branch account operations.', size: 20 })] }),
       new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: '5. Utility Bill: BSNL Fiber invoice (Account No: 1024846990, Dated: 03-OCT-2026) in my name is attached.', size: 20 })] }),
       new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: 'VERIFICATION: Verified that the contents are true and correct to the best of my knowledge and belief.', italics: true, size: 18 })] }),
-      new Paragraph({ spacing: { before: 180 }, alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'Signature: ___________________________\nBAKHSHISH SINGH (Owner / Authorized Occupant)\nDate: 22/10/2026 | Place: Goindwal Sahib, Tarn Taran', bold: true, size: 20 })] })
+      new Paragraph({ spacing: { before: 180 }, alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'Signature: ___________________________\nBAKHSHISH SINGH (Owner / Authorized Occupant)\nDate: 22/10/2026 | Place: Village Booh, Kapurthala, Tarn Taran', bold: true, size: 20 })] })
     ]
   }]
 });
@@ -335,7 +335,7 @@ function makeDir2Legal(name, fatherName, address, email, mobile, pan, dob, filen
     The Board of Directors / Promoters,<br>
     <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong><br>
     (MCA Approved Name | SRN: AC6979718)<br>
-    Registered Office: Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422.</p>
+    Registered Office: Near Co-operative Bank, Village Booh, Kapurthala, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422.</p>
 
     <p><strong>SUBJECT: CONSENT TO ACT AS DIRECTOR OF FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong></p>
 
@@ -491,7 +491,7 @@ const inc9Html = getLegalHtmlTemplate(
   </table>
 
   <p style="margin-top: 10px;"><strong>Date:</strong> 22 / 10 / 2026<br>
-  <strong>Place:</strong> Goindwal Sahib, Tarn Taran, Punjab, India</p>
+  <strong>Place:</strong> Village Booh, Kapurthala, Tarn Taran, Punjab, India</p>
   `,
   true
 );

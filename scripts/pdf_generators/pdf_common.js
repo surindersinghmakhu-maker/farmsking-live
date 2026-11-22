@@ -2,7 +2,7 @@
  * Common PDF Generation Framework for FarmsKing Punjabi A4 Architectural Dossiers
  * Strictly adheres to FarmsKing Rules:
  *  - Rule 0: Strict Technical Verification & Truth
- *  - Rule 3: Corporate Registration (CIN: U01100PB2026PTC063294, Goindwal Sahib, Punjab)
+ *  - Rule 3: Corporate Registration (CIN: U62013PB2026PTC070389, Village Booh, Kapurthala, Punjab)
  *  - Rule 4: Mandatory A4 Page Setup (210mm x 297mm)
  *  - High Quality Punjabi Gurmukhi Typography with Professional English Subtitles
  */
@@ -328,7 +328,7 @@ function createPage(pageNumber, totalPages, docTitle, docSub, bodyHtml) {
       <div class="doc-header">
         <div class="brand-group">
           <h1>ਫਾਰਮਸਕਿੰਗ ਤਕਨਾਲੋਜੀ ਪ੍ਰਾਈਵੇਟ ਲਿਮਟਿਡ</h1>
-          <div class="sub">FARMSKING TECHNOLOGIES PRIVATE LIMITED &bull; CIN: U01100PB2026PTC063294</div>
+          <div class="sub">FARMSKING TECHNOLOGIES PRIVATE LIMITED &bull; CIN: U62013PB2026PTC070389</div>
         </div>
         <div class="header-meta">
           <div class="tag">${docTitle}</div>

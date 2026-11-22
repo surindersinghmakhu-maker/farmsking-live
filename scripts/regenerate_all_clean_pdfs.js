@@ -153,13 +153,13 @@ const nocHtml = getCleanLegalHtml(
 
   <p>Respected Sir / Madam,</p>
 
-  <p>I, <strong>BAKHSHISH SINGH</strong> (Son of <strong>KASHMIR SINGH</strong>), residing at Village Amritpur, Tehsil Sultanpur Lodhi, District Kapurthala, Punjab - 144628, and carrying on business at Goindwal Sahib, District Tarn Taran, Punjab, do hereby solemnly affirm, declare, and state as under:</p>
+  <p>I, <strong>BAKHSHISH SINGH</strong> (Son of <strong>KASHMIR SINGH</strong>), residing at Village Amritpur, Tehsil Sultanpur Lodhi, District Kapurthala, Punjab - 144628, and carrying on business at Village Booh, Kapurthala, District Tarn Taran, Punjab, do hereby solemnly affirm, declare, and state as under:</p>
 
   <p><strong>1. Lawful Possession & Absolute Authority:</strong> That I am the absolute and lawful owner / authorized occupant in vacant and legal possession of the commercial premises situated at:</p>
 
   <div class="highlight-box">
     <strong>M/s GURU NANAK COMPUTER ACADEMY</strong><br>
-    NEAR CO-OPERATIVE BANK, GOINDWAL SAHIB,<br>
+    NEAR CO-OPERATIVE BANK, Village Booh, Kapurthala,<br>
     TEHSIL: KHADOOR SAHIB, DISTRICT: TARN TARAN,<br>
     STATE: PUNJAB, INDIA — PIN CODE: 143422.
   </div>
@@ -179,7 +179,7 @@ const nocHtml = getCleanLegalHtml(
     <tr>
       <td style="width: 55%;">
         <strong>Date:</strong> 22 / 10 / 2026<br>
-        <strong>Place:</strong> Goindwal Sahib, Tarn Taran (Punjab)<br><br>
+        <strong>Place:</strong> Village Booh, Kapurthala, Tarn Taran (Punjab)<br><br>
         <strong>Attached Statutory Evidence:</strong><br>
         1. BSNL Fiber Tax Invoice (A/c: 1024846990, Dated: 03-OCT-2026)<br>
         2. PAN Card of Bakhshish Singh ('CNNPS4562F')<br>
@@ -222,7 +222,7 @@ function makeCleanDir2(name, fatherName, address, email, mobile, pan, dob, outPd
     The Board of Directors / Promoters,<br>
     <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong><br>
     (MCA Approved Name | SRN: AC6979718)<br>
-    Registered Office: Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422.</p>
+    Registered Office: Near Co-operative Bank, Village Booh, Kapurthala, Tehsil Khadoor Sahib, Tarn Taran, Punjab - 143422.</p>
 
     <p><strong>SUBJECT: CONSENT TO ACT AS DIRECTOR OF FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong></p>
 
@@ -365,7 +365,7 @@ const inc9Html = getCleanLegalHtml(
   </table>
 
   <p style="margin-top: 10px;"><strong>Date:</strong> 22 / 10 / 2026<br>
-  <strong>Place:</strong> Goindwal Sahib, Tarn Taran, Punjab, India</p>
+  <strong>Place:</strong> Village Booh, Kapurthala, Tarn Taran, Punjab, India</p>
   `,
   true
 );

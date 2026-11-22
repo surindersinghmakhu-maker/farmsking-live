@@ -5,7 +5,7 @@
  * Complies 100% with FarmsKing Agent Rules:
  *  - Rule 0: Strict Technical Verification & Objective Accuracy.
  *  - Rule 1: 100% Pure Professional English & Easy Wording.
- *  - Rule 3: Corporate Identity (CIN: U01100PB2026PTC063294, Goindwal Sahib, Punjab).
+ *  - Rule 3: Corporate Identity (CIN: U62013PB2026PTC070389, Village Booh, Kapurthala, Punjab).
  *  - Rule 4: Mandatory A4 Page Setup (210mm x 297mm) with @page { size: A4 portrait; margin: 12mm 14mm; }.
  *  - Rule 7: Super-Premium Institutional ISO 9001/27001 UI/UX Experience.
  */
@@ -335,11 +335,11 @@ const htmlContent = `<!DOCTYPE html>
         <div class="hero-meta-grid">
           <div class="hero-meta-item">
             <span class="label">Corporate Identity</span>
-            <span class="value">CIN: U01100PB2026PTC063294</span>
+            <span class="value">CIN: U62013PB2026PTC070389</span>
           </div>
           <div class="hero-meta-item">
             <span class="label">Registered Office</span>
-            <span class="value">Goindwal Sahib, Tarn Taran, Punjab</span>
+            <span class="value">Village Booh, Kapurthala, Tarn Taran, Punjab</span>
           </div>
           <div class="hero-meta-item">
             <span class="label">Live Web URL</span>
@@ -442,7 +442,7 @@ const htmlContent = `<!DOCTYPE html>
     </div>
 
     <div class="doc-footer">
-      <div class="statutory-note">FarmsKing Technologies Pvt. Ltd. &bull; CIN: U01100PB2026PTC063294 &bull; Regd: Goindwal Sahib, Punjab</div>
+      <div class="statutory-note">FarmsKing Technologies Pvt. Ltd. &bull; CIN: U62013PB2026PTC070389 &bull; Regd: Village Booh, Kapurthala, Punjab</div>
       <div>Page 1 of 5</div>
     </div>
   </div>
@@ -1065,7 +1065,7 @@ const htmlContent = `<!DOCTYPE html>
               FarmsKing Technologies Private Limited
             </div>
             <div style="font-size: 7.8pt; color: #475569; margin-top: 2px;">
-              CIN: U01100PB2026PTC063294 &bull; Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+              CIN: U62013PB2026PTC070389 &bull; Regd. Office: C/o Baldev Singh, Village Booh, Kapurthala, Punjab - 144601
             </div>
             <div style="font-size: 7.8pt; color: #059669; font-weight: 700; margin-top: 2px;">
               Institutional Standard: ISO 9001:2015 (Quality Management) &bull; ISO/IEC 27001:2022 (Information Security)

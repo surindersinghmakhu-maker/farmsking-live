@@ -994,7 +994,7 @@ export function MarketRatesCard() {
           {/* Table Header */}
           <View style={[styles.columnHeaderRow, { borderBottomColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
             <Text style={[styles.columnHeader, styles.cropColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('tabCrops', 'YOUR CROP')}</Text>
-            <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('stateMandi', 'LOCAL MANDI')}</Text>
+            <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('stateMandi', 'STATE')}</Text>
             <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('nationalMandi', 'ALL INDIA')}</Text>
             <View style={styles.shareColumn} />
           </View>

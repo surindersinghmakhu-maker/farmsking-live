@@ -222,3 +222,73 @@ export async function listPlantDiagnoses(plantId?: string): Promise<PlantDiagnos
   });
   return data;
 }
+
+// ── Doctor / Advisor Workspace Endpoints ──
+
+export interface PrescribePlantCarePayload {
+  gardenerId: string;
+  plantId?: string;
+  gardenId?: string;
+  careType: PlantCareType;
+  title: string;
+  instructions?: string;
+  intervalDays: number;
+  nextDueDate?: string;
+}
+
+export interface DoctorConsultationNotePayload {
+  gardenerId: string;
+  plantId: string;
+  notes: string;
+  conditionStatus?: string;
+  photoUrl?: string;
+}
+
+export interface DoctorGardenDashboardResponse {
+  activeGardenersCount: number;
+  pendingRequestsCount: number;
+  monitoredGardensCount: number;
+  monitoredPlantsCount: number;
+  criticalPlantsCount: number;
+  activeAssignments: any[];
+  pendingAssignments: any[];
+  recentDiagnoses: PlantDiagnosisRecord[];
+  wallet: { balance: number; totalEarnings: number };
+}
+
+export interface GardenerBotanicalProfileResponse {
+  gardener: {
+    id: string;
+    name: string;
+    mobile: string;
+    kingId?: string | null;
+    photoUrl?: string | null;
+    village?: string | null;
+    district?: string | null;
+    state?: string | null;
+    gardenerPlan?: { plan: string; startDate: string; endDate?: string | null } | null;
+  };
+  gardens: Garden[];
+  standalonePlants: Plant[];
+  diagnoses: PlantDiagnosisRecord[];
+}
+
+export async function fetchDoctorGardenDashboard(): Promise<DoctorGardenDashboardResponse> {
+  const { data } = await apiClient.get<DoctorGardenDashboardResponse>('/gardens/doctor/dashboard');
+  return data;
+}
+
+export async function fetchGardenerBotanicalProfile(gardenerId: string): Promise<GardenerBotanicalProfileResponse> {
+  const { data } = await apiClient.get<GardenerBotanicalProfileResponse>(`/gardens/doctor/patient/${gardenerId}`);
+  return data;
+}
+
+export async function prescribePlantCare(payload: PrescribePlantCarePayload): Promise<PlantCareSchedule> {
+  const { data } = await apiClient.post<PlantCareSchedule>('/gardens/doctor/prescriptions', payload);
+  return data;
+}
+
+export async function recordDoctorConsultationNote(payload: DoctorConsultationNotePayload): Promise<PlantHealthLog> {
+  const { data } = await apiClient.post<PlantHealthLog>('/gardens/doctor/consultation-note', payload);
+  return data;
+}

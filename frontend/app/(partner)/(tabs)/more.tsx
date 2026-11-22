@@ -173,6 +173,12 @@ export default function MoreScreen() {
     ...(isAdvisorRole
       ? [
           {
+            key: 'tabGardenDoctorStudio' as any,
+            label: 'Garden Doctor Studio',
+            icon: 'medical-outline',
+            href: '/(partner)/garden-doctor',
+          },
+          {
             key: 'tabAdvisorWallet' as any,
             label: 'Advisor Wallet & Payouts',
             icon: 'wallet-outline',

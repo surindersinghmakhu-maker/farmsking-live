@@ -16,6 +16,7 @@ import { RenewModal } from '@/src/components/RenewPlanCard';
 import { SprayScheduleCards } from '@/src/components/SprayScheduleCards';
 import { SprayDetailCard } from '@/src/components/SprayDetailCard';
 import { FarmerProfileModal } from '@/src/components/FarmerProfileModal';
+import { DoctorBotanicalInspectionModal } from '@/src/components/DoctorBotanicalInspectionModal';
 import { useMySprayItemTemplates } from '@/src/hooks/useSprayItemTemplates';
 import { WeatherForecastModal } from '@/src/components/WeatherForecastModal';
 import { CropActivitiesModal } from '@/components/CropActivitiesModal';
@@ -1048,6 +1049,27 @@ export default function AdvisorFarmsScreen() {
           setSelectedCropForActivities(null);
         }}
         isAdvisorView={true}
+      />
+
+      {/* Farmer Profile Modal (for Agricultural Advisors) */}
+      <FarmerProfileModal
+        visible={!!profileModalFarmerId && !isGardenAdvisor}
+        farmerId={profileModalFarmerId}
+        assignmentId={profileModalAssignmentId}
+        onClose={() => {
+          setProfileModalFarmerId(null);
+          setProfileModalAssignmentId(null);
+        }}
+      />
+
+      {/* Gardener Botanical Inspection Modal (for Garden Doctors & Horticulturists) */}
+      <DoctorBotanicalInspectionModal
+        visible={!!profileModalFarmerId && isGardenAdvisor}
+        gardenerId={profileModalFarmerId}
+        onClose={() => {
+          setProfileModalFarmerId(null);
+          setProfileModalAssignmentId(null);
+        }}
       />
 
       <Modal visible={!!sprayDetailItem} transparent animationType="slide" onRequestClose={() => setSprayDetailItem(null)}>

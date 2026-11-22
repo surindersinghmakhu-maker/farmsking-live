@@ -12,12 +12,38 @@ import { CreateGardenExpenseDto } from './dto/create-garden-expense.dto';
 import { CreatePlantCareScheduleDto } from './dto/create-plant-care-schedule.dto';
 import { LogPlantHealthDto } from './dto/log-plant-health.dto';
 import { DiagnosePlantDto } from './dto/diagnose-plant.dto';
+import { DoctorConsultationNoteDto, PrescribePlantCareDto } from './dto/prescribe-plant-care.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.GARDENER, Role.ADMIN, Role.SUPER_ADMIN)
+@Roles(Role.GARDENER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
 @Controller('gardens')
 export class GardensController {
   constructor(private readonly gardensService: GardensService) {}
+
+  // ── Doctor / Advisor Studio Endpoints ──
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('doctor/dashboard')
+  getDoctorGardenDashboard(@CurrentUser() user: AuthUser) {
+    return this.gardensService.getDoctorGardenDashboard(user);
+  }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('doctor/patient/:gardenerId')
+  getBotanicalProfileForDoctor(@CurrentUser() user: AuthUser, @Param('gardenerId') gardenerId: string) {
+    return this.gardensService.getBotanicalProfileForDoctor(user, gardenerId);
+  }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('doctor/prescriptions')
+  prescribeCareSchedule(@CurrentUser() user: AuthUser, @Body() dto: PrescribePlantCareDto) {
+    return this.gardensService.prescribeCareSchedule(user, dto);
+  }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('doctor/consultation-note')
+  recordDoctorConsultationNote(@CurrentUser() user: AuthUser, @Body() dto: DoctorConsultationNoteDto) {
+    return this.gardensService.recordDoctorConsultationNote(user, dto);
+  }
 
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateGardenDto) {

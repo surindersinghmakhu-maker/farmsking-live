@@ -44,6 +44,7 @@ describe('GardensService (Phase 2 Comprehensive Test Suite)', () => {
     },
     plantDiagnosis: {
       create: jest.fn(),
+      findMany: jest.fn(),
     },
     aiCreditLedger: {
       findUnique: jest.fn(),
@@ -55,6 +56,16 @@ describe('GardensService (Phase 2 Comprehensive Test Suite)', () => {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       delete: jest.fn(),
+    },
+    advisorAssignment: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+    },
+    user: {
+      findUnique: jest.fn(),
+    },
+    walletTransaction: {
+      aggregate: jest.fn(),
     },
     $transaction: jest.fn((promises) => Promise.all(promises)),
   };
@@ -269,6 +280,116 @@ describe('GardensService (Phase 2 Comprehensive Test Suite)', () => {
       );
       expect(res.diagnosis.detectedIssue).toContain('Root Rot');
       expect(mockPrisma.aiCreditLedger.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('5. Garden Doctor & Advisor Workspace (Phase 5)', () => {
+    const mockDoctor: AuthUser = {
+      id: 'doctor-1',
+      mobile: '9000000009',
+      role: Role.ADVISOR,
+      roles: [Role.ADVISOR],
+      status: 'ACTIVE',
+    };
+
+    it('should retrieve complete botanical profile of an assigned gardener', async () => {
+      mockPrisma.advisorAssignment.findFirst.mockResolvedValue({
+        id: 'assign-1',
+        advisorId: mockDoctor.id,
+        farmerId: 'gardener-client-1',
+        status: 'ACTIVE',
+      });
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'gardener-client-1',
+        name: 'Simranjeet Kaur',
+        mobile: '9876543210',
+        kingId: 'FK-GARDEN-001',
+      });
+
+      mockPrisma.garden.findMany.mockResolvedValue([
+        { id: 'g-1', name: 'Balcony Sanctuary', plants: [{ id: 'p-1', name: 'Monstera' }] },
+      ]);
+      mockPrisma.plant.findMany.mockResolvedValue([
+        { id: 'p-2', name: 'Bonsai Ficus', gardenId: null },
+      ]);
+      mockPrisma.plantDiagnosis.findMany.mockResolvedValue([
+        { id: 'diag-1', detectedIssue: 'Chlorosis' },
+      ]);
+
+      const profile = await service.getBotanicalProfileForDoctor(mockDoctor, 'gardener-client-1');
+
+      expect(profile.gardener.name).toBe('Simranjeet Kaur');
+      expect(profile.gardens).toHaveLength(1);
+      expect(profile.standalonePlants).toHaveLength(1);
+      expect(profile.diagnoses).toHaveLength(1);
+    });
+
+    it('should prescribe a plant care schedule and record a health log', async () => {
+      mockPrisma.advisorAssignment.findFirst.mockResolvedValue({
+        id: 'assign-1',
+        advisorId: mockDoctor.id,
+        farmerId: 'gardener-client-1',
+        status: 'ACTIVE',
+      });
+
+      mockPrisma.plantCareSchedule.create.mockResolvedValue({
+        id: 'sched-rx-1',
+        title: 'Cold-pressed Neem Oil Spray',
+        careType: PlantCareType.PEST_CONTROL,
+        intervalDays: 14,
+      });
+
+      mockPrisma.plantHealthLog.create.mockResolvedValue({
+        id: 'log-rx-1',
+        conditionStatus: 'DOCTOR_PRESCRIBED',
+      });
+
+      const res = await service.prescribeCareSchedule(mockDoctor, {
+        gardenerId: 'gardener-client-1',
+        plantId: 'p-1',
+        careType: PlantCareType.PEST_CONTROL,
+        title: 'Cold-pressed Neem Oil Spray',
+        intervalDays: 14,
+        instructions: 'Mix 5ml per liter with mild soap water; apply at dusk.',
+      });
+
+      expect(res.title).toBe('Cold-pressed Neem Oil Spray');
+      expect(mockPrisma.plantCareSchedule.create).toHaveBeenCalled();
+      expect(mockPrisma.plantHealthLog.create).toHaveBeenCalled();
+    });
+
+    it('should aggregate doctor garden dashboard metrics and wallet balance', async () => {
+      mockPrisma.advisorAssignment.findMany
+        .mockResolvedValueOnce([
+          {
+            id: 'assign-1',
+            farmerId: 'gardener-1',
+            farmer: {
+              id: 'gardener-1',
+              name: 'Amanpreet',
+              gardens: [{ id: 'g-1', plants: [{ id: 'p-1', healthStatus: 'HEALTHY' }] }],
+              plants: [{ id: 'p-2', healthStatus: 'NEEDS_CARE' }],
+            },
+          },
+        ])
+        .mockResolvedValueOnce([]); // pending
+
+      mockPrisma.plantDiagnosis.findMany.mockResolvedValue([
+        { id: 'd-1', detectedIssue: 'Powdery Mildew' },
+      ]);
+
+      mockPrisma.walletTransaction.aggregate
+        .mockResolvedValueOnce({ _sum: { amount: 5000 } }) // credit
+        .mockResolvedValueOnce({ _sum: { amount: 1000 } }); // debit
+
+      const dashboard = await service.getDoctorGardenDashboard(mockDoctor);
+
+      expect(dashboard.activeGardenersCount).toBe(1);
+      expect(dashboard.monitoredPlantsCount).toBe(2);
+      expect(dashboard.criticalPlantsCount).toBe(1);
+      expect(dashboard.wallet.balance).toBe(4000);
+      expect(dashboard.wallet.totalEarnings).toBe(5000);
     });
   });
 });

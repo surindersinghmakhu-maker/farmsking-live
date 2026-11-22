@@ -12,11 +12,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { RoleHeader } from './RoleHeader';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { apiClient } from '@/src/api/client';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useDoctorGardenDashboard } from '@/src/hooks/useGardens';
+import { DoctorBotanicalInspectionModal } from '@/src/components/DoctorBotanicalInspectionModal';
 
 interface AdvisorTask {
   id: string;
@@ -34,7 +37,11 @@ const tap = () => {
 
 export const GardenAdvisorDashboardView: React.FC = () => {
   const theme = RoleThemes.GARDEN_ADVISOR;
+  const router = useRouter();
   const { colors: tConfig, isDark, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
+
+  const { data: liveDoctorData } = useDoctorGardenDashboard();
+  const [inspectedGardenerId, setInspectedGardenerId] = useState<string | null>(null);
 
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [tasks, setTasks] = useState<AdvisorTask[]>([
@@ -118,6 +125,35 @@ export const GardenAdvisorDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        {/* Garden Doctor Studio Banner */}
+        <TouchableOpacity
+          style={[styles.studioBanner, premiumShadow('#a855f7', 'sm')]}
+          onPress={() => {
+            tap();
+            router.push('/(partner)/garden-doctor' as any);
+          }}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={['#1e0938', '#0d041a']}
+            style={styles.studioBannerGradient}
+          >
+            <View style={styles.studioBannerContent}>
+              <View style={styles.studioBadge}>
+                <Ionicons name="sparkles" size={13} color="#c084fc" />
+                <Text style={styles.studioBadgeText}>Professional Clinical Studio</Text>
+              </View>
+              <Text style={styles.studioBannerTitle}>Open Garden Doctor Studio</Text>
+              <Text style={styles.studioBannerSub}>
+                Patient triage queue, inspect plant pathology scans, and issue digital prescriptions.
+              </Text>
+            </View>
+            <View style={styles.studioArrowBtn}>
+              <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+
         {/* Assigned Gardeners Card */}
         <LinearGradient colors={theme.heroGradient} style={[styles.assignedCard, premiumShadow(theme.primary, 'md')]}>
           <Ionicons name="flower" size={104} color={theme.primary} style={styles.watermark} />
@@ -127,7 +163,9 @@ export const GardenAdvisorDashboardView: React.FC = () => {
               <Text style={[styles.badgePillText, { color: theme.primary }]}>Active This Month</Text>
             </View>
           </View>
-          <Text style={styles.assignedCount}>{dashboardData?.assignedGardeners?.count ?? 18}</Text>
+          <Text style={styles.assignedCount}>
+            {liveDoctorData?.activeGardenersCount ?? dashboardData?.assignedGardeners?.count ?? 0}
+          </Text>
 
           <View style={styles.sparklineContainer}>
             <View style={styles.sparklineBarRow}>
@@ -141,24 +179,31 @@ export const GardenAdvisorDashboardView: React.FC = () => {
         {/* 3 Metrics Row */}
         <View style={[styles.metricsRow, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
           <View style={styles.metricItem}>
-            <Text style={[styles.metricLabel, { color: subTextColor }]}>Active Gardens</Text>
-            <Text style={[styles.metricValue, { color: textColor }]}>{dashboardData?.metrics?.activeGardens ?? 29}</Text>
+            <Text style={[styles.metricLabel, { color: subTextColor }]}>Active Spaces</Text>
+            <Text style={[styles.metricValue, { color: textColor }]}>
+              {liveDoctorData?.monitoredGardensCount ?? dashboardData?.metrics?.activeGardens ?? 0}
+            </Text>
           </View>
           <View style={[styles.metricItem, styles.metricBorderLeft, { borderLeftColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
-            <Text style={[styles.metricLabel, { color: subTextColor }]}>Consultations</Text>
-            <Text style={[styles.metricValue, { color: textColor }]}>{dashboardData?.metrics?.consultations ?? 76}</Text>
+            <Text style={[styles.metricLabel, { color: subTextColor }]}>Monitored Pots</Text>
+            <Text style={[styles.metricValue, { color: textColor }]}>
+              {liveDoctorData?.monitoredPlantsCount ?? dashboardData?.metrics?.consultations ?? 0}
+            </Text>
           </View>
           <View style={[styles.metricItem, styles.metricBorderLeft, { borderLeftColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
-            <Text style={[styles.metricLabel, { color: subTextColor }]}>Follow-ups</Text>
-            <Text style={[styles.metricValue, { color: theme.primary }]}>{dashboardData?.metrics?.followUps ?? 21}</Text>
+            <Text style={[styles.metricLabel, { color: subTextColor }]}>Critical Attention</Text>
+            <Text style={[styles.metricValue, { color: '#f87171' }]}>
+              {liveDoctorData?.criticalPlantsCount ?? dashboardData?.metrics?.followUps ?? 0}
+            </Text>
           </View>
         </View>
 
         {/* Quick Actions Row */}
         <View style={styles.quickActionRow}>
           {[
-            { label: '+ Add Task', icon: 'add-circle-outline', modal: 'TASK', bg: theme.primaryLight, color: theme.primary },
-            { label: '+ Recommendation', icon: 'chatbox-ellipses-outline', modal: 'RECOMMEND', bg: '#eff6ff', color: '#2563eb' },
+            { label: '🌿 Open Studio', icon: 'medical-outline', action: () => router.push('/(partner)/garden-doctor' as any), bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' },
+            { label: '+ Add Task', icon: 'add-circle-outline', action: () => setModalType('TASK'), bg: theme.primaryLight, color: theme.primary },
+            { label: '+ Recommendation', icon: 'chatbox-ellipses-outline', action: () => setModalType('RECOMMEND'), bg: '#eff6ff', color: '#2563eb' },
           ].map((act, idx) => (
             <TouchableOpacity
               key={idx}
@@ -166,7 +211,7 @@ export const GardenAdvisorDashboardView: React.FC = () => {
               activeOpacity={0.75}
               onPress={() => {
                 tap();
-                setModalType(act.modal as any);
+                act.action();
               }}
             >
               <Ionicons name={act.icon as any} size={18} color={act.color} />
@@ -307,6 +352,13 @@ export const GardenAdvisorDashboardView: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Patient Botanical Health Inspection Modal */}
+      <DoctorBotanicalInspectionModal
+        visible={!!inspectedGardenerId}
+        gardenerId={inspectedGardenerId}
+        onClose={() => setInspectedGardenerId(null)}
+      />
     </ScrollView>
   );
 };
@@ -314,6 +366,59 @@ export const GardenAdvisorDashboardView: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: SPACING.lg, gap: SPACING.lg, paddingBottom: SPACING.xxl },
+  studioBanner: {
+    borderRadius: RADIUS.xl,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(168, 85, 247, 0.35)',
+  },
+  studioBannerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    gap: 16,
+  },
+  studioBannerContent: {
+    flex: 1,
+    gap: 4,
+  },
+  studioBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(168, 85, 247, 0.2)',
+    alignSelf: 'flex-start',
+    marginBottom: 2,
+  },
+  studioBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#c084fc',
+    textTransform: 'uppercase',
+  },
+  studioBannerTitle: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  studioBannerSub: {
+    fontSize: 12.5,
+    fontFamily: FONT.regular,
+    color: '#cbd5e1',
+    lineHeight: 18,
+  },
+  studioArrowBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#a855f7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   assignedCard: { borderRadius: RADIUS.xl, padding: SPACING.xl, overflow: 'hidden' },
   watermark: { position: 'absolute', top: -12, right: -16, opacity: 0.08 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

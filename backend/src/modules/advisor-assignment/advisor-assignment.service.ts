@@ -148,6 +148,27 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
                   },
                 },
               },
+              gardens: {
+                include: {
+                  plants: {
+                    where: { deletedAt: null },
+                    include: {
+                      schedules: { orderBy: { nextDueDate: 'asc' } },
+                      healthLogs: { orderBy: { loggedAt: 'desc' }, take: 10 },
+                      diagnoses: { orderBy: { createdAt: 'desc' }, take: 5 },
+                    },
+                  },
+                  schedules: { orderBy: { nextDueDate: 'asc' } },
+                },
+              },
+              plants: {
+                where: { gardenId: null, deletedAt: null },
+                include: {
+                  schedules: { orderBy: { nextDueDate: 'asc' } },
+                  healthLogs: { orderBy: { loggedAt: 'desc' }, take: 10 },
+                  diagnoses: { orderBy: { createdAt: 'desc' }, take: 5 },
+                },
+              },
             }),
       },
     });
@@ -155,7 +176,16 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       throw new NotFoundException('Farmer not found.');
     }
 
-    return { farmer: { ...farmer, farms: (farmer as any).farms ?? [] }, assignment, isExpired };
+    return {
+      farmer: {
+        ...farmer,
+        farms: (farmer as any).farms ?? [],
+        gardens: (farmer as any).gardens ?? [],
+        plants: (farmer as any).plants ?? [],
+      },
+      assignment,
+      isExpired,
+    };
   }
 
   private async getDoctorRatingStats(advisorIds: string[]) {

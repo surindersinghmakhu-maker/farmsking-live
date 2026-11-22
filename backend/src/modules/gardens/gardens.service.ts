@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { GardenerSubscriptionPlan, GardenType, PlantCareType, Role } from '@prisma/client';
+import { AdvisorAssignmentStatus, GardenerSubscriptionPlan, GardenType, PlantCareType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { GardenerPlansService, FREE_PLAN_MAX_PLANTS } from '../gardener-plans/gardener-plans.service';
 import { AiChatService } from '../ai-chat/ai-chat.service';
@@ -11,6 +11,7 @@ import { CreateGardenExpenseDto } from './dto/create-garden-expense.dto';
 import { CreatePlantCareScheduleDto } from './dto/create-plant-care-schedule.dto';
 import { LogPlantHealthDto } from './dto/log-plant-health.dto';
 import { DiagnosePlantDto } from './dto/diagnose-plant.dto';
+import { DoctorConsultationNoteDto, PrescribePlantCareDto } from './dto/prescribe-plant-care.dto';
 
 const FREE_GARDENER_MONTHLY_AI_SCANS = 5;
 const PREMIUM_GARDENER_MONTHLY_AI_SCANS = 100;
@@ -417,5 +418,271 @@ export class GardensService {
       throw new NotFoundException('Expense not found.');
     }
     return this.prisma.gardenExpense.delete({ where: { id } });
+  }
+
+  // ── Doctor / Advisor Botanical Workspace Methods ──
+
+  async verifyDoctorAccessOrThrow(doctorUser: AuthUser, gardenerId: string) {
+    const isAdmin = hasActiveRole(doctorUser, Role.ADMIN) || hasActiveRole(doctorUser, Role.SUPER_ADMIN);
+    if (isAdmin) return true;
+
+    const assignment = await this.prisma.advisorAssignment.findFirst({
+      where: {
+        advisorId: doctorUser.id,
+        farmerId: gardenerId,
+        status: AdvisorAssignmentStatus.ACTIVE,
+        deletedAt: null,
+      },
+    });
+
+    if (!assignment) {
+      throw new ForbiddenException('You are not assigned as the horticultural advisor for this gardener.');
+    }
+    return true;
+  }
+
+  async getBotanicalProfileForDoctor(doctorUser: AuthUser, gardenerId: string) {
+    await this.verifyDoctorAccessOrThrow(doctorUser, gardenerId);
+
+    const gardener = await this.prisma.user.findUnique({
+      where: { id: gardenerId },
+      select: {
+        id: true,
+        name: true,
+        mobile: true,
+        kingId: true,
+        photoUrl: true,
+        village: true,
+        district: true,
+        state: true,
+        gardenerPlan: { select: { plan: true, startDate: true, endDate: true } },
+      },
+    });
+
+    if (!gardener) {
+      throw new NotFoundException('Gardener not found.');
+    }
+
+    const [gardens, standalonePlants, diagnoses] = await Promise.all([
+      this.prisma.garden.findMany({
+        where: { gardenerId },
+        include: {
+          plants: {
+            where: { deletedAt: null },
+            include: {
+              schedules: { orderBy: { nextDueDate: 'asc' } },
+              healthLogs: { orderBy: { loggedAt: 'desc' }, take: 10 },
+              diagnoses: { orderBy: { createdAt: 'desc' }, take: 5 },
+            },
+          },
+          schedules: { orderBy: { nextDueDate: 'asc' } },
+          visits: { orderBy: { scheduledTime: 'desc' }, take: 5 },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.plant.findMany({
+        where: { gardenerId, gardenId: null, deletedAt: null },
+        include: {
+          schedules: { orderBy: { nextDueDate: 'asc' } },
+          healthLogs: { orderBy: { loggedAt: 'desc' }, take: 10 },
+          diagnoses: { orderBy: { createdAt: 'desc' }, take: 5 },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.plantDiagnosis.findMany({
+        where: { gardenerId },
+        include: { plant: { select: { id: true, name: true, locationType: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+    ]);
+
+    return {
+      gardener,
+      gardens,
+      standalonePlants,
+      diagnoses,
+    };
+  }
+
+  async prescribeCareSchedule(doctorUser: AuthUser, dto: PrescribePlantCareDto) {
+    await this.verifyDoctorAccessOrThrow(doctorUser, dto.gardenerId);
+
+    const nextDueDate = dto.nextDueDate
+      ? new Date(dto.nextDueDate)
+      : new Date(Date.now() + (dto.intervalDays || 1) * 86400000);
+
+    const schedule = await this.prisma.plantCareSchedule.create({
+      data: {
+        gardenerId: dto.gardenerId,
+        plantId: dto.plantId || null,
+        gardenId: dto.gardenId || null,
+        careType: dto.careType,
+        title: dto.title,
+        instructions: dto.instructions || null,
+        intervalDays: dto.intervalDays,
+        nextDueDate,
+      },
+    });
+
+    if (dto.plantId) {
+      await this.prisma.plantHealthLog.create({
+        data: {
+          plantId: dto.plantId,
+          photoUrl: '',
+          conditionStatus: 'DOCTOR_PRESCRIBED',
+          notes: `Prescription issued by Certified Garden Doctor: ${dto.title} (${dto.careType}). ${dto.instructions || ''}`,
+        },
+      });
+    }
+
+    return schedule;
+  }
+
+  async recordDoctorConsultationNote(doctorUser: AuthUser, dto: DoctorConsultationNoteDto) {
+    await this.verifyDoctorAccessOrThrow(doctorUser, dto.gardenerId);
+
+    const log = await this.prisma.plantHealthLog.create({
+      data: {
+        plantId: dto.plantId,
+        photoUrl: dto.photoUrl || '',
+        conditionStatus: dto.conditionStatus || 'DOCTOR_PRESCRIBED',
+        notes: `Clinical Consultation Note: ${dto.notes}`,
+      },
+    });
+
+    if (dto.conditionStatus) {
+      await this.prisma.plant.update({
+        where: { id: dto.plantId },
+        data: { healthStatus: dto.conditionStatus, healthNotes: dto.notes },
+      });
+    }
+
+    return log;
+  }
+
+  async getDoctorGardenDashboard(doctorUser: AuthUser) {
+    const isAdmin = hasActiveRole(doctorUser, Role.ADMIN) || hasActiveRole(doctorUser, Role.SUPER_ADMIN);
+
+    const activeAssignments = await this.prisma.advisorAssignment.findMany({
+      where: {
+        ...(isAdmin ? {} : { advisorId: doctorUser.id }),
+        status: AdvisorAssignmentStatus.ACTIVE,
+        deletedAt: null,
+        farmer: {
+          deletedAt: null,
+          OR: [{ role: Role.GARDENER }, { roles: { has: Role.GARDENER } }],
+        },
+      },
+      include: {
+        farmer: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true,
+            kingId: true,
+            photoUrl: true,
+            village: true,
+            district: true,
+            state: true,
+            gardenerPlan: { select: { plan: true, endDate: true } },
+            gardens: {
+              select: {
+                id: true,
+                name: true,
+                gardenType: true,
+                healthScore: true,
+                plants: { select: { id: true, name: true, healthStatus: true } },
+              },
+            },
+            plants: {
+              where: { gardenId: null, deletedAt: null },
+              select: { id: true, name: true, healthStatus: true },
+            },
+          },
+        },
+      },
+      orderBy: { startDate: 'desc' },
+    });
+
+    const pendingAssignments = await this.prisma.advisorAssignment.findMany({
+      where: {
+        ...(isAdmin ? {} : { advisorId: doctorUser.id }),
+        status: AdvisorAssignmentStatus.PENDING,
+        deletedAt: null,
+      },
+      include: {
+        farmer: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true,
+            kingId: true,
+            photoUrl: true,
+            village: true,
+            district: true,
+            state: true,
+          },
+        },
+      },
+      orderBy: { startDate: 'desc' },
+    });
+
+    const gardenerIds = activeAssignments.map((a) => a.farmerId);
+
+    const recentDiagnoses = gardenerIds.length
+      ? await this.prisma.plantDiagnosis.findMany({
+          where: { gardenerId: { in: gardenerIds } },
+          include: {
+            gardener: { select: { id: true, name: true, mobile: true } },
+            plant: { select: { id: true, name: true, locationType: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        })
+      : [];
+
+    let totalMonitoredGardens = 0;
+    let totalMonitoredPlants = 0;
+    let criticalPlantsCount = 0;
+
+    activeAssignments.forEach((a) => {
+      totalMonitoredGardens += a.farmer.gardens.length;
+      a.farmer.gardens.forEach((g) => {
+        totalMonitoredPlants += g.plants.length;
+        g.plants.forEach((p) => {
+          if (p.healthStatus === 'CRITICAL' || p.healthStatus === 'NEEDS_CARE') criticalPlantsCount++;
+        });
+      });
+      totalMonitoredPlants += a.farmer.plants.length;
+      a.farmer.plants.forEach((p) => {
+        if (p.healthStatus === 'CRITICAL' || p.healthStatus === 'NEEDS_CARE') criticalPlantsCount++;
+      });
+    });
+
+    const [credits, debits] = await Promise.all([
+      this.prisma.walletTransaction.aggregate({
+        where: { userId: doctorUser.id, type: 'CREDIT' },
+        _sum: { amount: true },
+      }),
+      this.prisma.walletTransaction.aggregate({
+        where: { userId: doctorUser.id, type: 'DEBIT' },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const balance = (Number(credits._sum.amount) || 0) - (Number(debits._sum.amount) || 0);
+
+    return {
+      activeGardenersCount: activeAssignments.length,
+      pendingRequestsCount: pendingAssignments.length,
+      monitoredGardensCount: totalMonitoredGardens,
+      monitoredPlantsCount: totalMonitoredPlants,
+      criticalPlantsCount,
+      activeAssignments,
+      pendingAssignments,
+      recentDiagnoses,
+      wallet: { balance: Math.max(0, balance), totalEarnings: Number(credits._sum.amount) || 0 },
+    };
   }
 }

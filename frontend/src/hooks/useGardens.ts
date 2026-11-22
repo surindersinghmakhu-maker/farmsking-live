@@ -144,3 +144,45 @@ export function usePlantDiagnoses(plantId?: string) {
     queryFn: () => api.listPlantDiagnoses(plantId),
   });
 }
+
+// ── Doctor / Advisor Workspace Hooks ──
+
+export function useDoctorGardenDashboard() {
+  return useQuery({
+    queryKey: ['doctor-garden-dashboard'],
+    queryFn: api.fetchDoctorGardenDashboard,
+  });
+}
+
+export function useGardenerBotanicalProfile(gardenerId?: string | null) {
+  return useQuery({
+    queryKey: ['gardener-botanical-profile', gardenerId],
+    queryFn: () => (gardenerId ? api.fetchGardenerBotanicalProfile(gardenerId) : null),
+    enabled: !!gardenerId,
+  });
+}
+
+export function usePrescribePlantCare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: api.PrescribePlantCarePayload) => api.prescribePlantCare(payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['doctor-garden-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['gardener-botanical-profile', variables.gardenerId] });
+      queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['all-plants'] });
+    },
+  });
+}
+
+export function useRecordDoctorConsultationNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: api.DoctorConsultationNotePayload) => api.recordDoctorConsultationNote(payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['gardener-botanical-profile', variables.gardenerId] });
+      queryClient.invalidateQueries({ queryKey: ['doctor-garden-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['plant-details', variables.plantId] });
+    },
+  });
+}

@@ -8,23 +8,23 @@ export declare class NotificationsService {
         id: string;
         createdAt: Date;
         data: Prisma.JsonValue | null;
-        title: string;
-        type: import(".prisma/client").$Enums.NotificationType;
         body: string;
+        type: import(".prisma/client").$Enums.NotificationType;
+        title: string;
+        userId: string;
         isRead: boolean;
         readAt: Date | null;
-        userId: string;
     } | null>;
     listMine(user: AuthUser): Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
         data: Prisma.JsonValue | null;
-        title: string;
-        type: import(".prisma/client").$Enums.NotificationType;
         body: string;
+        type: import(".prisma/client").$Enums.NotificationType;
+        title: string;
+        userId: string;
         isRead: boolean;
         readAt: Date | null;
-        userId: string;
     }[]>;
     getUnreadCount(user: AuthUser): Promise<{
         count: number;
@@ -33,12 +33,12 @@ export declare class NotificationsService {
         id: string;
         createdAt: Date;
         data: Prisma.JsonValue | null;
-        title: string;
-        type: import(".prisma/client").$Enums.NotificationType;
         body: string;
+        type: import(".prisma/client").$Enums.NotificationType;
+        title: string;
+        userId: string;
         isRead: boolean;
         readAt: Date | null;
-        userId: string;
     }>;
     markAllRead(user: AuthUser): Promise<{
         success: boolean;

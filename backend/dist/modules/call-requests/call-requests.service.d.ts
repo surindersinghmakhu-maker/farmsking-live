@@ -28,12 +28,12 @@ export declare class CallRequestsService {
             mobile: string;
             name: string;
         };
-        advisorId: string;
-        status: import(".prisma/client").$Enums.CallRequestStatus;
         id: string;
         createdAt: Date;
+        status: import(".prisma/client").$Enums.CallRequestStatus;
         farmerId: string;
         resolvedAt: Date | null;
+        advisorId: string;
         resolvedComment: string | null;
     }>;
     getMyPending(farmer: AuthUser): import(".prisma/client").Prisma.Prisma__CallRequestClient<({
@@ -50,12 +50,12 @@ export declare class CallRequestsService {
             name: string;
         };
     } & {
-        advisorId: string;
-        status: import(".prisma/client").$Enums.CallRequestStatus;
         id: string;
         createdAt: Date;
+        status: import(".prisma/client").$Enums.CallRequestStatus;
         farmerId: string;
         resolvedAt: Date | null;
+        advisorId: string;
         resolvedComment: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     listMine(advisor: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
@@ -72,12 +72,12 @@ export declare class CallRequestsService {
             name: string;
         };
     } & {
-        advisorId: string;
-        status: import(".prisma/client").$Enums.CallRequestStatus;
         id: string;
         createdAt: Date;
+        status: import(".prisma/client").$Enums.CallRequestStatus;
         farmerId: string;
         resolvedAt: Date | null;
+        advisorId: string;
         resolvedComment: string | null;
     })[]>;
     resolve(advisor: AuthUser, id: string, dto: ResolveCallRequestDto): Promise<{
@@ -94,12 +94,12 @@ export declare class CallRequestsService {
             name: string;
         };
     } & {
-        advisorId: string;
-        status: import(".prisma/client").$Enums.CallRequestStatus;
         id: string;
         createdAt: Date;
+        status: import(".prisma/client").$Enums.CallRequestStatus;
         farmerId: string;
         resolvedAt: Date | null;
+        advisorId: string;
         resolvedComment: string | null;
     }>;
 }

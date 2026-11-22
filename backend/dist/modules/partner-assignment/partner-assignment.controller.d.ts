@@ -11,7 +11,6 @@ export declare class PartnerAssignmentController {
             photoUrl: string | null;
         };
     } & {
-        status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -19,6 +18,7 @@ export declare class PartnerAssignmentController {
         endDate: Date | null;
         customerId: string;
         businessPartnerId: string;
+        status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     findMyCustomers(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         customer: {
@@ -28,7 +28,6 @@ export declare class PartnerAssignmentController {
             photoUrl: string | null;
         };
     } & {
-        status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -36,5 +35,6 @@ export declare class PartnerAssignmentController {
         endDate: Date | null;
         customerId: string;
         businessPartnerId: string;
+        status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
     })[]>;
 }

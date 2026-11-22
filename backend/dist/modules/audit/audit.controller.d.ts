@@ -14,8 +14,8 @@ export declare class AuditController {
         } & {
             id: string;
             createdAt: Date;
-            method: string;
             actorRole: import(".prisma/client").$Enums.Role | null;
+            method: string;
             path: string;
             action: string;
             targetId: string | null;

@@ -20,12 +20,12 @@ export declare class WalletController {
             id: string;
             createdAt: Date;
             type: import(".prisma/client").$Enums.WalletTransactionType;
-            userId: string;
-            relatedUserId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             couponRedemptionId: string | null;
             withdrawalRequestId: string | null;
+            userId: string;
+            relatedUserId: string | null;
         })[];
     }>;
     claimWelcomeBonus(user: AuthUser): Promise<{
@@ -44,12 +44,12 @@ export declare class WalletController {
             id: string;
             createdAt: Date;
             type: import(".prisma/client").$Enums.WalletTransactionType;
-            userId: string;
-            relatedUserId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             couponRedemptionId: string | null;
             withdrawalRequestId: string | null;
+            userId: string;
+            relatedUserId: string | null;
         })[];
     }>;
     getReferralStatement(user: AuthUser): Promise<{
@@ -88,11 +88,11 @@ export declare class WalletController {
             welcomeEarnings: number;
             referralEarnings: number;
             commissionEarnings: number;
+            roles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
             name: string;
             upiId: string | null;
             bankAccountNumber: string | null;
@@ -180,19 +180,19 @@ export declare class WalletController {
                 bankIfsc: string | null;
             };
         } & {
-            status: import(".prisma/client").$Enums.WithdrawalStatus;
             id: string;
-            notes: string | null;
-            requestedAt: Date;
-            platformExpense: boolean;
             businessPartnerId: string;
-            gstAmount: import("@prisma/client/runtime/library").Decimal | null;
             requestedAmount: import("@prisma/client/runtime/library").Decimal;
             approvedAmount: import("@prisma/client/runtime/library").Decimal | null;
             platformFeeAmount: import("@prisma/client/runtime/library").Decimal | null;
+            gstAmount: import("@prisma/client/runtime/library").Decimal | null;
             netPayableAmount: import("@prisma/client/runtime/library").Decimal | null;
+            platformExpense: boolean;
+            status: import(".prisma/client").$Enums.WithdrawalStatus;
+            requestedAt: Date;
             processedAt: Date | null;
             processedById: string | null;
+            notes: string | null;
         })[];
         manualTransactions: ({
             user: {
@@ -206,12 +206,12 @@ export declare class WalletController {
             id: string;
             createdAt: Date;
             type: import(".prisma/client").$Enums.WalletTransactionType;
-            userId: string;
-            relatedUserId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             couponRedemptionId: string | null;
             withdrawalRequestId: string | null;
+            userId: string;
+            relatedUserId: string | null;
         })[];
         inAppUsageTransactions: ({
             user: {
@@ -225,12 +225,12 @@ export declare class WalletController {
             id: string;
             createdAt: Date;
             type: import(".prisma/client").$Enums.WalletTransactionType;
-            userId: string;
-            relatedUserId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             couponRedemptionId: string | null;
             withdrawalRequestId: string | null;
+            userId: string;
+            relatedUserId: string | null;
         })[];
     }>;
     getWalletForUser(userId: string): Promise<{
@@ -249,12 +249,12 @@ export declare class WalletController {
             id: string;
             createdAt: Date;
             type: import(".prisma/client").$Enums.WalletTransactionType;
-            userId: string;
-            relatedUserId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             couponRedemptionId: string | null;
             withdrawalRequestId: string | null;
+            userId: string;
+            relatedUserId: string | null;
         })[];
     }>;
     creditWallet(admin: AuthUser, userId: string, dto: CreditWalletDto): Promise<{
@@ -273,12 +273,12 @@ export declare class WalletController {
             id: string;
             createdAt: Date;
             type: import(".prisma/client").$Enums.WalletTransactionType;
-            userId: string;
-            relatedUserId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             couponRedemptionId: string | null;
             withdrawalRequestId: string | null;
+            userId: string;
+            relatedUserId: string | null;
         })[];
     }>;
     debitWallet(admin: AuthUser, userId: string, dto: CreditWalletDto): Promise<{
@@ -297,12 +297,12 @@ export declare class WalletController {
             id: string;
             createdAt: Date;
             type: import(".prisma/client").$Enums.WalletTransactionType;
-            userId: string;
-            relatedUserId: string | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             couponRedemptionId: string | null;
             withdrawalRequestId: string | null;
+            userId: string;
+            relatedUserId: string | null;
         })[];
     }>;
 }

@@ -13,11 +13,11 @@ export declare class PartiesService {
     constructor(prisma: PrismaService, chatGateway: ChatGateway);
     private getFarmerId;
     create(user: AuthUser, name: string, address: string, mobile?: string): import(".prisma/client").Prisma.Prisma__PartyClient<{
-        deletedAt: Date | null;
         id: string;
         mobile: string | null;
         name: string;
         createdAt: Date;
+        deletedAt: Date | null;
         ownerId: string;
         address: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
@@ -26,40 +26,40 @@ export declare class PartiesService {
         address?: string;
         mobile?: string;
     }): Promise<{
-        deletedAt: Date | null;
         id: string;
         mobile: string | null;
         name: string;
         createdAt: Date;
+        deletedAt: Date | null;
         ownerId: string;
         address: string | null;
     } | {
-        deletedAt: Date | null;
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
         state: string | null;
         createdAt: Date;
         updatedAt: Date;
+        deletedAt: Date | null;
         type: import(".prisma/client").$Enums.PartyType;
+        mandiName: string | null;
         userId: string | null;
         address: string | null;
-        mandiName: string | null;
         shopNumber: string | null;
         ownerFarmerId: string | null;
     }>;
     private computeBalance;
     listMine(user: AuthUser): Promise<{
         balance: number;
-        deletedAt: Date | null;
         id: string;
         mobile: string | null;
         name: string;
         createdAt: Date;
+        deletedAt: Date | null;
         ownerId: string;
         address: string | null;
     }[]>;
@@ -67,11 +67,11 @@ export declare class PartiesService {
     getStatement(user: AuthUser, partyId: string): Promise<{
         party: {
             isUnified: boolean;
-            deletedAt: Date | null;
             id: string;
             mobile: string | null;
             name: string;
             createdAt: Date;
+            deletedAt: Date | null;
             ownerId: string;
             address: string | null;
             kingId?: undefined;
@@ -91,11 +91,11 @@ export declare class PartiesService {
     recordSaleLedger(user: AuthUser, partyId: string, dto: RecordSaleLedgerDto): Promise<{
         party: {
             isUnified: boolean;
-            deletedAt: Date | null;
             id: string;
             mobile: string | null;
             name: string;
             createdAt: Date;
+            deletedAt: Date | null;
             ownerId: string;
             address: string | null;
             kingId?: undefined;
@@ -117,11 +117,11 @@ export declare class PartiesService {
         receiptNo: string;
         party: {
             isUnified: boolean;
-            deletedAt: Date | null;
             id: string;
             mobile: string | null;
             name: string;
             createdAt: Date;
+            deletedAt: Date | null;
             ownerId: string;
             address: string | null;
             kingId?: undefined;
@@ -142,11 +142,11 @@ export declare class PartiesService {
         receiptNo: string;
         party: {
             isUnified: boolean;
-            deletedAt: Date | null;
             id: string;
             mobile: string | null;
             name: string;
             createdAt: Date;
+            deletedAt: Date | null;
             ownerId: string;
             address: string | null;
             kingId?: undefined;
@@ -166,40 +166,40 @@ export declare class PartiesService {
     recordExpenseCredit(partyId: string, expenseId: string, amount: number, reason: string): Promise<void>;
     private generateKingId;
     createUnifiedParty(user: AuthUser, dto: CreateUnifiedPartyDto): Promise<{
-        deletedAt: Date | null;
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
         state: string | null;
         createdAt: Date;
         updatedAt: Date;
+        deletedAt: Date | null;
         type: import(".prisma/client").$Enums.PartyType;
+        mandiName: string | null;
         userId: string | null;
         address: string | null;
-        mandiName: string | null;
         shopNumber: string | null;
         ownerFarmerId: string | null;
     }>;
     listUnifiedParties(user: AuthUser, role?: PartyRole): Promise<{
-        deletedAt: Date | null;
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
         state: string | null;
         createdAt: Date;
         updatedAt: Date;
+        deletedAt: Date | null;
         type: import(".prisma/client").$Enums.PartyType;
+        mandiName: string | null;
         userId: string | null;
         address: string | null;
-        mandiName: string | null;
         shopNumber: string | null;
         ownerFarmerId: string | null;
     }[]>;
@@ -207,16 +207,15 @@ export declare class PartiesService {
         id: string;
         commissionPercent: import("@prisma/client/runtime/library").Decimal | null;
         createdAt: Date;
-        farmerId: string;
-        notes: string | null;
-        cropCycleId: string | null;
-        cropName: string | null;
         type: import(".prisma/client").$Enums.ArhtiyaTransactionType;
         amount: import("@prisma/client/runtime/library").Decimal;
+        notes: string | null;
+        farmerId: string;
+        cropCycleId: string | null;
         partyId: string;
-        commissionAmount: import("@prisma/client/runtime/library").Decimal | null;
-        grossAmount: import("@prisma/client/runtime/library").Decimal | null;
+        cropName: string | null;
         transactionDate: Date;
+        commissionAmount: import("@prisma/client/runtime/library").Decimal | null;
         interestRateMonthly: import("@prisma/client/runtime/library").Decimal | null;
         interestAccruedDays: number | null;
         interestAmount: import("@prisma/client/runtime/library").Decimal | null;
@@ -224,6 +223,7 @@ export declare class PartiesService {
         inputQuantity: number | null;
         quantityQuintals: number | null;
         ratePerQuintal: import("@prisma/client/runtime/library").Decimal | null;
+        grossAmount: import("@prisma/client/runtime/library").Decimal | null;
         otherCharges: import("@prisma/client/runtime/library").Decimal | null;
         netAmount: import("@prisma/client/runtime/library").Decimal | null;
         jFormNumber: string | null;
@@ -235,16 +235,15 @@ export declare class PartiesService {
         id: string;
         commissionPercent: import("@prisma/client/runtime/library").Decimal | null;
         createdAt: Date;
-        farmerId: string;
-        notes: string | null;
-        cropCycleId: string | null;
-        cropName: string | null;
         type: import(".prisma/client").$Enums.ArhtiyaTransactionType;
         amount: import("@prisma/client/runtime/library").Decimal;
+        notes: string | null;
+        farmerId: string;
+        cropCycleId: string | null;
         partyId: string;
-        commissionAmount: import("@prisma/client/runtime/library").Decimal | null;
-        grossAmount: import("@prisma/client/runtime/library").Decimal | null;
+        cropName: string | null;
         transactionDate: Date;
+        commissionAmount: import("@prisma/client/runtime/library").Decimal | null;
         interestRateMonthly: import("@prisma/client/runtime/library").Decimal | null;
         interestAccruedDays: number | null;
         interestAmount: import("@prisma/client/runtime/library").Decimal | null;
@@ -252,6 +251,7 @@ export declare class PartiesService {
         inputQuantity: number | null;
         quantityQuintals: number | null;
         ratePerQuintal: import("@prisma/client/runtime/library").Decimal | null;
+        grossAmount: import("@prisma/client/runtime/library").Decimal | null;
         otherCharges: import("@prisma/client/runtime/library").Decimal | null;
         netAmount: import("@prisma/client/runtime/library").Decimal | null;
         jFormNumber: string | null;
@@ -260,21 +260,21 @@ export declare class PartiesService {
     }>;
     getArhtiyaLedgerHisab(user: AuthUser, partyId: string): Promise<{
         party: {
-            deletedAt: Date | null;
+            roles: import(".prisma/client").$Enums.PartyRole[];
             id: string;
             kingId: string;
             mobile: string | null;
-            roles: import(".prisma/client").$Enums.PartyRole[];
             name: string;
             village: string | null;
             district: string | null;
             state: string | null;
             createdAt: Date;
             updatedAt: Date;
+            deletedAt: Date | null;
             type: import(".prisma/client").$Enums.PartyType;
+            mandiName: string | null;
             userId: string | null;
             address: string | null;
-            mandiName: string | null;
             shopNumber: string | null;
             ownerFarmerId: string | null;
         };
@@ -290,16 +290,15 @@ export declare class PartiesService {
             id: string;
             commissionPercent: import("@prisma/client/runtime/library").Decimal | null;
             createdAt: Date;
-            farmerId: string;
-            notes: string | null;
-            cropCycleId: string | null;
-            cropName: string | null;
             type: import(".prisma/client").$Enums.ArhtiyaTransactionType;
             amount: import("@prisma/client/runtime/library").Decimal;
+            notes: string | null;
+            farmerId: string;
+            cropCycleId: string | null;
             partyId: string;
-            commissionAmount: import("@prisma/client/runtime/library").Decimal | null;
-            grossAmount: import("@prisma/client/runtime/library").Decimal | null;
+            cropName: string | null;
             transactionDate: Date;
+            commissionAmount: import("@prisma/client/runtime/library").Decimal | null;
             interestRateMonthly: import("@prisma/client/runtime/library").Decimal | null;
             interestAccruedDays: number | null;
             interestAmount: import("@prisma/client/runtime/library").Decimal | null;
@@ -307,6 +306,7 @@ export declare class PartiesService {
             inputQuantity: number | null;
             quantityQuintals: number | null;
             ratePerQuintal: import("@prisma/client/runtime/library").Decimal | null;
+            grossAmount: import("@prisma/client/runtime/library").Decimal | null;
             otherCharges: import("@prisma/client/runtime/library").Decimal | null;
             netAmount: import("@prisma/client/runtime/library").Decimal | null;
             jFormNumber: string | null;
@@ -353,11 +353,11 @@ export declare class PartiesService {
         statement: {
             party: {
                 isUnified: boolean;
-                deletedAt: Date | null;
                 id: string;
                 mobile: string | null;
                 name: string;
                 createdAt: Date;
+                deletedAt: Date | null;
                 ownerId: string;
                 address: string | null;
                 kingId?: undefined;

@@ -6,7 +6,6 @@ export declare class FarmsController {
     private readonly farmsService;
     constructor(farmsService: FarmsService);
     create(user: AuthUser, dto: CreateFarmDto): import(".prisma/client").Prisma.Prisma__FarmClient<{
-        deletedAt: Date | null;
         id: string;
         name: string;
         village: string | null;
@@ -15,14 +14,14 @@ export declare class FarmsController {
         soilType: string | null;
         createdAt: Date;
         updatedAt: Date;
+        deletedAt: Date | null;
         notes: string | null;
-        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         ownerId: string;
         totalArea: number;
+        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         irrigationSource: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     findAll(user: AuthUser): Promise<{
-        deletedAt: Date | null;
         id: string;
         name: string;
         village: string | null;
@@ -31,14 +30,14 @@ export declare class FarmsController {
         soilType: string | null;
         createdAt: Date;
         updatedAt: Date;
+        deletedAt: Date | null;
         notes: string | null;
-        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         ownerId: string;
         totalArea: number;
+        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         irrigationSource: string | null;
     }[]>;
     findOne(user: AuthUser, id: string): Promise<{
-        deletedAt: Date | null;
         id: string;
         name: string;
         village: string | null;
@@ -47,14 +46,14 @@ export declare class FarmsController {
         soilType: string | null;
         createdAt: Date;
         updatedAt: Date;
+        deletedAt: Date | null;
         notes: string | null;
-        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         ownerId: string;
         totalArea: number;
+        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         irrigationSource: string | null;
     }>;
     update(user: AuthUser, id: string, dto: UpdateFarmDto): Promise<{
-        deletedAt: Date | null;
         id: string;
         name: string;
         village: string | null;
@@ -63,14 +62,14 @@ export declare class FarmsController {
         soilType: string | null;
         createdAt: Date;
         updatedAt: Date;
+        deletedAt: Date | null;
         notes: string | null;
-        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         ownerId: string;
         totalArea: number;
+        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         irrigationSource: string | null;
     }>;
     remove(user: AuthUser, id: string): Promise<{
-        deletedAt: Date | null;
         id: string;
         name: string;
         village: string | null;
@@ -79,10 +78,11 @@ export declare class FarmsController {
         soilType: string | null;
         createdAt: Date;
         updatedAt: Date;
+        deletedAt: Date | null;
         notes: string | null;
-        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         ownerId: string;
         totalArea: number;
+        areaUnit: import(".prisma/client").$Enums.AreaUnit;
         irrigationSource: string | null;
     }>;
 }

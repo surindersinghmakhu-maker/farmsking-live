@@ -7,12 +7,12 @@ export declare class SaleBillsController {
     create(user: AuthUser, dto: CreateSaleBillDto): Promise<{
         id: string;
         createdAt: Date;
-        farmerId: string;
-        notes: string | null;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
+        items: import("@prisma/client/runtime/library").JsonValue;
+        notes: string | null;
+        farmerId: string;
         discountAmount: import("@prisma/client/runtime/library").Decimal | null;
         partyId: string | null;
-        items: import("@prisma/client/runtime/library").JsonValue;
         billNo: string;
         farmerName: string;
         partyName: string;
@@ -30,12 +30,12 @@ export declare class SaleBillsController {
     findAllMine(user: AuthUser): Promise<{
         id: string;
         createdAt: Date;
-        farmerId: string;
-        notes: string | null;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
+        items: import("@prisma/client/runtime/library").JsonValue;
+        notes: string | null;
+        farmerId: string;
         discountAmount: import("@prisma/client/runtime/library").Decimal | null;
         partyId: string | null;
-        items: import("@prisma/client/runtime/library").JsonValue;
         billNo: string;
         farmerName: string;
         partyName: string;
@@ -57,12 +57,12 @@ export declare class SaleBillsController {
     update(user: AuthUser, id: string, dto: CreateSaleBillDto): Promise<{
         id: string;
         createdAt: Date;
-        farmerId: string;
-        notes: string | null;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
+        items: import("@prisma/client/runtime/library").JsonValue;
+        notes: string | null;
+        farmerId: string;
         discountAmount: import("@prisma/client/runtime/library").Decimal | null;
         partyId: string | null;
-        items: import("@prisma/client/runtime/library").JsonValue;
         billNo: string;
         farmerName: string;
         partyName: string;
@@ -80,12 +80,12 @@ export declare class SaleBillsController {
     remove(user: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;
-        farmerId: string;
-        notes: string | null;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
+        items: import("@prisma/client/runtime/library").JsonValue;
+        notes: string | null;
+        farmerId: string;
         discountAmount: import("@prisma/client/runtime/library").Decimal | null;
         partyId: string | null;
-        items: import("@prisma/client/runtime/library").JsonValue;
         billNo: string;
         farmerName: string;
         partyName: string;

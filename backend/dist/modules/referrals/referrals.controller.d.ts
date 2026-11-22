@@ -24,9 +24,9 @@ export declare class ReferralsController {
         } & {
             id: string;
             createdAt: Date;
-            level: number;
             referrerId: string;
             referredUserId: string;
+            level: number;
             isGuarantor: boolean;
             trustScoreBonus: number;
         })[];
@@ -40,9 +40,9 @@ export declare class ReferralsController {
         } & {
             id: string;
             createdAt: Date;
-            level: number;
             referrerId: string;
             referredUserId: string;
+            level: number;
             isGuarantor: boolean;
             trustScoreBonus: number;
         })[];
@@ -55,8 +55,8 @@ export declare class ReferralsController {
         } & {
             id: string;
             createdAt: Date;
-            userId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
+            userId: string;
             sourceUserId: string;
             royaltyType: string;
             referenceCode: string | null;
@@ -65,9 +65,9 @@ export declare class ReferralsController {
     linkReferralOnSignUp(user: AuthUser, dto: LinkReferralDto): Promise<{
         id: string;
         createdAt: Date;
-        level: number;
         referrerId: string;
         referredUserId: string;
+        level: number;
         isGuarantor: boolean;
         trustScoreBonus: number;
     } | null>;

@@ -25,13 +25,17 @@ export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
     getMe(user: AuthUser): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -75,6 +79,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -94,11 +99,6 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     requestDeleteMeOtp(user: AuthUser, body?: {
         mobile?: string;
@@ -139,13 +139,17 @@ export declare class UsersController {
         createdAt: Date;
     }[]>;
     becomeFarmer(user: AuthUser, dto?: UpdateFarmerProfileDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -189,6 +193,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -208,20 +213,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     becomeGardener(user: AuthUser): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -265,6 +269,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -284,20 +289,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     updateMyAddress(user: AuthUser, dto: UpdateMyAddressDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -341,6 +345,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -360,11 +365,6 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     getMyProfileStatus(user: AuthUser): Promise<{
         profileComplete: boolean;
@@ -377,13 +377,17 @@ export declare class UsersController {
         };
     }>;
     updateMyProfile(user: AuthUser, dto: UpdateFarmerProfileDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -427,6 +431,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -446,20 +451,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
+    }>;
+    updateMyAdvisorProfile(user: AuthUser, dto: UpdateAdvisorProfileDto): Promise<{
         sellerStore: {
             id: string;
             storeName: string;
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
-    }>;
-    updateMyAdvisorProfile(user: AuthUser, dto: UpdateAdvisorProfileDto): Promise<{
-        deletedAt: Date | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -520,6 +524,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -539,11 +544,6 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     getMyAdvisorProfileStatus(user: AuthUser): Promise<{
         profile: {
@@ -562,13 +562,17 @@ export declare class UsersController {
         missingFields: ("email" | "photoUrl" | "qualification" | "profileTitle" | "upiId" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
     }>;
     updateMyPartnerProfile(user: AuthUser, dto: UpdatePartnerProfileDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -617,6 +621,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -636,11 +641,6 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     getMyPartnerProfileStatus(user: AuthUser): Promise<{
         profile: {
@@ -665,13 +665,17 @@ export declare class UsersController {
             canRestore: boolean;
             isOnline: boolean;
             lastSeenAt: string | null;
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -715,6 +719,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -734,11 +739,6 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         }[];
         total: number;
         page: number;
@@ -746,11 +746,11 @@ export declare class UsersController {
     }>;
     lookupByKingId(kingId: string): Promise<{
         currentEmployerName: string | null;
+        roles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
         name: string;
         village: string | null;
         district: string | null;
@@ -764,13 +764,17 @@ export declare class UsersController {
         name: string;
     }[]>;
     setReferrer(id: string, dto: SetReferrerDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -814,6 +818,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -833,20 +838,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
+    }>;
+    adminUpdateUser(user: AuthUser, id: string, dto: AdminUpdateUserDto): Promise<{
         sellerStore: {
             id: string;
             storeName: string;
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
-    }>;
-    adminUpdateUser(user: AuthUser, id: string, dto: AdminUpdateUserDto): Promise<{
-        deletedAt: Date | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -900,6 +904,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -919,23 +924,22 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     resetPassword(user: AuthUser, id: string, dto: ResetUserPasswordDto): Promise<{
         tempPassword: string;
     }>;
     updateOperatorPermissions(id: string, dto: UpdateOperatorPermissionsDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -979,6 +983,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -998,11 +1003,6 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     sendAdminCreateOtp(user: AuthUser, dto: AdminCreateSendOtpDto): Promise<{
         success: boolean;
@@ -1061,13 +1061,17 @@ export declare class UsersController {
     }>;
     createAdvisor(dto: CreateAdvisorDto): Promise<{
         user: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -1111,6 +1115,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -1130,23 +1135,22 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createAssistantDoctor(user: AuthUser, dto: CreateAssistantDoctorDto): Promise<{
         user: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -1190,6 +1194,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -1209,22 +1214,21 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     getMyAssistantDoctors(user: AuthUser): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -1268,6 +1272,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -1287,21 +1292,20 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }[]>;
     createTrainer(dto: CreateStaffDto): Promise<{
         user: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -1345,6 +1349,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -1364,23 +1369,22 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createOperator(dto: CreateStaffDto): Promise<{
         user: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -1424,6 +1428,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -1443,23 +1448,22 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createAdmin(dto: CreateStaffDto): Promise<{
         user: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -1503,6 +1507,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -1522,23 +1527,22 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createManager(dto: CreateStaffDto): Promise<{
         user: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -1582,6 +1586,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -1601,23 +1606,22 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     createAccountant(dto: CreateStaffDto): Promise<{
         user: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -1661,6 +1665,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -1680,22 +1685,21 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
     updateAdminStaffPermissions(id: string, dto: UpdateAdminStaffPermissionsDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -1739,6 +1743,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -1758,21 +1763,20 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     createSupervisor(user: AuthUser, dto: CreateSupervisorDto): Promise<{
         supervisor: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -1816,6 +1820,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -1835,11 +1840,6 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         tempPassword: string;
     }>;
@@ -1899,13 +1899,17 @@ export declare class UsersController {
         featuresConfig: {};
     }>;
     getMySupervisors(user: AuthUser): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -1949,6 +1953,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -1968,11 +1973,6 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }[]>;
     updateSupervisorFeatures(user: AuthUser, id: string, featuresConfig: any): Promise<{
         success: boolean;
@@ -1981,13 +1981,17 @@ export declare class UsersController {
         featuresConfig: any;
     }>;
     updateSupervisorPermissions(user: AuthUser, id: string, dto: UpdateSupervisorPermissionsDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -2031,6 +2035,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -2050,23 +2055,22 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     resignSupervisor(user: AuthUser, id: string): Promise<{
         success: boolean;
         message: string;
         supervisor: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -2110,6 +2114,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -2129,21 +2134,20 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
     }>;
     assignSupervisorEmployer(user: AuthUser, id: string, employerFarmerId: string | null): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -2187,6 +2191,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -2206,11 +2211,6 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     deleteSupervisor(user: AuthUser, id: string): Promise<{
         success: boolean;
@@ -2219,19 +2219,18 @@ export declare class UsersController {
     listPartnerApplications(status?: string): Promise<{
         hasPassword: boolean;
         applicantUser: {
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
         } | null;
         reviewedBy: {
             id: string;
             name: string;
         } | null;
-        status: import(".prisma/client").$Enums.PartnerApplicationStatus;
         id: string;
         mobile: string;
         name: string;
@@ -2263,23 +2262,23 @@ export declare class UsersController {
         isPhoneVerified: boolean;
         createdAt: Date;
         updatedAt: Date;
-        reviewedById: string | null;
-        reviewedAt: Date | null;
         requestedRole: import(".prisma/client").$Enums.Role;
         storeName: string | null;
         legalName: string | null;
         sellerType: import(".prisma/client").$Enums.SellerType | null;
         pickupAddress: string | null;
+        status: import(".prisma/client").$Enums.PartnerApplicationStatus;
         rejectionReason: string | null;
         resubmissionCount: number;
         applicantUserId: string | null;
+        reviewedById: string | null;
+        reviewedAt: Date | null;
     }[]>;
     approvePartnerApplication(user: AuthUser, id: string, body?: {
         adminConfirmationOtp?: string;
     }, queryOtp?: string, headerOtp?: string): Promise<{
         success: boolean;
         application: {
-            status: import(".prisma/client").$Enums.PartnerApplicationStatus;
             id: string;
             mobile: string;
             name: string;
@@ -2311,16 +2310,17 @@ export declare class UsersController {
             isPhoneVerified: boolean;
             createdAt: Date;
             updatedAt: Date;
-            reviewedById: string | null;
-            reviewedAt: Date | null;
             requestedRole: import(".prisma/client").$Enums.Role;
             storeName: string | null;
             legalName: string | null;
             sellerType: import(".prisma/client").$Enums.SellerType | null;
             pickupAddress: string | null;
+            status: import(".prisma/client").$Enums.PartnerApplicationStatus;
             rejectionReason: string | null;
             resubmissionCount: number;
             applicantUserId: string | null;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
         };
         user: any;
         message: string;
@@ -2328,7 +2328,6 @@ export declare class UsersController {
     rejectPartnerApplication(user: AuthUser, id: string, reason: string): Promise<{
         success: boolean;
         application: {
-            status: import(".prisma/client").$Enums.PartnerApplicationStatus;
             id: string;
             mobile: string;
             name: string;
@@ -2360,27 +2359,28 @@ export declare class UsersController {
             isPhoneVerified: boolean;
             createdAt: Date;
             updatedAt: Date;
-            reviewedById: string | null;
-            reviewedAt: Date | null;
             requestedRole: import(".prisma/client").$Enums.Role;
             storeName: string | null;
             legalName: string | null;
             sellerType: import(".prisma/client").$Enums.SellerType | null;
             pickupAddress: string | null;
+            status: import(".prisma/client").$Enums.PartnerApplicationStatus;
             rejectionReason: string | null;
             resubmissionCount: number;
             applicantUserId: string | null;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
         };
         message: string;
     }>;
     listVerifiedSignupLeads(status?: string, search?: string): Promise<{
         items: ({
             convertedUser: {
+                roles: import(".prisma/client").$Enums.Role[];
                 id: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                roles: import(".prisma/client").$Enums.Role[];
                 name: string;
             } | null;
             convertedBy: {
@@ -2390,7 +2390,6 @@ export declare class UsersController {
                 name: string;
             } | null;
         } & {
-            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
             id: string;
             mobile: string;
             village: string | null;
@@ -2399,18 +2398,19 @@ export declare class UsersController {
             pincode: string | null;
             createdAt: Date;
             updatedAt: Date;
-            adminNotes: string | null;
-            sourceChannel: string;
+            referralCode: string | null;
             portal: string | null;
+            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
+            sourceChannel: string;
             otpVerifiedAt: Date;
             lastAttemptAt: Date;
             attemptCount: number;
             ipAddress: string | null;
             userAgent: string | null;
-            referralCode: string | null;
             capturedName: string | null;
             capturedEmail: string | null;
             intendedRole: import(".prisma/client").$Enums.Role | null;
+            adminNotes: string | null;
             convertedUserId: string | null;
             convertedById: string | null;
             convertedAt: Date | null;
@@ -2427,11 +2427,11 @@ export declare class UsersController {
         success: boolean;
         lead: {
             convertedUser: {
+                roles: import(".prisma/client").$Enums.Role[];
                 id: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                roles: import(".prisma/client").$Enums.Role[];
                 name: string;
             } | null;
             convertedBy: {
@@ -2441,7 +2441,6 @@ export declare class UsersController {
                 name: string;
             } | null;
         } & {
-            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
             id: string;
             mobile: string;
             village: string | null;
@@ -2450,18 +2449,19 @@ export declare class UsersController {
             pincode: string | null;
             createdAt: Date;
             updatedAt: Date;
-            adminNotes: string | null;
-            sourceChannel: string;
+            referralCode: string | null;
             portal: string | null;
+            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
+            sourceChannel: string;
             otpVerifiedAt: Date;
             lastAttemptAt: Date;
             attemptCount: number;
             ipAddress: string | null;
             userAgent: string | null;
-            referralCode: string | null;
             capturedName: string | null;
             capturedEmail: string | null;
             intendedRole: import(".prisma/client").$Enums.Role | null;
+            adminNotes: string | null;
             convertedUserId: string | null;
             convertedById: string | null;
             convertedAt: Date | null;
@@ -2471,13 +2471,17 @@ export declare class UsersController {
     convertVerifiedLeadToUser(user: AuthUser, id: string, dto: ConvertVerifiedLeadDto): Promise<{
         success: boolean;
         user: {
-            deletedAt: Date | null;
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -2521,6 +2525,7 @@ export declare class UsersController {
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
             createdAt: Date;
+            deletedAt: Date | null;
             employerFarmer: {
                 id: string;
                 kingId: string | null;
@@ -2540,19 +2545,14 @@ export declare class UsersController {
                     farmName: string | null;
                 };
             }[];
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
         };
         lead: {
             convertedUser: {
+                roles: import(".prisma/client").$Enums.Role[];
                 id: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                roles: import(".prisma/client").$Enums.Role[];
                 name: string;
             } | null;
             convertedBy: {
@@ -2562,7 +2562,6 @@ export declare class UsersController {
                 name: string;
             } | null;
         } & {
-            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
             id: string;
             mobile: string;
             village: string | null;
@@ -2571,18 +2570,19 @@ export declare class UsersController {
             pincode: string | null;
             createdAt: Date;
             updatedAt: Date;
-            adminNotes: string | null;
-            sourceChannel: string;
+            referralCode: string | null;
             portal: string | null;
+            status: import(".prisma/client").$Enums.VerifiedLeadStatus;
+            sourceChannel: string;
             otpVerifiedAt: Date;
             lastAttemptAt: Date;
             attemptCount: number;
             ipAddress: string | null;
             userAgent: string | null;
-            referralCode: string | null;
             capturedName: string | null;
             capturedEmail: string | null;
             intendedRole: import(".prisma/client").$Enums.Role | null;
+            adminNotes: string | null;
             convertedUserId: string | null;
             convertedById: string | null;
             convertedAt: Date | null;
@@ -2594,13 +2594,12 @@ export declare class UsersController {
             isPermanentlyDeleted: boolean;
             isOnline: boolean;
             lastSeenAt: string | null;
-            deletedAt: Date | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -2694,13 +2693,14 @@ export declare class UsersController {
             profileRejectionReason: string | null;
             createdAt: Date;
             updatedAt: Date;
+            deletedAt: Date | null;
         };
         farmCount: number;
         walletBalance: number;
         couponsUsed: {
             id: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             code: string;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             daysGranted: number;
             usedAt: Date | null;
         }[];
@@ -2709,10 +2709,10 @@ export declare class UsersController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            farmerId: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            farmerId: string;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
         } | null;
@@ -2720,9 +2720,9 @@ export declare class UsersController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
             gardenerId: string;
@@ -2731,13 +2731,17 @@ export declare class UsersController {
         } | null;
     }>;
     updateRole(user: AuthUser, id: string, dto: UpdateRoleDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -2781,6 +2785,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -2800,20 +2805,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     updateActiveRoles(user: AuthUser, id: string, dto: UpdateActiveRolesDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -2857,6 +2861,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -2876,24 +2881,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     deactivate(user: AuthUser, id: string): Promise<{
         deletedAt: Date;
         isPermanentlyBlocked: boolean;
         wasHardDeleted: boolean;
         message: string;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         passwordHash: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -2990,13 +2990,17 @@ export declare class UsersController {
     } | {
         wasHardDeleted: boolean;
         message: string;
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -3040,6 +3044,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -3059,23 +3064,22 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     reactivate(user: AuthUser, id: string, body?: {
         newMobile?: string;
         newName?: string;
     }): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -3119,6 +3123,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -3138,23 +3143,22 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     reactivatePost(user: AuthUser, id: string, body?: {
         newMobile?: string;
         newName?: string;
     }): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -3198,6 +3202,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -3217,11 +3222,6 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     deleteUserByAdmin(user: AuthUser, id: string, body?: {
         adminConfirmationOtp?: string;
@@ -3235,13 +3235,17 @@ export declare class UsersController {
         wasHardDeleted?: undefined;
     }>;
     assignStaffRole(user: AuthUser, dto: AssignStaffRoleDto): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -3285,6 +3289,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -3304,20 +3309,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     submitProfileCompletion(user: AuthUser, body: any): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -3361,6 +3365,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -3380,20 +3385,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     getPendingApprovals(): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -3437,6 +3441,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -3456,20 +3461,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }[]>;
     approveProfile(user: AuthUser, id: string): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -3513,6 +3517,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -3532,20 +3537,19 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
     rejectProfile(user: AuthUser, id: string, reason: string): Promise<{
-        deletedAt: Date | null;
+        sellerStore: {
+            id: string;
+            storeName: string;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        } | null;
+        roles: import(".prisma/client").$Enums.Role[];
+        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         id: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
-        roles: import(".prisma/client").$Enums.Role[];
-        deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
         isEmailVerified: boolean;
@@ -3589,6 +3593,7 @@ export declare class UsersController {
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
         createdAt: Date;
+        deletedAt: Date | null;
         employerFarmer: {
             id: string;
             kingId: string | null;
@@ -3608,10 +3613,5 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
-        sellerStore: {
-            id: string;
-            storeName: string;
-            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-        } | null;
     }>;
 }

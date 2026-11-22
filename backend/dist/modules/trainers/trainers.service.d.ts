@@ -8,12 +8,12 @@ export declare class TrainersService {
     private readonly whatsappBotService;
     constructor(prisma: PrismaService, walletService: WalletService, whatsappBotService: WhatsappBotService);
     autoAssignFarmer(farmerId: string, state?: string | null, district?: string | null): Promise<{
-        status: import(".prisma/client").$Enums.TrainingStatus;
         id: string;
         district: string | null;
         state: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.TrainingStatus;
         farmerId: string;
         rating: number | null;
         payoutAmount: number;
@@ -44,12 +44,12 @@ export declare class TrainersService {
             createdAt: Date;
         };
     } & {
-        status: import(".prisma/client").$Enums.TrainingStatus;
         id: string;
         district: string | null;
         state: string;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.TrainingStatus;
         farmerId: string;
         rating: number | null;
         payoutAmount: number;
@@ -75,12 +75,12 @@ export declare class TrainersService {
         rewardAmount: number;
         message: string;
         trainingLog: {
-            status: import(".prisma/client").$Enums.TrainingStatus;
             id: string;
             district: string | null;
             state: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
             rating: number | null;
             payoutAmount: number;
@@ -108,12 +108,12 @@ export declare class TrainersService {
         rewardAmount: number;
         message: string;
         log: {
-            status: import(".prisma/client").$Enums.TrainingStatus;
             id: string;
             district: string | null;
             state: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
             rating: number | null;
             payoutAmount: number;
@@ -149,8 +149,8 @@ export declare class TrainersService {
         state: string;
         createdAt: Date;
         updatedAt: Date;
-        level: import(".prisma/client").$Enums.TrainerLevel;
         commissionRate: number;
+        level: import(".prisma/client").$Enums.TrainerLevel;
         trainerId: string;
         uplineTrainerId: string | null;
         grade: import(".prisma/client").$Enums.TrainerGrade;
@@ -175,8 +175,8 @@ export declare class TrainersService {
         state: string;
         createdAt: Date;
         updatedAt: Date;
-        level: import(".prisma/client").$Enums.TrainerLevel;
         commissionRate: number;
+        level: import(".prisma/client").$Enums.TrainerLevel;
         trainerId: string;
         uplineTrainerId: string | null;
         grade: import(".prisma/client").$Enums.TrainerGrade;
@@ -190,12 +190,12 @@ export declare class TrainersService {
         success: boolean;
         message: string;
         log: {
-            status: import(".prisma/client").$Enums.TrainingStatus;
             id: string;
             district: string | null;
             state: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
             rating: number | null;
             payoutAmount: number;
@@ -217,12 +217,12 @@ export declare class TrainersService {
         success: boolean;
         message: string;
         log: {
-            status: import(".prisma/client").$Enums.TrainingStatus;
             id: string;
             district: string | null;
             state: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
             rating: number | null;
             payoutAmount: number;
@@ -246,8 +246,8 @@ export declare class TrainersService {
         state: string;
         createdAt: Date;
         updatedAt: Date;
-        level: import(".prisma/client").$Enums.TrainerLevel;
         commissionRate: number;
+        level: import(".prisma/client").$Enums.TrainerLevel;
         trainerId: string;
         uplineTrainerId: string | null;
         grade: import(".prisma/client").$Enums.TrainerGrade;
@@ -283,12 +283,12 @@ export declare class TrainersService {
                 name: string;
             } | null;
         } & {
-            status: import(".prisma/client").$Enums.TrainingStatus;
             id: string;
             district: string | null;
             state: string;
             createdAt: Date;
             updatedAt: Date;
+            status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
             rating: number | null;
             payoutAmount: number;

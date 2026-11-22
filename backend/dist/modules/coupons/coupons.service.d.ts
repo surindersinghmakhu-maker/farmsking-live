@@ -12,7 +12,6 @@ export declare class CouponsService {
     create(user: AuthUser, dto: CreateCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        isActive: boolean;
         code: string;
         businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
@@ -26,6 +25,7 @@ export declare class CouponsService {
         expiresAt: Date;
         usageLimit: number;
         usedCount: number;
+        isActive: boolean;
         createdById: string;
     }>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
@@ -37,7 +37,6 @@ export declare class CouponsService {
     } & {
         id: string;
         createdAt: Date;
-        isActive: boolean;
         code: string;
         businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
@@ -51,12 +50,12 @@ export declare class CouponsService {
         expiresAt: Date;
         usageLimit: number;
         usedCount: number;
+        isActive: boolean;
         createdById: string;
     })[]>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
-        isActive: boolean;
         code: string;
         businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
@@ -70,6 +69,7 @@ export declare class CouponsService {
         expiresAt: Date;
         usageLimit: number;
         usedCount: number;
+        isActive: boolean;
         createdById: string;
     }[]>;
     listAvailablePromotions(): Promise<{
@@ -87,7 +87,6 @@ export declare class CouponsService {
     update(id: string, dto: UpdateCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        isActive: boolean;
         code: string;
         businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
@@ -101,12 +100,12 @@ export declare class CouponsService {
         expiresAt: Date;
         usageLimit: number;
         usedCount: number;
+        isActive: boolean;
         createdById: string;
     }>;
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
-        isActive: boolean;
         code: string;
         businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
@@ -120,6 +119,7 @@ export declare class CouponsService {
         expiresAt: Date;
         usageLimit: number;
         usedCount: number;
+        isActive: boolean;
         createdById: string;
     }>;
     getRedemptions(user: AuthUser, id: string): Promise<({
@@ -130,20 +130,19 @@ export declare class CouponsService {
         } | null;
     } & {
         id: string;
-        couponId: string;
         customerId: string | null;
+        couponId: string;
         discountAmount: import("@prisma/client/runtime/library").Decimal;
-        commissionAmount: import("@prisma/client/runtime/library").Decimal;
         orderId: string | null;
-        creditedAt: Date | null;
         orderAmount: import("@prisma/client/runtime/library").Decimal;
+        commissionAmount: import("@prisma/client/runtime/library").Decimal;
+        creditedAt: Date | null;
         redeemedAt: Date;
     })[]>;
     getActiveForOrder(code: string, orderAmount: number): Promise<{
         coupon: {
             id: string;
             createdAt: Date;
-            isActive: boolean;
             code: string;
             businessPartnerId: string;
             commissionType: import(".prisma/client").$Enums.DiscountValueType;
@@ -157,6 +156,7 @@ export declare class CouponsService {
             expiresAt: Date;
             usageLimit: number;
             usedCount: number;
+            isActive: boolean;
             createdById: string;
         };
         discountAmount: number;
@@ -172,13 +172,13 @@ export declare class CouponsService {
         commissionAmount: number;
         redemption: {
             id: string;
-            couponId: string;
             customerId: string | null;
+            couponId: string;
             discountAmount: import("@prisma/client/runtime/library").Decimal;
-            commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string | null;
-            creditedAt: Date | null;
             orderAmount: import("@prisma/client/runtime/library").Decimal;
+            commissionAmount: import("@prisma/client/runtime/library").Decimal;
+            creditedAt: Date | null;
             redeemedAt: Date;
         };
     }>;
@@ -188,7 +188,6 @@ export declare class CouponsService {
         coupons: {
             id: string;
             createdAt: Date;
-            isActive: boolean;
             code: string;
             businessPartnerId: string;
             commissionType: import(".prisma/client").$Enums.DiscountValueType;
@@ -202,6 +201,7 @@ export declare class CouponsService {
             expiresAt: Date;
             usageLimit: number;
             usedCount: number;
+            isActive: boolean;
             createdById: string;
         }[];
     }>;

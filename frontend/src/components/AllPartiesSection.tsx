@@ -780,8 +780,6 @@ export function AllPartiesSection() {
                 value={newAddress}
                 onChangeText={setNewAddress}
               />
-                onChangeText={setNewAddress}
-              />
             </ScrollView>
 
             {createError ? <Text style={styles.errorText}>{createError}</Text> : null}

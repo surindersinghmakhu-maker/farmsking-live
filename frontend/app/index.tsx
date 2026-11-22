@@ -4119,7 +4119,7 @@ export default function PublicLandingPage() {
               >
                 <Text style={[S.footerContactEmail, isDay && S.footerContactEmailDay]}>{supportContact.supportEmail}</Text>
               </TouchableOpacity>
-              <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Regd: Goindwal Sahib, Tarn Taran - 143422 • Corp HQ: Makhu, Ferozepur - 142044</Text>
+              <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Regd: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala - 144601 • Corp HQ: Makhu, Ferozepur - 142044</Text>
             </View>
           </View>
 

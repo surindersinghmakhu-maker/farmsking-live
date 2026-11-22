@@ -1,47 +1,61 @@
-import { loginWithMobile, verifyLoginOtp } from '../auth.api';
+import { login, registerFarmer } from '../auth.api';
 import { apiClient } from '../client';
 
-describe('Auth API', () => {
+describe('Admin Auth API', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('loginWithMobile should send mobile number to backend', async () => {
+  it('login should send credentials to backend', async () => {
+    const mockAuthResponse = {
+      token: 'fake-admin-jwt',
+      user: {
+        id: 'admin-1',
+        mobile: '9872066901',
+        role: 'ADMIN',
+      },
+    };
+
     (apiClient.post as jest.Mock).mockResolvedValueOnce({
-      data: { success: true, message: 'OTP sent' },
+      data: mockAuthResponse,
     });
 
-    const response = await loginWithMobile('9876543210', 'FARMER');
+    const response = await login({ mobile: '9872066901', password: 'securePassword123' });
 
     expect(apiClient.post).toHaveBeenCalledWith('/auth/login', {
-      mobile: '9876543210',
-      role: 'FARMER',
+      mobile: '9872066901',
+      password: 'securePassword123',
     });
-    expect(response.success).toBe(true);
+    expect(response.token).toBe('fake-admin-jwt');
+    expect(response.user.role).toBe('ADMIN');
   });
 
-  it('verifyLoginOtp should send OTP to backend and return token and user', async () => {
-    const mockData = {
-      token: 'fake-jwt-token',
+  it('registerFarmer should post registration payload to backend', async () => {
+    const mockResponse = {
+      token: 'fake-farmer-jwt',
       user: {
-        id: '1',
+        id: 'user-new-1',
+        name: 'Sardar Baldev Singh',
         mobile: '9876543210',
         role: 'FARMER',
       },
     };
 
     (apiClient.post as jest.Mock).mockResolvedValueOnce({
-      data: mockData,
+      data: mockResponse,
     });
 
-    const response = await verifyLoginOtp('9876543210', '123456', 'FARMER');
-
-    expect(apiClient.post).toHaveBeenCalledWith('/auth/verify-login', {
+    const payload = {
       mobile: '9876543210',
-      otp: '123456',
-      role: 'FARMER',
-    });
-    expect(response.token).toBe('fake-jwt-token');
-    expect(response.user.id).toBe('1');
+      password: 'FarmerPassword123',
+      name: 'Sardar Baldev Singh',
+      pincode: '144601',
+    };
+
+    const response = await registerFarmer(payload);
+
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/register', payload);
+    expect(response.token).toBe('fake-farmer-jwt');
+    expect(response.user.id).toBe('user-new-1');
   });
 });

@@ -416,7 +416,7 @@ export default function ComplianceScreen() {
                         Registered Corporate Office:
                       </Text>
                       <Text style={[styles.addressText, isDay ? styles.addressTextDay : styles.addressTextNight]}>
-                        VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab, India - 143422
+                        C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Punjab, India - 144601
                       </Text>
                     </View>
                   </View>
@@ -982,7 +982,7 @@ export default function ComplianceScreen() {
                       isDay ? styles.officerDetailTextDay : styles.officerDetailTextNight,
                     ]}
                   >
-                    Regd: VPO Goindwal Sahib, Tarn Taran, Punjab - 143422
+                    Regd: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
                   </Text>
                 </View>
               </View>

@@ -30,7 +30,7 @@ export default function ContactUsPage() {
   const phone = '9577622000';
   const displayPhone = '95776-22000';
   const email = support?.email || 'support@farmsking.in';
-  const registeredAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nVPO Goindwal Sahib, Tehsil Khadur Sahib\nDistrict Tarn Taran, Punjab, India - 143422';
+  const registeredAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nC/o BALDEV SINGH, VILLAGE BOOH\nKapurthala, Punjab, India - 144601';
   const corporateAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nMakhu, Ferozepur\nPunjab, India - 142044';
 
   const [themeMode, setThemeMode] = useState<'day' | 'night'>('day');
@@ -242,7 +242,7 @@ export default function ContactUsPage() {
             {/* Registered Corporate Office */}
             <TouchableOpacity
               style={[styles.touchCard, isDay ? styles.touchCardDay : styles.touchCardNight]}
-              onPress={() => Linking.openURL('https://maps.google.com/?q=Goindwal+Sahib,Tarn+Taran,Punjab,143422')}
+              onPress={() => Linking.openURL('https://maps.google.com/?q=Village+Booh,Kapurthala,Punjab,144601')}
               activeOpacity={0.88}
             >
               <View style={[styles.iconCircle, { backgroundColor: isDay ? '#fef3c7' : 'rgba(245,158,11,0.18)' }]}>
@@ -250,10 +250,10 @@ export default function ContactUsPage() {
               </View>
               <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>Registered Corporate Office</Text>
               <Text style={[styles.cardHighlight, { color: '#d97706', fontSize: 13.5 }]}>
-                Goindwal Sahib, Tarn Taran
+                Village Booh, Kapurthala
               </Text>
               <Text style={[styles.cardSubText, isDay ? styles.cardSubDay : styles.cardSubNight]}>
-                VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422
+                C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Punjab - 144601
               </Text>
               <View style={[styles.actionPill, { borderColor: 'rgba(245,158,11,0.3)', backgroundColor: 'rgba(245,158,11,0.08)' }]}>
                 <Ionicons name="map-outline" size={13} color="#d97706" />

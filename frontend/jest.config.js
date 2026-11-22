@@ -10,6 +10,7 @@ module.exports = {
     '<rootDir>/__tests__/setup.ts'
   ],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1'
+    '^@/(.*)$': '<rootDir>/$1',
+    '^react-native/setup-env$': '<rootDir>/__mocks__/setup-env.js'
   }
 };

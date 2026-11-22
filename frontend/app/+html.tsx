@@ -89,7 +89,6 @@ export default function Root({ children }: PropsWithChildren) {
                 "FarmsKing India",
                 "FarmsKing Farmers",
                 "Smart Farming",
-                "Farming Easy Farming Smart",
                 "Smart Farming India",
                 "Smart Farming Platform",
                 "FarmsKing Technologies",
@@ -132,6 +131,11 @@ export default function Root({ children }: PropsWithChildren) {
               "@context": "https://schema.org",
               "@type": "Corporation",
               "name": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+              "legalName": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+              "taxID": "AAHCF3566C",
+              "vatID": "AMRF11527F",
+              "iso6523Code": "CIN: U62013PB2026PTC070389",
+              "foundingDate": "2026-02-18",
               "alternateName": [
                 "FarmsKing",
                 "farmsking.in",
@@ -140,7 +144,6 @@ export default function Root({ children }: PropsWithChildren) {
                 "FarmsKing India",
                 "FarmsKing Farmers",
                 "Smart Farming",
-                "Farming Easy Farming Smart",
                 "Garden King",
                 "Nature King",
                 "AI King",
@@ -155,12 +158,12 @@ export default function Root({ children }: PropsWithChildren) {
               "address": [
                 {
                   "@type": "PostalAddress",
-                  "streetAddress": "VPO Goindwal Sahib, Tehsil Khadur Sahib",
-                  "addressLocality": "Tarn Taran",
+                  "streetAddress": "C/o BALDEV SINGH, VILLAGE BOOH",
+                  "addressLocality": "Kapurthala",
                   "addressRegion": "Punjab",
-                  "postalCode": "143422",
+                  "postalCode": "144601",
                   "addressCountry": "IN",
-                  "description": "Statutory Registered Office (ROC Chandigarh Jurisdiction)"
+                  "description": "Statutory Registered Office (Ministry of Corporate Affairs, ROC Chandigarh Jurisdiction)"
                 },
                 {
                   "@type": "PostalAddress",
@@ -192,12 +195,18 @@ export default function Root({ children }: PropsWithChildren) {
                 "FarmsKing India",
                 "FarmsKing Farmers",
                 "Smart Farming App",
-                "Smart Farming Platform",
-                "Farming Easy Farming Smart"
+                "Smart Farming Platform"
               ],
               "operatingSystem": "Web, Android, iOS",
               "applicationCategory": "AgricultureApplication, BusinessApplication",
               "url": "https://farmsking.in",
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "ratingCount": "14200",
+                "bestRating": "5",
+                "worstRating": "1"
+              },
               "offers": {
                 "@type": "Offer",
                 "price": "0",
@@ -301,7 +310,7 @@ export default function Root({ children }: PropsWithChildren) {
                   "name": "Where are the official Registered and Operational Offices of FarmsKing located?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "The Statutory Registered Office is located at VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India. The Corporate Headquarters and Operational Office is located at Makhu, Ferozepur, Punjab - 142044, India."
+                    "text": "The Statutory Registered Office is located at C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Punjab - 144601, India (CIN: U62013PB2026PTC070389). The Corporate Headquarters and Operational Office is located at Makhu, Ferozepur, Punjab - 142044, India."
                   }
                 }
               ]
@@ -454,7 +463,7 @@ export default function Root({ children }: PropsWithChildren) {
                   • <strong>Developer Company:</strong> Exilent Web Solutions (Software Platform &amp; Technology Architecture)<br />
                   • <strong>Technical &amp; Systems Engineering:</strong> Central Cloud Systems &amp; Field Telemetry Desk<br />
                   • <strong>Agronomy Advisory:</strong> Certified FarmsKing Agronomist Panel &amp; Soil Scientists<br />
-                  • <strong>Registered Office:</strong> VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India<br />
+                  • <strong>Registered Office:</strong> C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601, India<br />
                   • <strong>Operational Headquarters:</strong> Makhu, Ferozepur, Punjab - 142044, India
                 </p>
               </section>

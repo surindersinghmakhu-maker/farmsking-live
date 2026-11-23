@@ -228,35 +228,6 @@ export default function MembershipsScreen() {
               <Ionicons name="arrow-forward" size={16} color="#34d399" />
             </TouchableOpacity>
 
-            {/* 🧪 Admin Demo Checking & Quick Test Payment */}
-            <TouchableOpacity
-              style={{
-                backgroundColor: 'rgba(5, 150, 105, 0.15)',
-                borderWidth: 1.5,
-                borderColor: '#059669',
-                borderRadius: RADIUS.lg,
-                padding: 12,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-              activeOpacity={0.85}
-              onPress={() => setIsFarmerPlanModalOpen(true)}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="flash" size={18} color="#ffffff" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Demo Checking: Admin Test Payment ⚡</Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#6ee7b7' }}>1-Click instant test payment simulation & plan activation</Text>
-                </View>
-              </View>
-              <View style={{ backgroundColor: '#059669', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md }}>
-                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>TEST PAY →</Text>
-              </View>
-            </TouchableOpacity>
-
             {/* Current Active Plan Status */}
             <View style={[styles.statusCard, premiumShadow('#0f172a', 'sm')]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

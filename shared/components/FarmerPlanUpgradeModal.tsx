@@ -819,12 +819,11 @@ function UpiUpgradeFlow({
   const queryClient = useQueryClient();
   const initiate = useInitiateFarmerPlanPayment();
   const submit = useSubmitFarmerPlanPayment();
-  const [selectedPayMethod, setSelectedPayMethod] = useState<'ADMIN_TEST' | 'UPI_QR' | 'GATEWAY'>('ADMIN_TEST');
+  const [selectedPayMethod, setSelectedPayMethod] = useState<'UPI_QR' | 'GATEWAY'>('UPI_QR');
   const [isAutoDebit, setIsAutoDebit] = useState(true);
   const [request, setRequest] = useState<InitiateFarmerPlanPaymentResponse | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [autoActivatedData, setAutoActivatedData] = useState<any>(null);
-  const [isTestPaying, setIsTestPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [utr, setUtr] = useState('');
   const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
@@ -841,12 +840,10 @@ function UpiUpgradeFlow({
         const res = await initiate.mutateAsync({ targetPlan: plan, billingPeriodDays, isAutoDebit });
         if (isMounted) {
           setRequest(res);
-          if (res?.activeGateway === 'TEST_MODE') {
-            setSelectedPayMethod('ADMIN_TEST');
-          } else if (res?.activeGateway === 'UPI_DIRECT') {
-            setSelectedPayMethod('UPI_QR');
-          } else if (res?.activeGateway) {
+          if (res?.activeGateway === 'GATEWAY' || (res?.activeGateway && res?.activeGateway !== 'UPI_DIRECT' && res?.activeGateway !== 'TEST_MODE')) {
             setSelectedPayMethod('GATEWAY');
+          } else {
+            setSelectedPayMethod('UPI_QR');
           }
         }
       } catch (err: any) {
@@ -903,30 +900,6 @@ function UpiUpgradeFlow({
     Linking.openURL(url).catch(() => { });
   };
 
-  const handleTestPayAutoSuccess = async () => {
-    if (!request) return;
-    setError(null);
-    setIsTestPaying(true);
-    try {
-      const testUtr = `TEST-AUTO-PAID-${Date.now().toString().slice(-6)}`;
-      const res: any = await submit.mutateAsync({
-        id: request.id,
-        utr: testUtr,
-        screenshotUrl: screenshotUrl ?? undefined,
-      });
-      queryClient.invalidateQueries({ queryKey: ['farmer-plan'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription-status'] });
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['my-advisor'] });
-      setAutoActivatedData(res);
-      setSubmitted(true);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not activate test payment.');
-    } finally {
-      setIsTestPaying(false);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!request) return;
     if (!utr.trim()) {
@@ -940,7 +913,7 @@ function UpiUpgradeFlow({
         utr: utr.trim(),
         screenshotUrl: screenshotUrl ?? undefined,
       });
-      if (res?.isAutoActivated || utr.toUpperCase().includes('TEST') || utr === '123456') {
+      if (res?.isAutoActivated) {
         setAutoActivatedData(res);
       }
       setSubmitted(true);
@@ -1120,33 +1093,10 @@ function UpiUpgradeFlow({
           {planName} Plan Price: ₹{request.amount}
         </Text>
 
-        {/* 👑 Payment Method Selector: Admin Test Payment vs Direct UPI vs Gateway */}
+        {/* 👑 Payment Method Selector: Direct UPI vs Gateway */}
         <View style={styles.paymentMethodSelectorWrap}>
           <Text style={styles.paymentSelectorHeader}>SELECT PAYMENT METHOD:</Text>
           <View style={styles.paymentMethodSelectorRow}>
-            <TouchableOpacity
-              style={[
-                styles.paymentMethodTab,
-                selectedPayMethod === 'ADMIN_TEST' && styles.paymentMethodTabActiveTest,
-              ]}
-              onPress={() => setSelectedPayMethod('ADMIN_TEST')}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name="shield-checkmark"
-                size={14}
-                color={selectedPayMethod === 'ADMIN_TEST' ? '#ffffff' : '#059669'}
-              />
-              <Text
-                style={[
-                  styles.paymentMethodTabText,
-                  selectedPayMethod === 'ADMIN_TEST' && styles.paymentMethodTabTextActive,
-                ]}
-              >
-                👑 Admin Test
-              </Text>
-            </TouchableOpacity>
-
             <TouchableOpacity
               style={[
                 styles.paymentMethodTab,
@@ -1195,44 +1145,7 @@ function UpiUpgradeFlow({
           </View>
         </View>
 
-        {/* 1. ADMIN TEST PAYMENT VIEW */}
-        {selectedPayMethod === 'ADMIN_TEST' ? (
-          <View style={styles.testModeCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="shield-checkmark" size={18} color="#059669" />
-                <Text style={styles.testModeTitle}>Admin Demo Checking Mode</Text>
-              </View>
-              <View style={styles.testModeBadge}>
-                <Text style={styles.testModeBadgeText}>DEMO TESTING</Text>
-              </View>
-            </View>
-
-            <Text style={styles.testModeSub}>
-              Zero-balance demo verification. Tap the button below to execute an immediate successful payment and activate the <Text style={{ fontFamily: FONT.bold, color: '#065f46' }}>{planName}</Text> plan.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.testModeBtn}
-              onPress={handleTestPayAutoSuccess}
-              disabled={isTestPaying || submit.isPending}
-              activeOpacity={0.88}
-            >
-              {isTestPaying || submit.isPending ? (
-                <ActivityIndicator color="#ffffff" size="small" />
-              ) : (
-                <>
-                  <Ionicons name="flash" size={18} color="#ffffff" />
-                  <Text style={styles.testModeBtnText}>
-                    ⚡ TEST PAYMENT
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        {/* 2. DIRECT UPI QR VIEW */}
+        {/* 1. DIRECT UPI QR VIEW */}
         {selectedPayMethod === 'UPI_QR' ? (
           <>
             {/* Billing Mode Switcher: Auto-Debit vs One-Time */}
@@ -1484,65 +1397,12 @@ const styles = StyleSheet.create({
   paymentMethodTabActive: {
     backgroundColor: '#0284c7',
   },
-  paymentMethodTabActiveTest: {
-    backgroundColor: '#059669',
-  },
   paymentMethodTabText: {
     fontSize: 11,
     fontFamily: FONT.bold,
     color: '#64748b',
   },
   paymentMethodTabTextActive: {
-    color: '#ffffff',
-  },
-  testModeCard: {
-    width: '100%',
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderWidth: 1.5,
-    borderColor: '#10b981',
-    borderRadius: RADIUS.lg,
-    padding: 12,
-    gap: 6,
-    marginVertical: 4,
-  },
-  testModeTitle: {
-    fontSize: 13,
-    fontFamily: FONT.extraBold,
-    color: '#065f46',
-  },
-  testModeBadge: {
-    backgroundColor: '#10b981',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: RADIUS.pill,
-  },
-  testModeBadgeText: {
-    fontSize: 9,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-    letterSpacing: 0.5,
-  },
-  testModeSub: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#047857',
-    lineHeight: 15,
-  },
-  testModeBtn: {
-    backgroundColor: '#059669',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: RADIUS.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 4,
-    ...premiumShadow('#059669', 'sm'),
-  },
-  testModeBtnText: {
-    fontSize: 12.5,
-    fontFamily: FONT.extraBold,
     color: '#ffffff',
   },
 });

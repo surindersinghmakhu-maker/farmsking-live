@@ -195,7 +195,7 @@ export class FarmerPlanPaymentsService {
     const activeGateway = isAdvisorBooking
       ? (integrations?.gateway?.routing?.advisorBookingGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT')
       : (integrations?.gateway?.routing?.farmerPlanGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT');
-    const isTestPayment = activeGateway === 'TEST_MODE' || dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
+    const isTestPayment = activeGateway === 'TEST_MODE';
     if (isTestPayment) {
       const actualAdmin = await this.prisma.user.findFirst({ where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] }, deletedAt: null }, select: { id: true } });
       const adminId = actualAdmin?.id || user.id;

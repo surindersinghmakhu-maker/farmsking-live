@@ -79,64 +79,6 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
 
   const totalPayable = packagePricing[selectedPackage];
 
-  const handleTestPaymentInstant = async () => {
-    tap();
-    setIsProcessing(true);
-    setStatusMessage(null);
-    setCouponStatus(null);
-    try {
-      // 1. Initiate farmer plan payment request
-      const res = await initiatePayment.mutateAsync({
-        targetPlan: 'GOLD',
-        billingPeriodDays: selectedPackage === 'PRESCRIPTION' ? 30 : selectedPackage === 'SEASON' ? 120 : 365,
-        selectedDoctorId: isSeniorDoctor ? selectedAdv?.id : undefined,
-        selectedAdvisorId: !isSeniorDoctor ? selectedAdv?.id : undefined,
-        doctorKingId: isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
-        advisorKingId: !isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
-      });
-
-      // 2. Submit payment with test UTR (backend auto-confirms test payments instantly)
-      await submitPayment.mutateAsync({
-        id: res.id,
-        utr: `TEST-CARE-${Date.now().toString().slice(-6)}`,
-      });
-
-      // 3. Refresh live caches
-      queryClient.invalidateQueries({ queryKey: ['my-advisor'] });
-      queryClient.invalidateQueries({ queryKey: ['advisor-assignment'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription-status'] });
-      queryClient.invalidateQueries({ queryKey: ['farmer-plan'] });
-      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-
-      const pkgLabel = selectedPackage === 'PRESCRIPTION'
-        ? 'Pay Per Prescription (Instant SOS)'
-        : selectedPackage === 'SEASON'
-        ? 'Full Crop Season Care (120 Days)'
-        : 'VIP Farm Doctor 24/7';
-
-      setActivatedConsultation({
-        doctorName: selectedAdv?.name || 'Dr. FarmsKing Agronomist',
-        doctorRole: isSeniorDoctor ? 'Senior Crop Doctor' : 'Certified Farm Advisor',
-        specialization: selectedAdv?.specialization || 'Crop Pathology & Field Health',
-        kingId: selectedAdv?.kingId || 'FK-DOC',
-        phone: selectedAdv?.mobile || (selectedAdv as any)?.phone || null,
-        planKey: 'GOLD',
-        packageName: pkgLabel,
-        validUntil: new Date(Date.now() + 120 * 24 * 3600 * 1000).toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-        }),
-        isTestMode: true,
-      });
-      setStatusMessage('🎉 Payment verified! Crop Care Scheme activated successfully.');
-    } catch (err: any) {
-      setStatusMessage(`❌ ${err?.response?.data?.message || err?.message || 'Could not complete test payment.'}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleLivePayment = async () => {
     tap();
     setIsProcessing(true);
@@ -160,8 +102,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
       } else if (res.upiLink) {
         await Linking.openURL(res.upiLink).catch(() => {});
       } else {
-        // Fallback auto-confirm in test mode
-        handleTestPaymentInstant();
+        setStatusMessage('⚠️ Payment gateway initialized. Please complete payment to activate.');
       }
     } catch (err: any) {
       setStatusMessage(`❌ ${err?.response?.data?.message || 'Could not initiate payment gateway.'}`);
@@ -215,7 +156,6 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
           month: 'short',
           year: 'numeric',
         }),
-        isTestMode: false,
       });
       setCouponStatus(`🎉 Coupon "${previewData.code}" redeemed! Doctor Plan activated.`);
       setPreviewData(null);
@@ -264,9 +204,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                 </View>
 
                 <View style={styles.activatedTag}>
-                  <Text style={styles.activatedTagText}>
-                    {activatedConsultation.isTestMode ? '⚡ TEST PAYMENT DIRECT SUCCESS' : '🎉 PLAN ACTIVATED'}
-                  </Text>
+                  <Text style={styles.activatedTagText}>🎉 PLAN ACTIVATED</Text>
                 </View>
 
                 <Text style={[styles.activatedTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>
@@ -506,37 +444,23 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                   </Text>
                 ) : null}
 
-                {/* 4. INSTANT 1-CLICK TEST PAYMENT BUTTON (Requested by User) */}
-                <TouchableOpacity
-                  style={[styles.testPaymentBtn, isProcessing && { opacity: 0.6 }]}
-                  disabled={isProcessing}
-                  onPress={handleTestPaymentInstant}
-                  activeOpacity={0.88}
-                >
-                  {isProcessing ? (
-                    <ActivityIndicator color="#0f172a" size="small" />
-                  ) : (
-                    <View style={{ alignItems: 'center', gap: 2 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="flash" size={18} color="#0f172a" />
-                        <Text style={styles.testPaymentBtnText}>⚡ 1-Click Test Payment (Instant Success)</Text>
-                      </View>
-                      <Text style={styles.testPaymentBtnSub}>Direct Test Mode · Instantly Activates Scheme</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-
-                {/* 5. REAL ONLINE PAYMENT (Cashfree / UPI) */}
+                {/* 4. ONLINE PAYMENT (Cashfree / UPI Gateway) */}
                 <TouchableOpacity
                   style={[styles.livePayBtn, isProcessing && { opacity: 0.6 }]}
                   disabled={isProcessing}
                   onPress={handleLivePayment}
                   activeOpacity={0.88}
                 >
-                  <Ionicons name="card-outline" size={16} color="#ffffff" />
-                  <Text style={styles.livePayBtnText}>
-                    Pay ₹{totalPayable} via Online Payment Gateway
-                  </Text>
+                  {isProcessing ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="shield-checkmark" size={17} color="#ffffff" />
+                      <Text style={styles.livePayBtnText}>
+                        Proceed to Pay ₹{totalPayable} Securely
+                      </Text>
+                    </>
+                  )}
                 </TouchableOpacity>
 
                 {/* 6. COLLAPSIBLE COUPON ACCORDION */}
@@ -729,27 +653,6 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontFamily: FONT.bold,
     textAlign: 'center',
-  },
-  testPaymentBtn: {
-    width: '100%',
-    backgroundColor: '#34d399',
-    paddingVertical: 12,
-    borderRadius: RADIUS.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#059669',
-    ...premiumShadow('#10b981', 'sm'),
-  },
-  testPaymentBtnText: {
-    color: '#0f172a',
-    fontSize: 13.5,
-    fontFamily: FONT.extraBold,
-  },
-  testPaymentBtnSub: {
-    color: '#064e3b',
-    fontSize: 10,
-    fontFamily: FONT.bold,
   },
   livePayBtn: {
     width: '100%',

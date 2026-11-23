@@ -378,7 +378,7 @@ export function MarketRatesCard() {
     const textMessage =
       `🌾 *FarmsKing — Live Mandi Price Card* 📊\n` +
       `🌱 *Crop:* ${crop.displayTitle} (${todayDateStr} ${currentTimeStr})\n` +
-      `🏛️ *LOCAL (${userState}):* Avg ${localAvgStr} (Min ${localMinStr} · Max ${localMaxStr})\n` +
+      `🏛️ *State Mandi:* Avg ${localAvgStr} (Min ${localMinStr} · Max ${localMaxStr})\n` +
       `🇮🇳 *ALL INDIA:* Avg ${natAvgStr}\n\n` +
       `✨ *FarmsKing Web App Features:* Live Mandi Rates • Farm Accounts & Expenses • Crop Doctor Advisory\n\n` +
       `🎁 *GET ₹${bonusAmount} WELCOME CASH BONUS!* Code: \`${userRefCode}\`\n` +
@@ -630,7 +630,7 @@ export function MarketRatesCard() {
       }
       ctx.fillStyle = '#166534';
       ctx.font = '800 12.5px sans-serif';
-      ctx.fillText(`🏛️ LOCAL (${userState.toUpperCase()})`, tableX + 18, row1Y + 32);
+      ctx.fillText('🏛️ STATE MANDI', tableX + 18, row1Y + 32);
 
       // Center Average Price Pill Box (Super Vibrant Emerald Pill)
       ctx.fillStyle = '#16a34a';
@@ -994,7 +994,7 @@ export function MarketRatesCard() {
           {/* Table Header */}
           <View style={[styles.columnHeaderRow, { borderBottomColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
             <Text style={[styles.columnHeader, styles.cropColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('tabCrops', 'YOUR CROP')}</Text>
-            <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('stateMandi', 'STATE')}</Text>
+            <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('stateMandi', 'STATE MANDI')}</Text>
             <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('nationalMandi', 'ALL INDIA')}</Text>
             <View style={styles.shareColumn} />
           </View>
@@ -1509,7 +1509,7 @@ export function MarketRatesCard() {
               <View style={styles.posterTableRowLocal}>
                 <View style={{ flex: 1.25 }}>
                   <View style={styles.posterMarketTagLocalBadge}>
-                    <Text style={styles.posterMarketTagLocalText}>🏛️ LOCAL ({userState.toUpperCase()})</Text>
+                    <Text style={styles.posterMarketTagLocalText}>🏛️ STATE MANDI</Text>
                   </View>
                 </View>
                 <View style={{ flex: 1.1 }}>

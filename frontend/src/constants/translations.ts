@@ -217,7 +217,7 @@ export const translations = {
     avgPrice: "Avg Price",
     modalPrice: "Modal Price",
     mandiArrivals: "Arrivals",
-    stateMandi: "STATE",
+    stateMandi: "State Mandi",
     nationalMandi: "National Mandi",
     allMandis: "All Mandis",
     shareRates: "Share Rates",

@@ -87,7 +87,7 @@ export interface CropItem {
 }
 
 export const INITIAL_CROP_CATEGORIES: CropCategory[] = [
-  { id: 'flowers', name: 'Flowers & Floriculture', hindiName: 'Flowers & Floriculture', icon: 'flower', color: '#e11d48', bg: '#ffe4e6', examples: 'Rose, Marigold, Jasmine, Gladiolus, Gerbera' },
+  { id: 'flowers', name: 'Flowers & Floriculture', hindiName: 'Flowers & Floriculture', icon: 'flower', color: '#e11d48', bg: '#ffe4e6', examples: 'Rose, Marigold, Jafri, Bijlee, Rajnigandha, Gladiolus' },
   { id: 'vegetables', name: 'Vegetables', hindiName: 'Vegetables', icon: 'basket', color: '#047857', bg: '#ecfdf5', examples: 'Tomato, Potato, Onion, Peas, Cauliflower, Chilli' },
   { id: 'fruits', name: 'Fruits & Orchards', hindiName: 'Fruits & Orchards', icon: 'restaurant', color: '#c2410c', bg: '#fff7ed', examples: 'Mango, Kinnow, Apple, Banana, Guava, Papaya' },
   { id: 'medicinal', name: 'Medicinal & Aromatic Crops', hindiName: 'Medicinal & Aromatic Crops', icon: 'medkit', color: '#0d9488', bg: '#ccfbf1', examples: 'Ashwagandha, Aloe Vera, Mentha, Tulsi, Isabgol' },
@@ -104,19 +104,26 @@ export const INITIAL_CROP_CATEGORIES: CropCategory[] = [
 export const INITIAL_CROPS_LIST: CropItem[] = [
   // ── 1. Flowers & Floriculture (Continuous / Daily Harvest) ──────────────────
   { id: 'fl1', categoryId: 'flowers', name: 'Rose', hindiName: 'Rose', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Bunch', defaultPrice: 40, harvestType: 'CONTINUOUS' },
-  { id: 'fl2', categoryId: 'flowers', name: 'Marigold', hindiName: 'Marigold', duration: '90-100 Days', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 60, harvestType: 'CONTINUOUS' },
+  { id: 'fl2', categoryId: 'flowers', name: 'Marigold (Genda / African Marigold)', hindiName: 'Marigold', duration: '90-100 Days', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 60, harvestType: 'CONTINUOUS' },
   { id: 'fl3', categoryId: 'flowers', name: 'Jasmine / Mogra', hindiName: 'Jasmine', duration: 'Perennial', season: 'Summer', defaultUnit: 'KG', defaultPrice: 180, harvestType: 'CONTINUOUS' },
-  { id: 'fl4', categoryId: 'flowers', name: 'Gladiolus', hindiName: 'Gladiolus', duration: '90 Days', season: 'Winter', defaultUnit: 'Pieces', defaultPrice: 15, harvestType: 'CONTINUOUS' },
-  { id: 'fl5', categoryId: 'flowers', name: 'Tuberose / Rajnigandha', hindiName: 'Tuberose', duration: 'Perennial', season: 'Kharif', defaultUnit: 'Bunch', defaultPrice: 50, harvestType: 'CONTINUOUS' },
-  { id: 'fl6', categoryId: 'flowers', name: 'Chrysanthemum / Guldaudi', hindiName: 'Chrysanthemum', duration: '100-120 Days', season: 'Winter', defaultUnit: 'Bunch', defaultPrice: 45, harvestType: 'CONTINUOUS' },
-  { id: 'fl7', categoryId: 'flowers', name: 'Carnation', hindiName: 'Carnation', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Pieces', defaultPrice: 12, harvestType: 'CONTINUOUS' },
-  { id: 'fl8', categoryId: 'flowers', name: 'Gerbera', hindiName: 'Gerbera', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Pieces', defaultPrice: 10, harvestType: 'CONTINUOUS' },
-  { id: 'fl9', categoryId: 'flowers', name: 'Lotus / Kamal', hindiName: 'Lotus', duration: 'Perennial', season: 'Summer', defaultUnit: 'Pieces', defaultPrice: 15, harvestType: 'CONTINUOUS' },
-  { id: 'fl10', categoryId: 'flowers', name: 'Lily / Asiatic Lily', hindiName: 'Lily', duration: '90-100 Days', season: 'Winter', defaultUnit: 'Pieces', defaultPrice: 25, harvestType: 'CONTINUOUS' },
-  { id: 'fl11', categoryId: 'flowers', name: 'Orchid', hindiName: 'Orchid', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Pieces', defaultPrice: 35, harvestType: 'CONTINUOUS' },
-  { id: 'fl12', categoryId: 'flowers', name: 'Tulip', hindiName: 'Tulip', duration: '75-90 Days', season: 'Winter', defaultUnit: 'Pieces', defaultPrice: 30, harvestType: 'CONTINUOUS' },
-  { id: 'fl13', categoryId: 'flowers', name: 'Dahlia', hindiName: 'Dahlia', duration: '90-110 Days', season: 'Winter', defaultUnit: 'Bunch', defaultPrice: 35, harvestType: 'CONTINUOUS' },
-  { id: 'fl14', categoryId: 'flowers', name: 'Sunflower (Floriculture)', hindiName: 'Sunflower', duration: '70-85 Days', season: 'Summer / Spring', defaultUnit: 'Pieces', defaultPrice: 15, harvestType: 'CONTINUOUS' },
+  { id: 'fl4', categoryId: 'flowers', name: 'Gladiolus (Cut Flower Spikes)', hindiName: 'Gladiolus', duration: '90 Days', season: 'Winter', defaultUnit: 'Pieces', defaultPrice: 15, harvestType: 'CONTINUOUS' },
+  { id: 'fl5', categoryId: 'flowers', name: 'Rajnigandha / Tuberose', hindiName: 'Rajnigandha', duration: 'Perennial', season: 'Kharif / All Seasons', defaultUnit: 'Bunch', defaultPrice: 50, harvestType: 'CONTINUOUS' },
+  { id: 'fl6', categoryId: 'flowers', name: 'Bijlee (Bijlee Flower / Aster)', hindiName: 'Bijlee Flower', duration: '80-95 Days', season: 'Winter / Spring', defaultUnit: 'Bunch', defaultPrice: 40, harvestType: 'CONTINUOUS' },
+  { id: 'fl7', categoryId: 'flowers', name: 'Jafri (French Marigold / Jafri Genda)', hindiName: 'Jafri Marigold', duration: '75-90 Days', season: 'Winter / Spring', defaultUnit: 'KG', defaultPrice: 50, harvestType: 'CONTINUOUS' },
+  { id: 'fl8', categoryId: 'flowers', name: 'Chrysanthemum / Guldaudi', hindiName: 'Chrysanthemum', duration: '100-120 Days', season: 'Winter', defaultUnit: 'Bunch', defaultPrice: 45, harvestType: 'CONTINUOUS' },
+  { id: 'fl9', categoryId: 'flowers', name: 'Carnation', hindiName: 'Carnation', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Pieces', defaultPrice: 12, harvestType: 'CONTINUOUS' },
+  { id: 'fl10', categoryId: 'flowers', name: 'Gerbera', hindiName: 'Gerbera', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Pieces', defaultPrice: 10, harvestType: 'CONTINUOUS' },
+  { id: 'fl11', categoryId: 'flowers', name: 'Lotus / Kamal', hindiName: 'Lotus', duration: 'Perennial', season: 'Summer', defaultUnit: 'Pieces', defaultPrice: 15, harvestType: 'CONTINUOUS' },
+  { id: 'fl12', categoryId: 'flowers', name: 'Lily / Asiatic Lily', hindiName: 'Lily', duration: '90-100 Days', season: 'Winter', defaultUnit: 'Pieces', defaultPrice: 25, harvestType: 'CONTINUOUS' },
+  { id: 'fl13', categoryId: 'flowers', name: 'Orchid', hindiName: 'Orchid', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Pieces', defaultPrice: 35, harvestType: 'CONTINUOUS' },
+  { id: 'fl14', categoryId: 'flowers', name: 'Tulip', hindiName: 'Tulip', duration: '75-90 Days', season: 'Winter', defaultUnit: 'Pieces', defaultPrice: 30, harvestType: 'CONTINUOUS' },
+  { id: 'fl15', categoryId: 'flowers', name: 'Dahlia', hindiName: 'Dahlia', duration: '90-110 Days', season: 'Winter', defaultUnit: 'Bunch', defaultPrice: 35, harvestType: 'CONTINUOUS' },
+  { id: 'fl16', categoryId: 'flowers', name: 'Sunflower (Floriculture)', hindiName: 'Sunflower', duration: '70-85 Days', season: 'Summer / Spring', defaultUnit: 'Pieces', defaultPrice: 15, harvestType: 'CONTINUOUS' },
+  { id: 'fl17', categoryId: 'flowers', name: 'Gypsophila / Baby\'s Breath', hindiName: 'Gypsophila', duration: '80-90 Days', season: 'Winter', defaultUnit: 'Bunch', defaultPrice: 60, harvestType: 'CONTINUOUS' },
+  { id: 'fl18', categoryId: 'flowers', name: 'Gomphrena / Button Flower', hindiName: 'Gomphrena', duration: '70-85 Days', season: 'Summer / Kharif', defaultUnit: 'KG', defaultPrice: 45, harvestType: 'CONTINUOUS' },
+  { id: 'fl19', categoryId: 'flowers', name: 'Celosia / Cock\'s Comb', hindiName: 'Celosia', duration: '80-100 Days', season: 'Kharif / Winter', defaultUnit: 'Bunch', defaultPrice: 30, harvestType: 'CONTINUOUS' },
+  { id: 'fl20', categoryId: 'flowers', name: 'Statice (Dried Flower)', hindiName: 'Statice', duration: '100-120 Days', season: 'Winter', defaultUnit: 'Bunch', defaultPrice: 55, harvestType: 'CONTINUOUS' },
+  { id: 'fl21', categoryId: 'flowers', name: 'Zinnia', hindiName: 'Zinnia', duration: '60-75 Days', season: 'Summer / Monsoon', defaultUnit: 'Bunch', defaultPrice: 25, harvestType: 'CONTINUOUS' },
 
   // ── 2. Vegetables ─────────────────────────────────────────────────────────
   { id: 'v1', categoryId: 'vegetables', name: 'Tomato', hindiName: 'Tomato', duration: '120 Days', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 30, harvestType: 'CONTINUOUS' },

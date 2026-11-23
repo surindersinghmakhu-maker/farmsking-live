@@ -622,14 +622,6 @@ export class FarmerPlansService implements OnModuleInit {
       targetPlan === FarmerSubscriptionPlan.ROYAL,
     );
 
-    // Strict Downgrade Guard for Farm Record Plans (Rule: "vadde to shota plan nhi kita ja skda")
-    // Per Rule 8, Crop Care / Doctor consultation bookings are distinct and never blocked by farm record downgrade guards.
-    if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
-      throw new BadRequestException(
-        `Downgrade is strictly prohibited while an active higher-tier plan (${currentPlanType}) is running. You can only upgrade to a higher tier or renew your current plan.`,
-      );
-    }
-
     // 0. Advisor/Doctor Booking for farmer who already holds an active higher-tier Farm Record Plan (Rule 8)
     if (isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
       updatedPlan = await this.prisma.farmerPlan.update({
@@ -647,6 +639,33 @@ export class FarmerPlansService implements OnModuleInit {
           endDate: currentEndDate,
           couponId,
           notes: `Doctor/Advisor consultation activated under existing ${currentPlanType} Plan (${daysGranted} days)`,
+        },
+      });
+    }
+    // 0b. Lower-tier plan purchase while higher tier active — safely extend subscription without crashing
+    else if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
+      const baseDate = currentEndDate > now ? currentEndDate : now;
+      const newEndDate = new Date(baseDate.getTime() + daysGranted * DAY_MS);
+
+      updatedPlan = await this.prisma.farmerPlan.update({
+        where: { farmerId },
+        data: {
+          endDate: newEndDate,
+          expiredAt: null,
+          ...(couponId ? { couponId } : {}),
+        },
+      });
+
+      await this.prisma.farmerPlanHistory.create({
+        data: {
+          farmerId,
+          plan: targetPlan,
+          status: FarmerPlanRecordStatus.ACTIVE,
+          daysGranted,
+          startDate: now,
+          endDate: newEndDate,
+          couponId,
+          notes: `Extended via ${targetPlan} plan (${daysGranted} days added to active ${currentPlanType} plan)`,
         },
       });
     }

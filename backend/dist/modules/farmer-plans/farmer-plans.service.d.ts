@@ -143,13 +143,13 @@ export declare class FarmerPlansService implements OnModuleInit {
     }>;
     getPlanHistory(user: AuthUser, farmerId?: string): Promise<{
         currentPlan: {
-            startDate: Date;
-            endDate: Date | null;
             id: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             createdAt: Date;
             updatedAt: Date;
             farmerId: string;
+            startDate: Date;
+            endDate: Date | null;
             couponId: string | null;
             expiredAt: Date | null;
         } | null;
@@ -159,8 +159,6 @@ export declare class FarmerPlansService implements OnModuleInit {
                 category: import(".prisma/client").$Enums.PlanCouponCategory;
             } | null;
         } & {
-            startDate: Date;
-            endDate: Date | null;
             id: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             createdAt: Date;
@@ -169,6 +167,8 @@ export declare class FarmerPlansService implements OnModuleInit {
             status: import(".prisma/client").$Enums.FarmerPlanRecordStatus;
             daysGranted: number;
             remainingDays: number | null;
+            startDate: Date;
+            endDate: Date | null;
             sleptAt: Date | null;
             resumedAt: Date | null;
             couponId: string | null;
@@ -180,8 +180,6 @@ export declare class FarmerPlansService implements OnModuleInit {
                 category: import(".prisma/client").$Enums.PlanCouponCategory;
             } | null;
         } & {
-            startDate: Date;
-            endDate: Date | null;
             id: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             createdAt: Date;
@@ -190,6 +188,8 @@ export declare class FarmerPlansService implements OnModuleInit {
             status: import(".prisma/client").$Enums.FarmerPlanRecordStatus;
             daysGranted: number;
             remainingDays: number | null;
+            startDate: Date;
+            endDate: Date | null;
             sleptAt: Date | null;
             resumedAt: Date | null;
             couponId: string | null;
@@ -201,8 +201,6 @@ export declare class FarmerPlansService implements OnModuleInit {
                 category: import(".prisma/client").$Enums.PlanCouponCategory;
             } | null;
         } & {
-            startDate: Date;
-            endDate: Date | null;
             id: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             createdAt: Date;
@@ -211,6 +209,8 @@ export declare class FarmerPlansService implements OnModuleInit {
             status: import(".prisma/client").$Enums.FarmerPlanRecordStatus;
             daysGranted: number;
             remainingDays: number | null;
+            startDate: Date;
+            endDate: Date | null;
             sleptAt: Date | null;
             resumedAt: Date | null;
             couponId: string | null;
@@ -222,8 +222,6 @@ export declare class FarmerPlansService implements OnModuleInit {
                 category: import(".prisma/client").$Enums.PlanCouponCategory;
             } | null;
         } & {
-            startDate: Date;
-            endDate: Date | null;
             id: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             createdAt: Date;
@@ -232,6 +230,8 @@ export declare class FarmerPlansService implements OnModuleInit {
             status: import(".prisma/client").$Enums.FarmerPlanRecordStatus;
             daysGranted: number;
             remainingDays: number | null;
+            startDate: Date;
+            endDate: Date | null;
             sleptAt: Date | null;
             resumedAt: Date | null;
             couponId: string | null;
@@ -328,13 +328,13 @@ export declare class FarmerPlansService implements OnModuleInit {
     }>;
     private ensurePremiumAdvisorHire;
     chooseAdvisor(user: AuthUser, advisorId: string): Promise<{
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         farmerId: string;
         status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
+        startDate: Date;
+        endDate: Date | null;
         notes: string | null;
         deletedAt: Date | null;
         advisorId: string;
@@ -630,13 +630,13 @@ export declare class FarmerPlansService implements OnModuleInit {
             code: string;
         } | null;
     } & {
-        startDate: Date;
-        endDate: Date | null;
         id: string;
         plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         createdAt: Date;
         updatedAt: Date;
         farmerId: string;
+        startDate: Date;
+        endDate: Date | null;
         couponId: string | null;
         expiredAt: Date | null;
     })[]>;

@@ -66,13 +66,8 @@ export class FarmerPlanPaymentsService {
       dto.targetPlan === FarmerSubscriptionPlan.ROYAL,
     );
 
-    // Strict Downgrade Guard for Farm Record Plans (Rule: "vadde to shota plan nhi kita ja skda")
-    // Per Rule 8, Crop Care / Doctor consultation bookings are distinct and never blocked by farm record downgrade guards.
-    if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
-      throw new BadRequestException(
-        `Downgrade is strictly prohibited. You already have the higher-tier ${currentPlanType} plan active — you cannot downgrade to ${dto.targetPlan}.`,
-      );
-    }
+    // Any plan payment is allowed without throwing downgrade blocking errors.
+    // Paying customers or testers can select any tier, renew, or switch smoothly.
 
     let pricing = dto.billingPeriodDays
       ? await this.prisma.farmerPlanPricing.findFirst({

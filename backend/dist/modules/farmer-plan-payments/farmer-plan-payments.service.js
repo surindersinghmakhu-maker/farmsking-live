@@ -61,9 +61,6 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
             dto.advisorKingId ||
             dto.targetPlan === client_1.FarmerSubscriptionPlan.GOLD ||
             dto.targetPlan === client_1.FarmerSubscriptionPlan.ROYAL);
-        if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
-            throw new common_1.BadRequestException(`Downgrade is strictly prohibited. You already have the higher-tier ${currentPlanType} plan active — you cannot downgrade to ${dto.targetPlan}.`);
-        }
         let pricing = dto.billingPeriodDays
             ? await this.prisma.farmerPlanPricing.findFirst({
                 where: { plan: dto.targetPlan, billingPeriodDays: Number(dto.billingPeriodDays) },

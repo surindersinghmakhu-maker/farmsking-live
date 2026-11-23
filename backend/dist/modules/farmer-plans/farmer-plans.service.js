@@ -482,9 +482,6 @@ let FarmerPlansService = class FarmerPlansService {
         const isAdvisorBooking = Boolean(selectedAdvisorId ||
             targetPlan === client_1.FarmerSubscriptionPlan.GOLD ||
             targetPlan === client_1.FarmerSubscriptionPlan.ROYAL);
-        if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
-            throw new common_1.BadRequestException(`Downgrade is strictly prohibited while an active higher-tier plan (${currentPlanType}) is running. You can only upgrade to a higher tier or renew your current plan.`);
-        }
         if (isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
             updatedPlan = await this.prisma.farmerPlan.update({
                 where: { farmerId },
@@ -500,6 +497,30 @@ let FarmerPlansService = class FarmerPlansService {
                     endDate: currentEndDate,
                     couponId,
                     notes: `Doctor/Advisor consultation activated under existing ${currentPlanType} Plan (${daysGranted} days)`,
+                },
+            });
+        }
+        else if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
+            const baseDate = currentEndDate > now ? currentEndDate : now;
+            const newEndDate = new Date(baseDate.getTime() + daysGranted * DAY_MS);
+            updatedPlan = await this.prisma.farmerPlan.update({
+                where: { farmerId },
+                data: {
+                    endDate: newEndDate,
+                    expiredAt: null,
+                    ...(couponId ? { couponId } : {}),
+                },
+            });
+            await this.prisma.farmerPlanHistory.create({
+                data: {
+                    farmerId,
+                    plan: targetPlan,
+                    status: client_1.FarmerPlanRecordStatus.ACTIVE,
+                    daysGranted,
+                    startDate: now,
+                    endDate: newEndDate,
+                    couponId,
+                    notes: `Extended via ${targetPlan} plan (${daysGranted} days added to active ${currentPlanType} plan)`,
                 },
             });
         }

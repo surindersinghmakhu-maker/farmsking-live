@@ -1,21 +1,15 @@
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useQueryClient } from '@tanstack/react-query';
+import { ActivityIndicator, Alert, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import QRCode from 'react-native-qrcode-svg';
-import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useAuth } from '@/src/store/auth-context';
 import { useFarmerPlan, useFarmerPlanPricing, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon, useActivateTrial } from '@/src/hooks/useFarmerPlan';
 import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
-import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
+import { useInitiateFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import { useAvailableAdvisors, useMyAdvisor } from '@/src/hooks/useAdvisorAssignments';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
-import { uploadPhoto } from '@/src/api/uploads.api';
 import type { FarmerPlanType, FarmerPlanPricing } from '@/src/api/farmerPlans.api';
-import type { InitiateFarmerPlanPaymentResponse } from '@/src/api/farmerPlanPayments.api';
 
 const theme = RoleThemes.FARMER;
 
@@ -38,7 +32,6 @@ const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; c
   PRO: { label: 'Kisan Plan', emoji: '🌾', color: '#0284c7', price: '₹199/yr' },
   SMART: { label: 'Boss Plan', emoji: '👷', color: '#1d4ed8', price: '₹499/yr' },
   VIP: { label: 'Farmer VIP Plan', emoji: '👑', color: '#b45309', price: '₹999/yr' },
-  // Legacy backward-compatibility mappings
   BASIC: { label: 'Free Plan', emoji: '🌱', color: '#166534', price: '₹0' },
   SUPER: { label: 'Farmer VIP Plan', emoji: '👑', color: '#b45309', price: '₹999/yr' },
   PLATINUM: { label: 'Farmer VIP Plan', emoji: '👑', color: '#b45309', price: '₹999/yr' },
@@ -66,9 +59,6 @@ const PLAN_ROWS: PlanRow[] = [
   { label: 'Mandi AI Predictions', values: { FREE: '—', PRO: '—', SMART: '—', VIP: '✓ Included' } },
 ];
 
-
-
-/** 100% Single-Screen Responsive Plan Comparison Chart — fits perfectly on one screen without horizontal scrolling */
 function PlanComparisonChart({
   plans,
   currentPlan,
@@ -149,7 +139,6 @@ function PlanComparisonChart({
         <View style={[chartStyles.cell, chartStyles.labelCell]} />
         {plans.map((p) => {
           const isCurrent = p === currentPlan && currentPlan !== 'FREE';
-          const isDowngrade = PLAN_RANK[p] < PLAN_RANK[currentPlan];
           return (
             <View key={p} style={chartStyles.cell}>
               {p === 'FREE' ? (
@@ -166,16 +155,12 @@ function PlanComparisonChart({
                 >
                   <Text style={chartStyles.planBtnText}>Renew</Text>
                 </TouchableOpacity>
-              ) : isDowngrade ? (
-                <View style={chartStyles.planBtnDisabled}>
-                  <Text style={chartStyles.planBtnDisabledText}>—</Text>
-                </View>
               ) : (
                 <TouchableOpacity
                   style={[chartStyles.planBtn, { backgroundColor: PLAN_COLUMN_META[p].color }]}
                   onPress={() => onPickPlan(p)}
                 >
-                  <Text style={chartStyles.planBtnText}>Get</Text>
+                  <Text style={chartStyles.planBtnText}>Select</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -283,24 +268,8 @@ const chartStyles = StyleSheet.create({
     fontSize: 10,
     fontFamily: FONT.bold,
   },
-  planBtnDisabled: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: RADIUS.pill,
-    backgroundColor: '#f1f5f9',
-  },
-  planBtnDisabledText: {
-    color: '#94a3b8',
-    fontSize: 10,
-    fontFamily: FONT.bold,
-  },
 });
 
-/**
- * Upgrade flow for the Farmer plan — pick a plan from the comparison chart to pay for it directly via UPI, or
- * redeem an admin/advisor-issued coupon code. `tiers` scopes which paid plans are offered: the dashboard only
- * offers BASIC (record-keeping, no advisor); the Advisor tab only offers STANDARD/PREMIUM (advisor included).
- */
 export function FarmerPlanUpgradeModal({
   visible,
   onClose,
@@ -324,34 +293,33 @@ export function FarmerPlanUpgradeModal({
   const preview = usePreviewFarmerPlanCoupon();
   const redeem = useRedeemFarmerPlanCoupon();
   const activateTrial = useActivateTrial();
+  const initiate = useInitiateFarmerPlanPayment();
   const { data: myAdvisor } = useMyAdvisor();
+
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [previewResult, setPreviewResult] = useState<Awaited<ReturnType<typeof preview.mutateAsync>> | null>(null);
   const [result, setResult] = useState<Awaited<ReturnType<typeof redeem.mutateAsync>> | null>(null);
   const [showChart, setShowChart] = useState(false);
-  const [pickedPlan, setPickedPlan] = useState<FarmerPlanType | null>(null);
-  const [selectedOptionId, setSelectedOptionId] = useState<string>(isTrialEligible ? 'FARMER_FREE' : 'FARMER_BASIC');
-  const [planCategory, setPlanCategory] = useState<'FARMER' | 'ADVISOR'>('FARMER');
-  const [mode, setMode] = useState<'CODE' | 'UPI'>('CODE');
-  const [tabMode, setTabMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>(initialMode);
-  const [selectedAdvisorId, setSelectedAdvisorId] = useState<string | null>(null);
+  const [showCouponInput, setShowCouponInput] = useState(initialMode === 'REDEEM_CODE');
+  const [pickedPlan, setPickedPlan] = useState<FarmerPlanType>('PRO');
   const [selectedDaysMap, setSelectedDaysMap] = useState<Record<string, number>>({});
+  const [selectedAdvisorId, setSelectedAdvisorId] = useState<string | null>(null);
+  const [isPaying, setIsPaying] = useState(false);
   const codeInputRef = useRef<TextInput>(null);
 
-  // Sync initialMode & option selection when modal becomes visible
   React.useEffect(() => {
     if (visible) {
-      setTabMode(initialMode);
-      if (!isTrialEligible && selectedOptionId === 'FARMER_FREE') {
-        setSelectedOptionId('FARMER_BASIC');
+      setError(null);
+      setShowCouponInput(initialMode === 'REDEEM_CODE');
+      if (currentPlan && currentPlan !== 'FREE' && tiers.includes(currentPlan)) {
+        setPickedPlan(currentPlan);
+      } else {
         setPickedPlan('PRO');
       }
     }
-  }, [visible, initialMode, isTrialEligible]);
+  }, [visible, initialMode, currentPlan]);
 
-  // Only a genuinely fresh advisor plan needs the farmer to pick one here — if they already have an
-  // active advisor, a same-tier renewal just extends their days and keeps that advisor as-is.
   const needsAdvisorPick = !!previewResult?.includesAdvisor && !myAdvisor;
   const { data: availableAdvisors, isLoading: isLoadingAvailableAdvisors } = useAvailableAdvisors(needsAdvisorPick);
 
@@ -361,10 +329,14 @@ export function FarmerPlanUpgradeModal({
     setPreviewResult(null);
     setResult(null);
     setShowChart(false);
-    setPickedPlan(null);
-    setMode('CODE');
-    setTabMode(initialMode);
+    setShowCouponInput(false);
     setSelectedAdvisorId(null);
+    setIsPaying(false);
+  };
+
+  const closeAndReset = () => {
+    reset();
+    onClose();
   };
 
   const handlePickPlan = async (plan: FarmerPlanType) => {
@@ -374,39 +346,62 @@ export function FarmerPlanUpgradeModal({
         const msg = '🎉 Trial Activated successfully!';
         if (Platform.OS === 'web') alert(msg);
         else Alert.alert('Trial Activated', msg);
-        reset();
-        onClose();
+        closeAndReset();
       } catch (err: any) {
         const msg = err?.response?.data?.message ?? 'Trial already active or used.';
         if (Platform.OS === 'web') alert(`Notice: ${msg}`);
         else Alert.alert('Notice', msg);
-        reset();
-        onClose();
+        closeAndReset();
       }
       return;
     }
+
     setPickedPlan(plan);
-    if (plan === 'PRO') {
-      setPlanCategory('FARMER');
-      setSelectedOptionId('FARMER_BASIC');
-    } else if (plan === 'SMART') {
-      setPlanCategory('FARMER');
-      setSelectedOptionId('FARMER_PRO');
-    } else if (plan === 'SUPER') {
-      setPlanCategory('FARMER');
-      setSelectedOptionId('FARMER_SUPER');
-    }
     const activeVariants = pricingList.filter((it: FarmerPlanPricing) => it.plan === plan && it.isActive !== false);
     if (activeVariants.length > 0 && !selectedDaysMap[plan]) {
       setSelectedDaysMap((prev) => ({ ...prev, [plan]: Number(activeVariants[0].billingPeriodDays) }));
     }
     setShowChart(false);
-    setMode('UPI');
   };
 
-  const closeAndReset = () => {
-    reset();
-    onClose();
+  const handleProceedToGatewayPayment = async () => {
+    if (pickedPlan === 'FREE') {
+      handlePickPlan('FREE');
+      return;
+    }
+    setError(null);
+    setIsPaying(true);
+    try {
+      const activeVariants = pricingList
+        .filter((it: FarmerPlanPricing) => it.plan === pickedPlan && it.isActive !== false)
+        .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
+      const days = selectedDaysMap[pickedPlan] || activeVariants[0]?.billingPeriodDays || 365;
+
+      const res: any = await initiate.mutateAsync({
+        targetPlan: pickedPlan,
+        billingPeriodDays: Number(days),
+      });
+
+      if (res?.cashfreeSessionId) {
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.location.href = `https://payments.cashfree.com/order/#${res.cashfreeSessionId}`;
+        } else {
+          await Linking.openURL(`https://payments.cashfree.com/order/#${res.cashfreeSessionId}`);
+        }
+      } else if (res?.cashfreeSubscriptionLink) {
+        await Linking.openURL(res.cashfreeSubscriptionLink);
+      } else if (res?.razorpayShortUrl) {
+        await Linking.openURL(res.razorpayShortUrl);
+      } else if (res?.upiLink) {
+        await Linking.openURL(res.upiLink);
+      } else {
+        setError('Payment gateway link generated. Please check your screen.');
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Could not initiate payment gateway.');
+    } finally {
+      setIsPaying(false);
+    }
   };
 
   const handleCheckCode = async () => {
@@ -424,7 +419,7 @@ export function FarmerPlanUpgradeModal({
     }
   };
 
-  const handleConfirm = async () => {
+  const handleConfirmCoupon = async () => {
     setError(null);
     try {
       const res = await redeem.mutateAsync({
@@ -438,6 +433,23 @@ export function FarmerPlanUpgradeModal({
     }
   };
 
+  const planOptions = [
+    { id: 'PRO', key: 'PRO' as FarmerPlanType, label: '🌾 Kisan Plan', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic 🧾' },
+    { id: 'SMART', key: 'SMART' as FarmerPlanType, label: '👷 Boss Plan', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login 👥' },
+    { id: 'SUPER', key: 'SUPER' as FarmerPlanType, label: '👑 Farmer VIP Plan', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Delegation 🛡️' },
+    ...(isTrialEligible ? [{ id: 'FREE', key: 'FREE' as FarmerPlanType, label: '🌱 Free Plan Trial 🎁', iconName: 'leaf', color: '#166534', sub: `Full ${freeTrialPlan} Plan Access (${freeTrialDays}-Day Free Demo Trial) 🎁` }] : []),
+  ];
+
+  const currentPickedVariants = pricingList
+    .filter((it: FarmerPlanPricing) => it.plan === pickedPlan && it.isActive !== false)
+    .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
+  const currentPickedDays = selectedDaysMap[pickedPlan];
+  const activePricingVariant = (currentPickedDays != null
+    ? currentPickedVariants.find((v: FarmerPlanPricing) => Number(v.billingPeriodDays) === Number(currentPickedDays))
+    : null) || currentPickedVariants[0] || { price: pickedPlan === 'FREE' ? '0' : pickedPlan === 'SUPER' ? '999' : pickedPlan === 'SMART' ? '499' : '199', billingPeriodDays: 365 };
+
+  const currentPayAmount = pickedPlan === 'FREE' ? 0 : Number(activePricingVariant.price);
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={closeAndReset}>
       <View style={styles.overlay}>
@@ -448,8 +460,10 @@ export function FarmerPlanUpgradeModal({
                 <Ionicons name="sparkles" size={13} color="#f59e0b" />
                 <Text style={styles.highlightVipLabelText}>FARMSKING VIP PASS SCHEME</Text>
               </View>
-              {tabMode === 'REDEEM_CODE' ? (
-                <Text style={styles.headerTitleText}>Redeem Coupon Code 🎟️</Text>
+              {currentPlan && currentPlan !== 'FREE' ? (
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#86efac' }}>
+                  Currently Active: {currentPlan} Plan
+                </Text>
               ) : null}
             </View>
             <TouchableOpacity onPress={closeAndReset} style={styles.closeBtnIcon}>
@@ -457,31 +471,10 @@ export function FarmerPlanUpgradeModal({
             </TouchableOpacity>
           </LinearGradient>
 
-          {mode === 'UPI' && pickedPlan ? (
-            <UpiUpgradeFlow
-              plan={pickedPlan}
-              billingPeriodDays={
-                selectedDaysMap[pickedPlan] ?? (
-                  pricingList
-                    .filter((it: FarmerPlanPricing) => it.plan === pickedPlan && it.isActive !== false)
-                    .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays))[0]?.billingPeriodDays
-                )
-              }
-              onDone={closeAndReset}
-              onSwitchToCode={() => {
-                setMode('CODE');
-                setTabMode('REDEEM_CODE');
-              }}
-              onPickDifferentPlan={() => {
-                setPickedPlan(null);
-                setMode('CODE');
-                setShowChart(true);
-              }}
-            />
-          ) : result ? (
-            <View style={{ gap: 10 }}>
+          {result ? (
+            <View style={{ gap: 12, paddingVertical: 10 }}>
               <View style={styles.successBox}>
-                <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
+                <Ionicons name="checkmark-circle" size={24} color="#16a34a" />
                 <Text style={styles.successText}>
                   {result.plan.plan} VIP Pass active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
                   {result.advisorHired ? ' A Farm Advisor has been assigned to you.' : ''}
@@ -510,7 +503,7 @@ export function FarmerPlanUpgradeModal({
                     <ActivityIndicator color={theme.primary} />
                   ) : !availableAdvisors || availableAdvisors.length === 0 ? (
                     <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#475569', backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                      ⚡ An available Farm Advisor will be assigned automatically to your account upon confirmation.
+                      ⚡ An available Farm Advisor will be assigned automatically upon confirmation.
                     </Text>
                   ) : (
                     <View style={{ gap: 8 }}>
@@ -524,22 +517,9 @@ export function FarmerPlanUpgradeModal({
                             onPress={() => setSelectedAdvisorId(isSelected ? null : advisor.id)}
                           >
                             <View style={{ flex: 1 }}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                <Text style={styles.advisorPickName}>{advisor.name}</Text>
-                                {advisor.isSeniorDoctor ? (
-                                  <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10 }}>
-                                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309' }}>👴 Senior Doctor</Text>
-                                  </View>
-                                ) : (
-                                  <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10 }}>
-                                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#475569' }}>👨‍⚕️ Assistant Doctor</Text>
-                                  </View>
-                                )}
-                              </View>
+                              <Text style={styles.advisorPickName}>{advisor.name}</Text>
                               <Text style={styles.advisorPickMeta}>
-                                🏷️ {advisor.specialization || 'General Crop Specialist'}
-                                {advisor.doctorConsultationFee ? ` · Fee: ₹${advisor.doctorConsultationFee}` : ''}
-                                {advisor.yearsExperience ? ` · ${advisor.yearsExperience} yrs exp` : ''} · {advisor.activeFarmerCount} farmers
+                                🏷️ {advisor.specialization || 'General Specialist'} · {advisor.activeFarmerCount} farmers
                               </Text>
                             </View>
                             <Ionicons
@@ -555,54 +535,44 @@ export function FarmerPlanUpgradeModal({
                 </View>
               ) : null}
 
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              {error ? <Text style={styles.errorText}>❌ {error}</Text> : null}
               <TouchableOpacity
                 style={styles.submitBtn}
                 disabled={redeem.isPending}
-                onPress={handleConfirm}
+                onPress={handleConfirmCoupon}
               >
-                {redeem.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Confirm</Text>}
+                {redeem.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Confirm Coupon Activation</Text>}
               </TouchableOpacity>
             </ScrollView>
-          ) : tabMode === 'GET_COUPON' ? (
-            /* GET VIP PASS COUPON FLOW: Generate UPI QR Code */
-            <View style={{ gap: 10 }}>
-              <Text style={styles.label}>👑 SELECT FARMSKING VIP PASS SCHEME</Text>
+          ) : (
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+              <Text style={styles.label}>SELECT MEMBERSHIP PLAN:</Text>
               <View style={{ gap: 8 }}>
-                {([
-                      { id: 'FARMER_BASIC', key: 'PRO', label: '🌾 Kisan Plan', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic 🧾' },
-                      { id: 'FARMER_PRO', key: 'SMART', label: '👷 Boss Plan 🚀', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login 👥 🚀' },
-                      { id: 'FARMER_SUPER', key: 'SUPER', label: '👑 Farmer VIP Plan 💎', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Sub-Accounts Delegation 🛡️' },
-                      ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Plan Trial 🎁', iconName: 'leaf', color: '#166534', sub: `Full ${freeTrialPlan} Plan Access (${freeTrialDays}-Day Free Demo Trial) 🎁` }] : []),
-                    ]
-                ).map((item) => {
-                  const p = item.key as FarmerPlanType;
+                {planOptions.map((item) => {
+                  const p = item.key;
                   const availableVariants = pricingList
                     .filter((it: FarmerPlanPricing) => it.plan === p && it.isActive !== false)
                     .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
-                  
-                  const selectedDays = selectedDaysMap[item.id];
+
+                  const selectedDays = selectedDaysMap[p];
                   const currentVariant =
                     (selectedDays != null
                       ? availableVariants.find((v: FarmerPlanPricing) => Number(v.billingPeriodDays) === Number(selectedDays))
                       : null) ||
                     availableVariants[0] ||
-                    { price: p === 'FREE' ? '0' : p === 'SUPER' ? '999' : p === 'SMART' ? '499' : '299', billingPeriodDays: planCategory === 'FARMER' ? 365 : 30 };
+                    { price: p === 'FREE' ? '0' : p === 'SUPER' ? '999' : p === 'SMART' ? '499' : '199', billingPeriodDays: 365 };
 
-                  const isSelected = selectedOptionId === item.id;
+                  const isSelected = pickedPlan === p;
 
                   return (
                     <TouchableOpacity
-                      key={`FARMER-${item.id}`}
+                      key={item.id}
                       style={[
                         styles.advisorPickRow,
-                        isSelected && { borderColor: item.color, backgroundColor: '#f5f3ff' },
+                        isSelected && { borderColor: item.color, backgroundColor: '#f0fdf4' },
                       ]}
                       activeOpacity={0.85}
-                      onPress={() => {
-                        setSelectedOptionId(item.id);
-                        setPickedPlan(p);
-                      }}
+                      onPress={() => handlePickPlan(p)}
                     >
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -610,53 +580,18 @@ export function FarmerPlanUpgradeModal({
                           <Text style={[styles.advisorPickName, { color: item.color }]}>
                             {item.label}
                           </Text>
-                          {item.key === 'FREE' && (!isExpired && (currentPlan === 'SUPER' || currentPlan === 'FREE')) ? (
-                            <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#86efac' }}>
-                              <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>
-                                ✨ Trial Activated
-                              </Text>
+                          {currentPlan === p ? (
+                            <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: RADIUS.pill }}>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#166534' }}>Current Plan</Text>
                             </View>
                           ) : null}
                         </View>
-                        <Text style={[styles.advisorPickMeta, { color: '#475569', fontWeight: '700' }]}>
+                        <Text style={[styles.advisorPickMeta, { color: '#0f172a', fontWeight: '700' }]}>
                           Price: {p === 'FREE' ? `₹0 (${freeTrialDays} Days Demo)` : `₹${currentVariant.price} / ${currentVariant.billingPeriodDays === 365 ? '1 year' : `${currentVariant.billingPeriodDays} days`}`}
                         </Text>
                         <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
                           {item.sub}
                         </Text>
-
-                        {item.key === 'FREE' && isTrialEligible ? (
-                          <TouchableOpacity
-                            style={{
-                              backgroundColor: '#166534',
-                              paddingHorizontal: 14,
-                              paddingVertical: 9,
-                              borderRadius: RADIUS.md,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 6,
-                              marginTop: 8,
-                            }}
-                            activeOpacity={0.85}
-                            disabled={activateTrial.isPending}
-                            onPress={(e) => {
-                              e.stopPropagation();
-                              handlePickPlan('FREE');
-                            }}
-                          >
-                            {activateTrial.isPending ? (
-                              <ActivityIndicator size="small" color="#ffffff" />
-                            ) : (
-                              <>
-                                <Ionicons name="sparkles" size={16} color="#ffffff" />
-                                <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                                  Get Free Demo {freeTrialDays} Days 🎁
-                                </Text>
-                              </>
-                            )}
-                          </TouchableOpacity>
-                        ) : null}
 
                         {/* Duration Variant Selector Chips */}
                         {availableVariants.length > 1 ? (
@@ -677,9 +612,8 @@ export function FarmerPlanUpgradeModal({
                                     },
                                   ]}
                                   onPress={() => {
-                                    setSelectedOptionId(item.id);
                                     setPickedPlan(p);
-                                    setSelectedDaysMap((prev) => ({ ...prev, [item.id]: Number(v.billingPeriodDays) }));
+                                    setSelectedDaysMap((prev) => ({ ...prev, [p]: Number(v.billingPeriodDays) }));
                                   }}
                                 >
                                   <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDurSelected ? '#ffffff' : '#334155' }}>
@@ -691,7 +625,7 @@ export function FarmerPlanUpgradeModal({
                           </View>
                         ) : null}
                       </View>
-                      <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                      <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
                         <Ionicons
                           name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                           size={22}
@@ -703,78 +637,76 @@ export function FarmerPlanUpgradeModal({
                 })}
               </View>
 
-              <TouchableOpacity
-                style={[styles.submitBtn, { backgroundColor: '#6d28d9', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
-                onPress={() => {
-                  if (!pickedPlan) setPickedPlan(planCategory === 'FARMER' ? 'PRO' : 'SUPER');
-                  setMode('UPI');
-                }}
-              >
-                  <Ionicons name="qr-code-outline" size={18} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>
-                    Activate VIP Pass via UPI ⚡ — {
-                      (() => {
-                        const allOpts = [
-                          { id: 'FARMER_FREE', label: 'Free Plan 🎁', key: 'FREE' },
-                          { id: 'FARMER_BASIC', label: 'Kisan Plan 🌾', key: 'PRO' },
-                          { id: 'FARMER_PRO', label: 'Boss Plan 👷', key: 'SMART' },
-                          { id: 'FARMER_SUPER', label: 'Farmer VIP Plan 👑', key: 'SUPER' },
-                          { id: 'CARE_SILVER', label: 'Crop Advisor 🩺', key: 'SILVER' },
-                          { id: 'CARE_GOLD', label: 'Crop Doctor 🏆', key: 'GOLD' },
-                          { id: 'CARE_ROYAL', label: 'Crop Doctor VIP 👑', key: 'ROYAL' },
-                        ];
-                        const selOpt = allOpts.find((o) => o.id === selectedOptionId) || allOpts[0];
-                        const availableVariants = pricingList
-                          .filter((it: FarmerPlanPricing) => it.plan === selOpt.key && it.isActive !== false)
-                          .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
-                        const selectedDays = selectedDaysMap[selOpt.id];
-                        const currentVariant =
-                          (selectedDays != null
-                            ? availableVariants.find((v: FarmerPlanPricing) => Number(v.billingPeriodDays) === Number(selectedDays))
-                            : null) ||
-                          availableVariants[0] ||
-                          { price: selOpt.key === 'SUPER' ? '999' : selOpt.key === 'SMART' ? '499' : '299' };
-
-                        return `${selOpt.label} (₹${currentVariant.price})`;
-                      })()
-                    }
-                  </Text>
-                </TouchableOpacity>
-
-              {ENABLE_COUPON_SYSTEM ? (
-                <TouchableOpacity style={styles.seePlansBtn} onPress={() => setTabMode('REDEEM_CODE')}>
-                  <Ionicons name="key-outline" size={14} color={theme.primary} />
-                  <Text style={styles.seePlansBtnText}>Have a coupon code? Enter code</Text>
-                </TouchableOpacity>
+              {/* Error Display */}
+              {error ? (
+                <View style={{ backgroundColor: '#fef2f2', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fecaca' }}>
+                  <Text style={styles.errorText}>❌ {error}</Text>
+                </View>
               ) : null}
-            </View>
-          ) : (
-            /* REDEEM CODE / UPGRADE MEMBERSHIP FLOW: Enter Coupon Code */
-            <View style={{ gap: 12 }}>
-              <Text style={styles.label}>Enter your VIP Pass coupon code to upgrade or extend your VIP Pass:</Text>
 
-              <TextInput
-                ref={codeInputRef}
-                style={styles.input}
-                placeholder="e.g. PLAN-A1B2C3"
-                placeholderTextColor="#94a3b8"
-                autoCapitalize="characters"
-                value={code}
-                onChangeText={setCode}
-              />
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-              <TouchableOpacity style={[styles.submitBtn, { backgroundColor: '#0f172a' }]} disabled={preview.isPending} onPress={handleCheckCode}>
-                {preview.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Check Coupon Code</Text>}
+              {/* DIRECT PAYMENT GATEWAY ACTION BUTTON */}
+              <TouchableOpacity
+                style={[styles.submitBtn, isPaying && { opacity: 0.7 }]}
+                disabled={isPaying}
+                onPress={handleProceedToGatewayPayment}
+                activeOpacity={0.88}
+              >
+                {isPaying ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <Ionicons name="shield-checkmark" size={18} color="#ffffff" />
+                    <Text style={styles.submitBtnText}>
+                      {pickedPlan === 'FREE' ? 'Activate Free Demo Trial 🎁' : `Proceed to Pay ₹${currentPayAmount} Securely`}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.seePlansBtn} onPress={() => setTabMode('GET_COUPON')}>
-                <Ionicons name="qr-code-outline" size={14} color={theme.primary} />
-                <Text style={styles.seePlansBtnText}>Don't have a coupon code? Get VIP Pass Coupon via UPI</Text>
-              </TouchableOpacity>
+              {/* COLLAPSIBLE COUPON ACCORDION */}
+              {ENABLE_COUPON_SYSTEM ? (
+                <View style={{ marginTop: 4 }}>
+                  <TouchableOpacity
+                    style={styles.seePlansBtn}
+                    onPress={() => setShowCouponInput((v) => !v)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="pricetag-outline" size={14} color={theme.primary} />
+                    <Text style={styles.seePlansBtnText}>
+                      {showCouponInput ? 'Hide Coupon Box ▲' : 'Have a VIP Pass Coupon Code? Tap here ▼'}
+                    </Text>
+                  </TouchableOpacity>
 
+                  {showCouponInput ? (
+                    <View style={{ backgroundColor: '#f8fafc', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 8, marginTop: 4 }}>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569' }}>
+                        Enter your VIP Pass coupon code below:
+                      </Text>
+                      <TextInput
+                        ref={codeInputRef}
+                        style={styles.input}
+                        placeholder="e.g. PLAN-A1B2C3"
+                        placeholderTextColor="#94a3b8"
+                        autoCapitalize="characters"
+                        value={code}
+                        onChangeText={setCode}
+                      />
+                      <TouchableOpacity
+                        style={[styles.submitBtn, { backgroundColor: '#0f172a', paddingVertical: 10 }]}
+                        disabled={preview.isPending}
+                        onPress={handleCheckCode}
+                      >
+                        {preview.isPending ? <ActivityIndicator color="#ffffff" size="small" /> : <Text style={styles.submitBtnText}>Check Coupon Code</Text>}
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+
+              {/* COMPARISON CHART ACCORDION */}
               <TouchableOpacity style={styles.seePlansBtn} onPress={() => setShowChart((v) => !v)}>
                 <Ionicons name="stats-chart-outline" size={14} color={theme.primary} />
-                <Text style={styles.seePlansBtnText}>{showChart ? 'Hide VIP Pass Features' : 'Compare VIP Pass Features'}</Text>
+                <Text style={styles.seePlansBtnText}>{showChart ? 'Hide Plan Features' : 'Compare VIP Pass Features'}</Text>
                 <Ionicons name={showChart ? 'chevron-up' : 'chevron-down'} size={14} color={theme.primary} />
               </TouchableOpacity>
 
@@ -786,10 +718,10 @@ export function FarmerPlanUpgradeModal({
                   inGrace={inGrace}
                   pricingList={pricingList}
                   onPickPlan={handlePickPlan}
-                  maxFreeCrops={appSettings?.freePlanMaxCrops ?? 3}
+                  maxFreeCrops={settings?.freePlanMaxCrops ?? 3}
                 />
               ) : null}
-            </View>
+            </ScrollView>
           )}
         </View>
       </View>
@@ -797,550 +729,126 @@ export function FarmerPlanUpgradeModal({
   );
 }
 
-function UpiUpgradeFlow({
-  plan,
-  billingPeriodDays,
-  onDone,
-  onSwitchToCode,
-  onPickDifferentPlan,
-}: {
-  plan: FarmerPlanType;
-  billingPeriodDays?: number;
-  onDone: () => void;
-  onSwitchToCode: () => void;
-  onPickDifferentPlan: () => void;
-}) {
-  const { user } = useAuth();
-  const isAdminUser = Boolean(
-    user?.role === 'ADMIN' ||
-    user?.role === 'SUPER_ADMIN' ||
-    (Array.isArray(user?.roles) && (user.roles.includes('ADMIN') || user.roles.includes('SUPER_ADMIN')))
-  );
-  const queryClient = useQueryClient();
-  const initiate = useInitiateFarmerPlanPayment();
-  const submit = useSubmitFarmerPlanPayment();
-  const [selectedPayMethod, setSelectedPayMethod] = useState<'UPI_QR' | 'GATEWAY'>('UPI_QR');
-  const [isAutoDebit, setIsAutoDebit] = useState(true);
-  const [request, setRequest] = useState<InitiateFarmerPlanPaymentResponse | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [autoActivatedData, setAutoActivatedData] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [utr, setUtr] = useState('');
-  const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
-  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-
-  // Auto-generate payment request & UPI link as soon as Pay via UPI is clicked
-  React.useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      setError(null);
-      try {
-        const res = await initiate.mutateAsync({ targetPlan: plan, billingPeriodDays, isAutoDebit });
-        if (isMounted) {
-          setRequest(res);
-          if (res?.activeGateway === 'GATEWAY' || (res?.activeGateway && res?.activeGateway !== 'UPI_DIRECT' && res?.activeGateway !== 'TEST_MODE')) {
-            setSelectedPayMethod('GATEWAY');
-          } else {
-            setSelectedPayMethod('UPI_QR');
-          }
-        }
-      } catch (err: any) {
-        if (isMounted) setError(err?.response?.data?.message ?? 'Could not generate payment link. Try again.');
-      }
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, [plan, billingPeriodDays, isAutoDebit]);
-
-  const handleOpenUpiApp = async () => {
-    if (!request || !request.upiLink) return;
-    try {
-      await Linking.openURL(request.upiLink);
-    } catch {
-      setError('No UPI app found on this device.');
-    }
-  };
-
-  const handlePickScreenshot = async () => {
-    try {
-      const res = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: false,
-        quality: 0.8,
-      });
-      if (!res.canceled && res.assets?.[0]?.uri) {
-        const uri = res.assets[0].uri;
-        setScreenshotUri(uri);
-        setIsUploadingPhoto(true);
-        try {
-          const uploaded = await uploadPhoto(uri);
-          setScreenshotUrl(uploaded.fileUrl);
-        } catch {
-          setError('Could not upload screenshot image. You can still submit payment info without it.');
-        } finally {
-          setIsUploadingPhoto(false);
-        }
-      }
-    } catch {
-      setError('Could not open image picker.');
-    }
-  };
-
-  const handleWhatsAppNotify = () => {
-    if (!request) return;
-    const kingId = request.farmer.kingId || request.farmerId;
-    const planName = (PLAN_COLUMN_META[plan]?.label ?? plan).toUpperCase();
-    const paymentRefCode = `FK-${kingId}-${planName}-${request.id.slice(0, 6).toUpperCase()}`;
-    const utrText = utr.trim() ? `\nUPI Txn ID / UTR: ${utr.trim()}` : '';
-    const text = `Sat Shri Akaal Admin, I have paid ₹${request.amount} for the ${planName} Plan via UPI.\n\nPayment Ref Code: ${paymentRefCode}${utrText}\nKing ID: ${kingId}\nFarmer Name: ${request.farmer.name}\n\nAttaching payment screenshot for verification.`;
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    Linking.openURL(url).catch(() => { });
-  };
-
-  const handleSubmit = async () => {
-    if (!request) return;
-    if (!utr.trim()) {
-      setError('⚠️ UPI Transaction ID / UTR is required!');
-      return;
-    }
-    setError(null);
-    try {
-      const res: any = await submit.mutateAsync({
-        id: request.id,
-        utr: utr.trim(),
-        screenshotUrl: screenshotUrl ?? undefined,
-      });
-      if (res?.isAutoActivated) {
-        setAutoActivatedData(res);
-      }
-      setSubmitted(true);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not submit payment info to admin.');
-    }
-  };
-
-  if (submitted) {
-    if (autoActivatedData) {
-      return (
-        <View style={{ gap: 14, alignItems: 'center', paddingVertical: 12 }}>
-          <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: '#22c55e' }}>
-            <Ionicons name="checkmark-circle" size={48} color="#16a34a" />
-          </View>
-          <View style={{ gap: 6, alignItems: 'center' }}>
-            <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#fde68a' }}>
-              <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#92400e', letterSpacing: 0.5 }}>
-                ⚡ TEST MODE INSTANT AUTO-PAY SUCCESS
-              </Text>
-            </View>
-            <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center' }}>
-              🎉 Payment Successful & VIP Pass Activated!
-            </Text>
-            <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#166534', textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 }}>
-              The <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{autoActivatedData?.plan?.plan || plan} VIP Pass</Text> has been successfully paid and activated on your account in Test Mode. All farm records, bahi-khata, and crop care features are live!
-            </Text>
-            {autoActivatedData?.newEndDate ? (
-              <View style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 14, paddingVertical: 6, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#86efac', marginTop: 4 }}>
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#15803d' }}>
-                  🗓️ Valid Until: {new Date(autoActivatedData.newEndDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </Text>
-              </View>
-            ) : null}
-            {autoActivatedData?.coupon?.code ? (
-              <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#64748b', marginTop: 2 }}>
-                Coupon Reference: {autoActivatedData.coupon.code}
-              </Text>
-            ) : null}
-          </View>
-
-          <TouchableOpacity
-            style={[styles.submitBtn, { width: '100%', backgroundColor: '#16a34a', marginTop: 8 }]}
-            onPress={() => {
-              onDone();
-              if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                window.location.reload();
-              }
-            }}
-          >
-            <Text style={styles.submitBtnText}>Start Using Premium Features Now →</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    return (
-      <View style={{ gap: 12 }}>
-        <View style={styles.successBox}>
-          <Ionicons name="checkmark-circle" size={24} color="#16a34a" />
-          <View style={{ flex: 1, gap: 4 }}>
-            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#15803d' }}>
-              Payment details sent to Admin!
-            </Text>
-            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#166534', lineHeight: 16 }}>
-              Your payment and plan code will be verified by the Admin and activated within 24 hours.
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity style={[styles.submitBtn, { backgroundColor: '#25D366', flexDirection: 'row', justifyContent: 'center', gap: 8 }]} onPress={handleWhatsAppNotify}>
-          <Ionicons name="logo-whatsapp" size={18} color="#ffffff" />
-          <Text style={styles.submitBtnText}>Send Screenshot to Admin on WhatsApp</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.submitBtn} onPress={onDone}>
-          <Text style={styles.submitBtnText}>Done</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  if (initiate.isPending && !request) {
-    return (
-      <View style={{ padding: 30, alignItems: 'center', gap: 12 }}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={{ fontSize: 13, fontFamily: FONT.semiBold, color: '#475569' }}>
-          Generating Superadmin UPI QR Code & Plan Code...
-        </Text>
-      </View>
-    );
-  }
-
-  if (request) {
-    const kingId = request.farmer.kingId || request.farmerId;
-    const planName = (PLAN_COLUMN_META[plan]?.label ?? plan).toUpperCase();
-    const paymentRefCode = `FK-${kingId}-${planName}-${request.id.slice(0, 6).toUpperCase()}`;
-
-    const handlePayOnline = async (gatewayType?: 'RAZORPAY' | 'CASHFREE') => {
-      // 1. Razorpay Flow
-      if (gatewayType === 'RAZORPAY' || request.razorpayOrderId || request.razorpaySubscriptionId) {
-        if (request.razorpayShortUrl) {
-          try {
-            await Linking.openURL(request.razorpayShortUrl);
-            return;
-          } catch {}
-        }
-        if (Platform.OS === 'web' && typeof window !== 'undefined') {
-          const loadScript = () => {
-            return new Promise((resolve) => {
-              if ((window as any).Razorpay) return resolve(true);
-              const script = document.createElement('script');
-              script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-              script.onload = () => resolve(true);
-              script.onerror = () => resolve(false);
-              document.body.appendChild(script);
-            });
-          };
-
-          const loaded = await loadScript();
-          if (loaded && (window as any).Razorpay) {
-            const options: any = {
-              key: request.razorpayKeyId || 'rzp_test_placeholder',
-              amount: Math.round(Number(request.amount) * 100),
-              currency: 'INR',
-              name: 'FarmsKing Technologies',
-              description: `${planName} Plan ${request.isAutoDebit ? 'UPI AutoPay Subscription' : 'Membership'}`,
-              prefill: {
-                name: request.farmer?.name,
-                contact: request.farmer?.mobile,
-              },
-              theme: { color: '#16a34a' },
-              handler: function () {
-                window.location.reload();
-              },
-            };
-            if (request.razorpaySubscriptionId) {
-              options.subscription_id = request.razorpaySubscriptionId;
-            } else if (request.razorpayOrderId) {
-              options.order_id = request.razorpayOrderId;
-            }
-            const rzp = new (window as any).Razorpay(options);
-            rzp.open();
-            return;
-          }
-        }
-      }
-
-      // 2. Cashfree Flow
-      if (request.cashfreeSubscriptionLink) {
-        try {
-          await Linking.openURL(request.cashfreeSubscriptionLink);
-          return;
-        } catch {}
-      }
-      if (request.cashfreeSessionId) {
-        try {
-          await Linking.openURL(`https://payments.cashfree.com/order/#${request.cashfreeSessionId}`);
-          return;
-        } catch {
-          setError('Could not open payment page.');
-          return;
-        }
-      }
-
-      // 3. Fallback direct UPI
-      if (request.upiLink) {
-        handleOpenUpiApp();
-      } else {
-        setError('Payment session could not be initialized.');
-      }
-    };
-
-    return (
-      <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, alignItems: 'center', paddingBottom: 20 }}>
-        <Text style={[styles.label, { alignSelf: 'flex-start', color: '#0f172a', fontWeight: '700' }]}>
-          {planName} Plan Price: ₹{request.amount}
-        </Text>
-
-        {/* 👑 Payment Method Selector: Direct UPI vs Gateway */}
-        <View style={styles.paymentMethodSelectorWrap}>
-          <Text style={styles.paymentSelectorHeader}>SELECT PAYMENT METHOD:</Text>
-          <View style={styles.paymentMethodSelectorRow}>
-            <TouchableOpacity
-              style={[
-                styles.paymentMethodTab,
-                selectedPayMethod === 'UPI_QR' && styles.paymentMethodTabActive,
-              ]}
-              onPress={() => setSelectedPayMethod('UPI_QR')}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name="qr-code"
-                size={14}
-                color={selectedPayMethod === 'UPI_QR' ? '#ffffff' : '#64748b'}
-              />
-              <Text
-                style={[
-                  styles.paymentMethodTabText,
-                  selectedPayMethod === 'UPI_QR' && styles.paymentMethodTabTextActive,
-                ]}
-              >
-                📱 Direct UPI
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.paymentMethodTab,
-                selectedPayMethod === 'GATEWAY' && styles.paymentMethodTabActive,
-              ]}
-              onPress={() => setSelectedPayMethod('GATEWAY')}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name="card"
-                size={14}
-                color={selectedPayMethod === 'GATEWAY' ? '#ffffff' : '#64748b'}
-              />
-              <Text
-                style={[
-                  styles.paymentMethodTabText,
-                  selectedPayMethod === 'GATEWAY' && styles.paymentMethodTabTextActive,
-                ]}
-              >
-                💳 Online Gateway
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 1. DIRECT UPI QR VIEW */}
-        {selectedPayMethod === 'UPI_QR' ? (
-          <>
-            {/* Billing Mode Switcher: Auto-Debit vs One-Time */}
-            <View style={{ width: '100%', flexDirection: 'row', gap: 6, backgroundColor: '#f1f5f9', padding: 3, borderRadius: RADIUS.pill, marginVertical: 2 }}>
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  paddingVertical: 7,
-                  paddingHorizontal: 8,
-                  borderRadius: RADIUS.pill,
-                  backgroundColor: isAutoDebit ? '#16a34a' : 'transparent',
-                  alignItems: 'center',
-                }}
-                onPress={() => setIsAutoDebit(true)}
-              >
-                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isAutoDebit ? '#ffffff' : '#64748b' }}>
-                  ⚡ GPay AutoPay (Auto-Debit)
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  paddingVertical: 7,
-                  paddingHorizontal: 8,
-                  borderRadius: RADIUS.pill,
-                  backgroundColor: !isAutoDebit ? '#16a34a' : 'transparent',
-                  alignItems: 'center',
-                }}
-                onPress={() => setIsAutoDebit(false)}
-              >
-                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: !isAutoDebit ? '#ffffff' : '#64748b' }}>
-                  💳 Pay Once (One-Time)
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {isAutoDebit ? (
-              <View style={{ width: '100%', backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', padding: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="repeat" size={16} color="#059669" />
-                <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#065f46', flex: 1 }}>
-                  Auto-renews periodically via UPI AutoPay. Cancel or pause anytime in Google Pay settings.
-                </Text>
-              </View>
-            ) : null}
-
-            {request.upiLink ? (
-              <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#e2e8f0' }}>
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
-                  Direct UPI / Scan QR (0% Surcharge)
-                </Text>
-                <View style={styles.qrBox}>
-                  <QRCode value={request.upiLink} size={140} />
-                </View>
-                <TouchableOpacity 
-                  style={[styles.submitBtn, { width: '100%', backgroundColor: '#0284c7', flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-                  onPress={handleOpenUpiApp}
-                >
-                  <Ionicons name="phone-portrait-outline" size={16} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>Open UPI App (GPay / PhonePe / Paytm)</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
-
-            <View style={{ width: '100%', marginTop: 6, gap: 6 }}>
-              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                Enter UPI UTR / Transaction Reference No.:
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 426189012345 (12-digit UTR)"
-                placeholderTextColor="#94a3b8"
-                value={utr}
-                onChangeText={setUtr}
-                keyboardType="number-pad"
-              />
-              <TouchableOpacity
-                style={[styles.submitBtn, { backgroundColor: '#15803d' }]}
-                onPress={handleSubmit}
-                disabled={submit.isPending}
-              >
-                {submit.isPending ? (
-                  <ActivityIndicator color="#ffffff" size="small" />
-                ) : (
-                  <Text style={styles.submitBtnText}>Submit Payment & Request Activation</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </>
-        ) : null}
-
-        {/* 3. ONLINE GATEWAYS VIEW */}
-        {selectedPayMethod === 'GATEWAY' ? (
-          <>
-            {request.razorpayOrderId || request.razorpaySubscriptionId || request.activeGateway === 'RAZORPAY' ? (
-              <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
-                <Ionicons name="flash" size={32} color="#0284c7" />
-                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
-                  {isAutoDebit ? 'Set up UPI AutoPay via Razorpay' : 'Instant Checkout via Razorpay'}
-                </Text>
-                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
-                  Supports Google Pay, PhonePe, Paytm, Cards & Netbanking
-                </Text>
-                <TouchableOpacity 
-                  style={[styles.submitBtn, { width: '100%', backgroundColor: '#0284c7', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-                  onPress={() => handlePayOnline('RAZORPAY')}
-                >
-                  <Ionicons name="flash-outline" size={16} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>
-                    {isAutoDebit ? 'Authorize AutoPay on Google Pay (Razorpay)' : 'Pay Now via Razorpay'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
-
-            {request.cashfreeSessionId || request.cashfreeSubscriptionLink || request.activeGateway === 'CASHFREE' ? (
-              <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
-                <Ionicons name="card-outline" size={32} color="#6d28d9" />
-                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
-                  {isAutoDebit ? 'Set up UPI AutoPay via Cashfree' : 'Instant Checkout via Cashfree'}
-                </Text>
-                <TouchableOpacity 
-                  style={[styles.submitBtn, { width: '100%', backgroundColor: '#6d28d9', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-                  onPress={() => handlePayOnline('CASHFREE')}
-                >
-                  <Ionicons name="lock-closed" size={16} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>
-                    {isAutoDebit ? 'Authorize AutoPay on Google Pay (Cashfree)' : 'Pay Online Now (Cashfree)'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
-          </>
-        ) : null}
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      </ScrollView>
-    );
-  }
-
-  return (
-    <View style={{ gap: 10 }}>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      <TouchableOpacity
-        style={styles.submitBtn}
-        disabled={initiate.isPending}
-        onPress={() => {
-          setError(null);
-          initiate.mutateAsync({ targetPlan: plan, billingPeriodDays }).then(setRequest).catch((err: any) => {
-            setError(err?.response?.data?.message ?? 'Could not generate payment link.');
-          });
-        }}
-      >
-        {initiate.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Retry Generating UPI QR Code</Text>}
-      </TouchableOpacity>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <TouchableOpacity onPress={onPickDifferentPlan}>
-          <Text style={styles.seePlansBtnText}>Pick a different plan</Text>
-        </TouchableOpacity>
-        {ENABLE_COUPON_SYSTEM ? (
-          <TouchableOpacity onPress={onSwitchToCode}>
-            <Text style={styles.seePlansBtnText}>Have a coupon code?</Text>
-          </TouchableOpacity>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  card: { width: '100%', maxWidth: 400, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 8, overflow: 'hidden', ...premiumShadow('#000000', 'lg') },
-  headerBanner: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, marginHorizontal: -SPACING.lg, marginTop: -SPACING.lg, marginBottom: 8, borderBottomWidth: 1.5, borderBottomColor: '#10b981' },
-  highlightVipLabelWrap: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#fde68a' },
-  highlightVipLabelText: { fontSize: 10, fontFamily: FONT.extraBold, color: '#92400e', letterSpacing: 0.5 },
-  headerTitleText: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
-  closeBtnIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center' },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  title: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
-  label: { fontSize: 12, fontFamily: FONT.semiBold, color: '#64748b' },
-  chipRow: { flexDirection: 'row', gap: 8, marginVertical: 2 },
-  partnerChip: { flex: 1, paddingVertical: 8, paddingHorizontal: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#f8fafc', alignItems: 'center' },
-  partnerChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#475569' },
-  input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, fontFamily: FONT.medium, backgroundColor: '#f8fafc', color: '#0f172a' },
-  errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },
-  submitBtn: { backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
-  submitBtnSecondary: { backgroundColor: '#0f172a' },
-  submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
-  qrBox: { padding: 12, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1.5, borderColor: '#e2e8f0' },
-  seePlansBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 8 },
-  seePlansBtnText: { color: theme.primary, fontFamily: FONT.bold, fontSize: 12.5 },
-  hintBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#eff6ff', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: '#bfdbfe' },
-  hintText: { flex: 1, fontSize: 11.5, fontFamily: FONT.semiBold, color: '#1d4ed8' },
-  successBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: '#bbf7d0' },
-  successText: { flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#15803d' },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.lg,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 420,
+    maxHeight: '90%',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    gap: 8,
+    overflow: 'hidden',
+    ...premiumShadow('#000000', 'lg'),
+  },
+  headerBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginHorizontal: -SPACING.lg,
+    marginTop: -SPACING.lg,
+    marginBottom: 8,
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#10b981',
+  },
+  highlightVipLabelWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  highlightVipLabelText: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    color: '#92400e',
+    letterSpacing: 0.5,
+  },
+  closeBtnIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    letterSpacing: 0.5,
+  },
+  input: {
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    backgroundColor: '#ffffff',
+    color: '#0f172a',
+  },
+  errorText: {
+    color: '#dc2626',
+    fontFamily: FONT.bold,
+    fontSize: 12,
+  },
+  submitBtn: {
+    backgroundColor: '#16a34a',
+    borderRadius: RADIUS.md,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    ...premiumShadow('#16a34a', 'sm'),
+  },
+  submitBtnText: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
+    fontSize: 13.5,
+  },
+  seePlansBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 6,
+  },
+  seePlansBtnText: {
+    color: theme.primary,
+    fontFamily: FONT.bold,
+    fontSize: 12,
+  },
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#f0fdf4',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  successText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    color: '#15803d',
+  },
   advisorPickRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1348,61 +856,18 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     borderRadius: RADIUS.md,
-    padding: 10,
+    padding: 11,
     backgroundColor: '#ffffff',
   },
-  advisorPickName: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
-  advisorPickMeta: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
-  screenshotNoticeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#f0fdf4',
-    borderRadius: RADIUS.md,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    width: '100%',
-  },
-  screenshotNoticeText: { flex: 1, fontSize: 11.5, fontFamily: FONT.bold, color: '#166534', lineHeight: 16 },
-  paymentMethodSelectorWrap: {
-    width: '100%',
-    marginVertical: 4,
-    gap: 6,
-  },
-  paymentSelectorHeader: {
-    fontSize: 10.5,
-    fontFamily: FONT.extraBold,
-    color: '#64748b',
-    letterSpacing: 0.5,
-  },
-  paymentMethodSelectorRow: {
-    flexDirection: 'row',
-    width: '100%',
-    backgroundColor: '#f1f5f9',
-    padding: 3,
-    borderRadius: RADIUS.pill,
-    gap: 4,
-  },
-  paymentMethodTab: {
-    flex: 1,
-    paddingVertical: 7,
-    paddingHorizontal: 6,
-    borderRadius: RADIUS.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 5,
-  },
-  paymentMethodTabActive: {
-    backgroundColor: '#0284c7',
-  },
-  paymentMethodTabText: {
-    fontSize: 11,
+  advisorPickName: {
+    fontSize: 13,
     fontFamily: FONT.bold,
-    color: '#64748b',
+    color: '#0f172a',
   },
-  paymentMethodTabTextActive: {
-    color: '#ffffff',
+  advisorPickMeta: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 2,
   },
 });

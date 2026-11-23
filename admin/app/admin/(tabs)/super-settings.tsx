@@ -383,6 +383,12 @@ export default function SuperSettingsScreen() {
       gateway: {
         ...prev.gateway,
         activeGateway: gateway,
+        routing: {
+          farmerPlanGateway: gateway,
+          advisorBookingGateway: gateway,
+          gardenStoreGateway: gateway,
+          ecommerceStoreGateway: gateway,
+        },
       },
     }));
   };

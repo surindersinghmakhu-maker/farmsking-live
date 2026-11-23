@@ -541,7 +541,16 @@ export function ThirdPartyServicesSection() {
                       onPress={() => {
                         setLocalConfig({
                           ...localConfig,
-                          gateway: { ...localConfig.gateway, activeGateway: gw.key },
+                          gateway: {
+                            ...localConfig.gateway,
+                            activeGateway: gw.key,
+                            routing: {
+                              farmerPlanGateway: gw.key,
+                              advisorBookingGateway: gw.key,
+                              gardenStoreGateway: gw.key,
+                              ecommerceStoreGateway: gw.key,
+                            },
+                          },
                         });
                         showToast(`⚡ Switched Primary Checkout to ${gw.name}`);
                       }}

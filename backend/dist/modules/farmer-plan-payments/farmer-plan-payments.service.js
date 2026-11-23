@@ -105,7 +105,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         });
         const integrations = await this.appSettingsService.getIntegrations();
         const appSettings = await this.appSettingsService.get();
-        const activeGateway = integrations.gateway.routing?.farmerPlanGateway || 'UPI_DIRECT';
+        const activeGateway = integrations.gateway?.activeGateway || integrations.gateway?.routing?.farmerPlanGateway || 'CASHFREE';
         const upiPayeeVpa = integrations.gateway.providers.upiDirect?.upiId || appSettings.upiId || 'surindersinghmakhu-5@oksbi';
         const upiPayeeName = integrations.gateway.providers.upiDirect?.payeeName || appSettings.upiPayeeName || 'FarmsKing Technologies';
         const upiLink = (0, upi_util_1.buildUpiPaymentLink)({

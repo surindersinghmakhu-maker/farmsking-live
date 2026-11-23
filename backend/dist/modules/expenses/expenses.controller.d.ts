@@ -7,11 +7,11 @@ export declare class ExpensesController {
     constructor(expensesService: ExpensesService);
     listCategories(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        key: string;
-        isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
@@ -19,11 +19,11 @@ export declare class ExpensesController {
     }[]>;
     listAllCategoriesForAdmin(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        key: string;
-        isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
@@ -36,11 +36,11 @@ export declare class ExpensesController {
         sortOrder?: number;
     }): Promise<{
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        key: string;
-        isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
@@ -53,11 +53,11 @@ export declare class ExpensesController {
         isActive?: boolean;
     }): Promise<{
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        key: string;
-        isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
@@ -65,97 +65,97 @@ export declare class ExpensesController {
     }>;
     deleteCategory(id: string): Promise<{
         id: string;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
-        key: string;
-        isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
         sortOrder: number;
     }>;
     create(user: AuthUser, dto: CreateExpenseDto): Promise<{
-        cropCycle: {
-            id: string;
-            cropName: string;
-        } | null;
         category: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            key: string;
-            isActive: boolean;
             isSystem: boolean;
+            key: string;
             labelEn: string;
             labelHi: string;
             icon: string | null;
             sortOrder: number;
         };
+        cropCycle: {
+            id: string;
+            cropName: string;
+        } | null;
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
-        recordedById: string;
-        expenseDate: Date;
-        vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
-        receiptPhotoUrl: string | null;
+        deletedAt: Date | null;
         farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
         machineryId: string | null;
         partyId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        expenseDate: Date;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
+        vendorName: string | null;
+        description: string | null;
+        quantity: number | null;
+        unit: string | null;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     }>;
     findAllForAdmin(): import(".prisma/client").Prisma.PrismaPromise<({
-        party: {
+        category: {
             id: string;
-            mobile: string | null;
-            name: string;
-        } | null;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            isSystem: boolean;
+            key: string;
+            labelEn: string;
+            labelHi: string;
+            icon: string | null;
+            sortOrder: number;
+        };
         farm: {
             id: string;
             name: string;
             owner: {
                 id: string;
-                mobile: string;
                 name: string;
+                mobile: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
             };
         };
+        cropCycle: {
+            id: string;
+            cropName: string;
+        } | null;
+        party: {
+            id: string;
+            name: string;
+            mobile: string | null;
+        } | null;
         plot: {
             id: string;
             name: string;
         } | null;
-        cropCycle: {
-            id: string;
-            cropName: string;
-        } | null;
-        category: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            key: string;
-            isActive: boolean;
-            isSystem: boolean;
-            labelEn: string;
-            labelHi: string;
-            icon: string | null;
-            sortOrder: number;
-        };
         recordedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -164,75 +164,87 @@ export declare class ExpensesController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
-        recordedById: string;
-        expenseDate: Date;
-        vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
-        receiptPhotoUrl: string | null;
+        deletedAt: Date | null;
         farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
         machineryId: string | null;
         partyId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        expenseDate: Date;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
+        vendorName: string | null;
+        description: string | null;
+        quantity: number | null;
+        unit: string | null;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     })[]>;
     findAllForFarm(user: AuthUser, farmId: string): Promise<({
-        cropCycle: {
-            id: string;
-            cropName: string;
-        } | null;
         category: {
             id: string;
+            isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
-            key: string;
-            isActive: boolean;
             isSystem: boolean;
+            key: string;
             labelEn: string;
             labelHi: string;
             icon: string | null;
             sortOrder: number;
         };
+        cropCycle: {
+            id: string;
+            cropName: string;
+        } | null;
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
-        recordedById: string;
-        expenseDate: Date;
-        vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
-        receiptPhotoUrl: string | null;
+        deletedAt: Date | null;
         farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
         machineryId: string | null;
         partyId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        expenseDate: Date;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
+        vendorName: string | null;
+        description: string | null;
+        quantity: number | null;
+        unit: string | null;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     })[]>;
     findOne(user: AuthUser, id: string): Promise<{
+        category: {
+            id: string;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            isSystem: boolean;
+            key: string;
+            labelEn: string;
+            labelHi: string;
+            icon: string | null;
+            sortOrder: number;
+        };
         farm: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
+            notes: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
             soilType: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             deletedAt: Date | null;
-            notes: string | null;
             ownerId: string;
             totalArea: number;
             areaUnit: import(".prisma/client").$Enums.AreaUnit;
@@ -242,99 +254,87 @@ export declare class ExpensesController {
             id: string;
             cropName: string;
         } | null;
-        category: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            key: string;
-            isActive: boolean;
-            isSystem: boolean;
-            labelEn: string;
-            labelHi: string;
-            icon: string | null;
-            sortOrder: number;
-        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
-        recordedById: string;
-        expenseDate: Date;
-        vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
-        receiptPhotoUrl: string | null;
+        deletedAt: Date | null;
         farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
         machineryId: string | null;
         partyId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        expenseDate: Date;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
+        vendorName: string | null;
+        description: string | null;
+        quantity: number | null;
+        unit: string | null;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     }>;
     update(user: AuthUser, id: string, dto: UpdateExpenseDto): Promise<{
+        category: {
+            id: string;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            isSystem: boolean;
+            key: string;
+            labelEn: string;
+            labelHi: string;
+            icon: string | null;
+            sortOrder: number;
+        };
         cropCycle: {
             id: string;
             cropName: string;
         } | null;
-        category: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            key: string;
-            isActive: boolean;
-            isSystem: boolean;
-            labelEn: string;
-            labelHi: string;
-            icon: string | null;
-            sortOrder: number;
-        };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
-        recordedById: string;
-        expenseDate: Date;
-        vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
-        receiptPhotoUrl: string | null;
+        deletedAt: Date | null;
         farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
         machineryId: string | null;
         partyId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        expenseDate: Date;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
+        vendorName: string | null;
+        description: string | null;
+        quantity: number | null;
+        unit: string | null;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     }>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
-        recordedById: string;
-        expenseDate: Date;
-        vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
-        receiptPhotoUrl: string | null;
+        deletedAt: Date | null;
         farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
         machineryId: string | null;
         partyId: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        expenseDate: Date;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
+        vendorName: string | null;
+        description: string | null;
+        quantity: number | null;
+        unit: string | null;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     }>;
 }

@@ -616,15 +616,42 @@ export class FarmerPlansService implements OnModuleInit {
     let extended = false;
     let sleptPlanCreated = false;
 
-    // Strict Downgrade Guard (Rule: "vadde to shota plan nhi kita ja skda")
-    if (isCurrentActive && targetRank < currentRank) {
+    const isAdvisorBooking = Boolean(
+      selectedAdvisorId ||
+      targetPlan === FarmerSubscriptionPlan.GOLD ||
+      targetPlan === FarmerSubscriptionPlan.ROYAL,
+    );
+
+    // Strict Downgrade Guard for Farm Record Plans (Rule: "vadde to shota plan nhi kita ja skda")
+    // Per Rule 8, Crop Care / Doctor consultation bookings are distinct and never blocked by farm record downgrade guards.
+    if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
       throw new BadRequestException(
         `Downgrade is strictly prohibited while an active higher-tier plan (${currentPlanType}) is running. You can only upgrade to a higher tier or renew your current plan.`,
       );
     }
 
+    // 0. Advisor/Doctor Booking for farmer who already holds an active higher-tier Farm Record Plan (Rule 8)
+    if (isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
+      updatedPlan = await this.prisma.farmerPlan.update({
+        where: { farmerId },
+        data: { expiredAt: null, ...(couponId ? { couponId } : {}) },
+      });
+
+      await this.prisma.farmerPlanHistory.create({
+        data: {
+          farmerId,
+          plan: currentPlanType,
+          status: FarmerPlanRecordStatus.ACTIVE,
+          daysGranted,
+          startDate: now,
+          endDate: currentEndDate,
+          couponId,
+          notes: `Doctor/Advisor consultation activated under existing ${currentPlanType} Plan (${daysGranted} days)`,
+        },
+      });
+    }
     // 1. Same Tier Renewal / Extension
-    if (isCurrentActive && targetRank === currentRank) {
+    else if (isCurrentActive && targetRank === currentRank) {
       const baseDate = currentEndDate > now ? currentEndDate : now;
       extended = baseDate.getTime() !== now.getTime();
       const newEndDate = new Date(baseDate.getTime() + daysGranted * DAY_MS);
@@ -720,8 +747,8 @@ export class FarmerPlansService implements OnModuleInit {
     }
 
     let advisorHired = false;
-    if (([FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER, FarmerSubscriptionPlan.VIP] as FarmerSubscriptionPlan[]).includes(targetPlan)) {
-      advisorHired = await this.ensurePremiumAdvisorHire(farmerId, updatedPlan.endDate ?? new Date(now.getTime() + daysGranted * DAY_MS), couponId, selectedAdvisorId);
+    if (selectedAdvisorId || ([FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER, FarmerSubscriptionPlan.VIP, FarmerSubscriptionPlan.GOLD, FarmerSubscriptionPlan.ROYAL] as FarmerSubscriptionPlan[]).includes(targetPlan)) {
+      advisorHired = await this.ensurePremiumAdvisorHire(farmerId, updatedPlan?.endDate ?? new Date(now.getTime() + daysGranted * DAY_MS), couponId, selectedAdvisorId);
     }
 
     await this.trimAdvisorCropsToCap(farmerId, null);

@@ -479,10 +479,31 @@ let FarmerPlansService = class FarmerPlansService {
         let updatedPlan;
         let extended = false;
         let sleptPlanCreated = false;
-        if (isCurrentActive && targetRank < currentRank) {
+        const isAdvisorBooking = Boolean(selectedAdvisorId ||
+            targetPlan === client_1.FarmerSubscriptionPlan.GOLD ||
+            targetPlan === client_1.FarmerSubscriptionPlan.ROYAL);
+        if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
             throw new common_1.BadRequestException(`Downgrade is strictly prohibited while an active higher-tier plan (${currentPlanType}) is running. You can only upgrade to a higher tier or renew your current plan.`);
         }
-        if (isCurrentActive && targetRank === currentRank) {
+        if (isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
+            updatedPlan = await this.prisma.farmerPlan.update({
+                where: { farmerId },
+                data: { expiredAt: null, ...(couponId ? { couponId } : {}) },
+            });
+            await this.prisma.farmerPlanHistory.create({
+                data: {
+                    farmerId,
+                    plan: currentPlanType,
+                    status: client_1.FarmerPlanRecordStatus.ACTIVE,
+                    daysGranted,
+                    startDate: now,
+                    endDate: currentEndDate,
+                    couponId,
+                    notes: `Doctor/Advisor consultation activated under existing ${currentPlanType} Plan (${daysGranted} days)`,
+                },
+            });
+        }
+        else if (isCurrentActive && targetRank === currentRank) {
             const baseDate = currentEndDate > now ? currentEndDate : now;
             extended = baseDate.getTime() !== now.getTime();
             const newEndDate = new Date(baseDate.getTime() + daysGranted * DAY_MS);
@@ -561,8 +582,8 @@ let FarmerPlansService = class FarmerPlansService {
             });
         }
         let advisorHired = false;
-        if ([client_1.FarmerSubscriptionPlan.SMART, client_1.FarmerSubscriptionPlan.SUPER, client_1.FarmerSubscriptionPlan.VIP].includes(targetPlan)) {
-            advisorHired = await this.ensurePremiumAdvisorHire(farmerId, updatedPlan.endDate ?? new Date(now.getTime() + daysGranted * DAY_MS), couponId, selectedAdvisorId);
+        if (selectedAdvisorId || [client_1.FarmerSubscriptionPlan.SMART, client_1.FarmerSubscriptionPlan.SUPER, client_1.FarmerSubscriptionPlan.VIP, client_1.FarmerSubscriptionPlan.GOLD, client_1.FarmerSubscriptionPlan.ROYAL].includes(targetPlan)) {
+            advisorHired = await this.ensurePremiumAdvisorHire(farmerId, updatedPlan?.endDate ?? new Date(now.getTime() + daysGranted * DAY_MS), couponId, selectedAdvisorId);
         }
         await this.trimAdvisorCropsToCap(farmerId, null);
         if (targetPlan !== client_1.FarmerSubscriptionPlan.FREE) {

@@ -57,8 +57,18 @@ export class FarmerPlanPaymentsService {
     const targetRank = PLAN_RANK[dto.targetPlan] ?? 0;
     const isCurrentActive = currentPlanType !== FarmerSubscriptionPlan.FREE && !!effective.endDate && effective.endDate > now;
 
-    // Strict Downgrade Guard (Rule: "vadde to shota plan nhi kita ja skda")
-    if (isCurrentActive && targetRank < currentRank) {
+    const isAdvisorBooking = Boolean(
+      dto.selectedDoctorId ||
+      dto.selectedAdvisorId ||
+      dto.doctorKingId ||
+      dto.advisorKingId ||
+      dto.targetPlan === FarmerSubscriptionPlan.GOLD ||
+      dto.targetPlan === FarmerSubscriptionPlan.ROYAL,
+    );
+
+    // Strict Downgrade Guard for Farm Record Plans (Rule: "vadde to shota plan nhi kita ja skda")
+    // Per Rule 8, Crop Care / Doctor consultation bookings are distinct and never blocked by farm record downgrade guards.
+    if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
       throw new BadRequestException(
         `Downgrade is strictly prohibited. You already have the higher-tier ${currentPlanType} plan active — you cannot downgrade to ${dto.targetPlan}.`,
       );

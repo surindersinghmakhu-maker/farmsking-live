@@ -250,10 +250,10 @@ exports.DEFAULT_INTEGRATIONS_CONFIG = {
         },
         providers: {
             testMode: {
-                enabled: true,
-                autoConfirmOnSubmit: true,
-                label: '⚡ Instant Demo & Test Payment Mode',
-                bypassVerification: true,
+                enabled: false,
+                autoConfirmOnSubmit: false,
+                label: 'Direct Gateway Mode',
+                bypassVerification: false,
             },
             phonepe: {
                 merchantId: process.env.PHONEPE_MERCHANT_ID || '',

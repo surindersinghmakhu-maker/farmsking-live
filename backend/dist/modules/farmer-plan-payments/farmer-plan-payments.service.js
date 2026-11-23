@@ -55,7 +55,13 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         const currentRank = farmer_plans_service_1.PLAN_RANK[currentPlanType] ?? 0;
         const targetRank = farmer_plans_service_1.PLAN_RANK[dto.targetPlan] ?? 0;
         const isCurrentActive = currentPlanType !== client_1.FarmerSubscriptionPlan.FREE && !!effective.endDate && effective.endDate > now;
-        if (isCurrentActive && targetRank < currentRank) {
+        const isAdvisorBooking = Boolean(dto.selectedDoctorId ||
+            dto.selectedAdvisorId ||
+            dto.doctorKingId ||
+            dto.advisorKingId ||
+            dto.targetPlan === client_1.FarmerSubscriptionPlan.GOLD ||
+            dto.targetPlan === client_1.FarmerSubscriptionPlan.ROYAL);
+        if (!isAdvisorBooking && isCurrentActive && targetRank < currentRank) {
             throw new common_1.BadRequestException(`Downgrade is strictly prohibited. You already have the higher-tier ${currentPlanType} plan active — you cannot downgrade to ${dto.targetPlan}.`);
         }
         let pricing = dto.billingPeriodDays
@@ -173,7 +179,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         const activeGateway = isAdvisorBooking
             ? (integrations?.gateway?.routing?.advisorBookingGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT')
             : (integrations?.gateway?.routing?.farmerPlanGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT');
-        const isTestPayment = activeGateway === 'TEST_MODE' || dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
+        const isTestPayment = activeGateway === 'TEST_MODE';
         if (isTestPayment) {
             const actualAdmin = await this.prisma.user.findFirst({ where: { role: { in: [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN] }, deletedAt: null }, select: { id: true } });
             const adminId = actualAdmin?.id || user.id;

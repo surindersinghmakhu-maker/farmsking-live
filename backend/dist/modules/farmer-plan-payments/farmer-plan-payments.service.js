@@ -116,6 +116,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
             payeeName: upiPayeeName,
         });
         let cashfreeSessionId = null;
+        let cashfreePaymentLink = null;
         if (activeGateway === 'CASHFREE') {
             try {
                 const cashfreeRes = await this.cashfreeService.createStandardOrder({
@@ -126,6 +127,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
                     customerName: farmer.name,
                 });
                 cashfreeSessionId = cashfreeRes.paymentSessionId;
+                cashfreePaymentLink = cashfreeRes.paymentLink;
             }
             catch (err) {
             }
@@ -135,6 +137,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
             activeGateway,
             upiLink,
             cashfreeSessionId,
+            cashfreePaymentLink,
         };
     }
     listMine(user) {

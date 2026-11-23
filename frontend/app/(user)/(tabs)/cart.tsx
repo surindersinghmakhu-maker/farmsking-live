@@ -157,8 +157,8 @@ export default function CartScreen() {
       if (paymentMethod === 'ONLINE') {
         try {
           const res = await initiateCashfree.mutateAsync({ id: order.id });
-          if (res?.paymentSessionId) {
-            const checkoutUrl = `https://payments.cashfree.com/order/#${res.paymentSessionId}`;
+          const checkoutUrl = (res as any)?.paymentLink || (res?.paymentSessionId ? `https://payments.cashfree.com/order/#${res.paymentSessionId}` : null);
+          if (checkoutUrl) {
             if (Platform.OS === 'web') {
               window.location.href = checkoutUrl;
               return;

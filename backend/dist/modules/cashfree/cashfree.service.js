@@ -63,6 +63,13 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
             ? 'https://api.cashfree.com/pg'
             : 'https://sandbox.cashfree.com/pg';
     }
+    getCheckoutBaseUrl() {
+        const env = this.configService.get('CASHFREE_ENV') || 'SANDBOX';
+        const isSandbox = env.toUpperCase() !== 'PRODUCTION' || this.appId.startsWith('TEST');
+        return isSandbox
+            ? 'https://payments-test.cashfree.com/order/#'
+            : 'https://payments.cashfree.com/order/#';
+    }
     getHeaders() {
         return {
             'x-client-id': this.appId,
@@ -172,6 +179,7 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
             return {
                 orderId: resData.order_id,
                 paymentSessionId: resData.payment_session_id,
+                paymentLink: `${this.getCheckoutBaseUrl()}${resData.payment_session_id}`,
                 orderStatus: resData.order_status,
             };
         }
@@ -211,6 +219,7 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
             return {
                 orderId: resData.order_id,
                 paymentSessionId: resData.payment_session_id,
+                paymentLink: `${this.getCheckoutBaseUrl()}${resData.payment_session_id}`,
                 orderStatus: resData.order_status,
             };
         }

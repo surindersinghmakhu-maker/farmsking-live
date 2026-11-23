@@ -677,7 +677,7 @@ export class OrdersService {
       data: { phonepeMerchantOrderId: result.orderId, phonepePaymentState: result.orderStatus, paymentStatus: OrderPaymentStatus.PENDING },
     });
 
-    return { paymentSessionId: result.paymentSessionId, orderId: result.orderId };
+    return { paymentSessionId: result.paymentSessionId, orderId: result.orderId, paymentLink: result.paymentLink };
   }
 
   /** Re-checks the live Cashfree status for this order's most recent payment attempt and syncs it locally. */

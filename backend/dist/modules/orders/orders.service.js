@@ -574,7 +574,7 @@ let OrdersService = class OrdersService {
             where: { id },
             data: { phonepeMerchantOrderId: result.orderId, phonepePaymentState: result.orderStatus, paymentStatus: client_1.OrderPaymentStatus.PENDING },
         });
-        return { paymentSessionId: result.paymentSessionId, orderId: result.orderId };
+        return { paymentSessionId: result.paymentSessionId, orderId: result.orderId, paymentLink: result.paymentLink };
     }
     async getCashfreePaymentStatus(user, id) {
         const order = await this.findOneOrThrow(user, id);

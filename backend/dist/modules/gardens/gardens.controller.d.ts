@@ -18,14 +18,14 @@ export declare class GardensController {
         criticalPlantsCount: number;
         activeAssignments: ({
             farmer: {
-                gardenerPlan: {
-                    endDate: Date | null;
-                    plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
-                } | null;
                 id: string;
-                kingId: string | null;
                 mobile: string;
                 name: string;
+                gardenerPlan: {
+                    plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+                    endDate: Date | null;
+                } | null;
+                kingId: string | null;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -51,22 +51,22 @@ export declare class GardensController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            farmerId: string;
+            status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
             deletedAt: Date | null;
             startDate: Date;
             endDate: Date | null;
-            status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
-            notes: string | null;
-            farmerId: string;
             advisorId: string;
-            subscriptionId: string | null;
             assignedById: string | null;
+            subscriptionId: string | null;
+            notes: string | null;
         })[];
         pendingAssignments: ({
             farmer: {
                 id: string;
-                kingId: string | null;
                 mobile: string;
                 name: string;
+                kingId: string | null;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -76,27 +76,27 @@ export declare class GardensController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            farmerId: string;
+            status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
             deletedAt: Date | null;
             startDate: Date;
             endDate: Date | null;
-            status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
-            notes: string | null;
-            farmerId: string;
             advisorId: string;
-            subscriptionId: string | null;
             assignedById: string | null;
+            subscriptionId: string | null;
+            notes: string | null;
         })[];
         recentDiagnoses: ({
-            plant: {
-                id: string;
-                name: string;
-                locationType: string | null;
-            } | null;
             gardener: {
                 id: string;
                 mobile: string;
                 name: string;
             };
+            plant: {
+                id: string;
+                name: string;
+                locationType: string | null;
+            } | null;
         } & {
             id: string;
             createdAt: Date;
@@ -118,15 +118,15 @@ export declare class GardensController {
     }>;
     getBotanicalProfileForDoctor(user: AuthUser, gardenerId: string): Promise<{
         gardener: {
-            gardenerPlan: {
-                startDate: Date;
-                endDate: Date | null;
-                plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
-            } | null;
             id: string;
-            kingId: string | null;
             mobile: string;
             name: string;
+            gardenerPlan: {
+                plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+                startDate: Date;
+                endDate: Date | null;
+            } | null;
+            kingId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -138,8 +138,8 @@ export declare class GardensController {
                     id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    title: string;
                     gardenerId: string;
+                    title: string;
                     nextDueDate: Date;
                     gardenId: string | null;
                     plantId: string;
@@ -173,21 +173,21 @@ export declare class GardensController {
                 }[];
             } & {
                 id: string;
-                name: string;
-                photoUrl: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                deletedAt: Date | null;
+                name: string;
                 gardenerId: string | null;
-                gardenId: string | null;
-                variety: string | null;
+                photoUrl: string | null;
+                deletedAt: Date | null;
+                plantedDate: Date | null;
                 customName: string | null;
                 species: string | null;
+                variety: string | null;
+                gardenId: string | null;
                 locationType: string | null;
                 potSizeInches: number | null;
                 potType: string | null;
                 healthStatus: string;
-                plantedDate: Date | null;
                 healthNotes: string | null;
             })[];
             visits: {
@@ -203,8 +203,8 @@ export declare class GardensController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                title: string;
                 gardenerId: string;
+                title: string;
                 nextDueDate: Date;
                 gardenId: string | null;
                 plantId: string;
@@ -216,14 +216,14 @@ export declare class GardensController {
             }[];
         } & {
             id: string;
-            name: string;
             createdAt: Date;
             updatedAt: Date;
-            area: number | null;
             status: string;
+            name: string;
             gardenerId: string;
             gardenType: import(".prisma/client").$Enums.GardenType;
             location: string | null;
+            area: number | null;
             sunlightExposure: string | null;
             wateringSource: string | null;
             healthScore: number;
@@ -233,8 +233,8 @@ export declare class GardensController {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                title: string;
                 gardenerId: string;
+                title: string;
                 nextDueDate: Date;
                 gardenId: string | null;
                 plantId: string;
@@ -268,21 +268,21 @@ export declare class GardensController {
             }[];
         } & {
             id: string;
-            name: string;
-            photoUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
-            deletedAt: Date | null;
+            name: string;
             gardenerId: string | null;
-            gardenId: string | null;
-            variety: string | null;
+            photoUrl: string | null;
+            deletedAt: Date | null;
+            plantedDate: Date | null;
             customName: string | null;
             species: string | null;
+            variety: string | null;
+            gardenId: string | null;
             locationType: string | null;
             potSizeInches: number | null;
             potType: string | null;
             healthStatus: string;
-            plantedDate: Date | null;
             healthNotes: string | null;
         })[];
         diagnoses: ({
@@ -310,8 +310,8 @@ export declare class GardensController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
         gardenerId: string;
+        title: string;
         nextDueDate: Date;
         gardenId: string | null;
         plantId: string;
@@ -331,14 +331,14 @@ export declare class GardensController {
     }>;
     create(user: AuthUser, dto: CreateGardenDto): import(".prisma/client").Prisma.Prisma__GardenClient<{
         id: string;
-        name: string;
         createdAt: Date;
         updatedAt: Date;
-        area: number | null;
         status: string;
+        name: string;
         gardenerId: string;
         gardenType: import(".prisma/client").$Enums.GardenType;
         location: string | null;
+        area: number | null;
         sunlightExposure: string | null;
         wateringSource: string | null;
         healthScore: number;
@@ -346,29 +346,29 @@ export declare class GardensController {
     findAll(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         plants: {
             id: string;
-            name: string;
-            photoUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
-            deletedAt: Date | null;
+            name: string;
             gardenerId: string | null;
-            gardenId: string | null;
-            variety: string | null;
+            photoUrl: string | null;
+            deletedAt: Date | null;
+            plantedDate: Date | null;
             customName: string | null;
             species: string | null;
+            variety: string | null;
+            gardenId: string | null;
             locationType: string | null;
             potSizeInches: number | null;
             potType: string | null;
             healthStatus: string;
-            plantedDate: Date | null;
             healthNotes: string | null;
         }[];
         schedules: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
             gardenerId: string;
+            title: string;
             nextDueDate: Date;
             gardenId: string | null;
             plantId: string;
@@ -380,14 +380,14 @@ export declare class GardensController {
         }[];
     } & {
         id: string;
-        name: string;
         createdAt: Date;
         updatedAt: Date;
-        area: number | null;
         status: string;
+        name: string;
         gardenerId: string;
         gardenType: import(".prisma/client").$Enums.GardenType;
         location: string | null;
+        area: number | null;
         sunlightExposure: string | null;
         wateringSource: string | null;
         healthScore: number;
@@ -402,8 +402,8 @@ export declare class GardensController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
             gardenerId: string;
+            title: string;
             nextDueDate: Date;
             gardenId: string | null;
             plantId: string;
@@ -423,53 +423,53 @@ export declare class GardensController {
         }[];
     } & {
         id: string;
-        name: string;
-        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        name: string;
         gardenerId: string | null;
-        gardenId: string | null;
-        variety: string | null;
+        photoUrl: string | null;
+        deletedAt: Date | null;
+        plantedDate: Date | null;
         customName: string | null;
         species: string | null;
+        variety: string | null;
+        gardenId: string | null;
         locationType: string | null;
         potSizeInches: number | null;
         potType: string | null;
         healthStatus: string;
-        plantedDate: Date | null;
         healthNotes: string | null;
     })[]>;
     addStandalonePlant(user: AuthUser, dto: CreatePlantDto): Promise<{
         id: string;
-        name: string;
-        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        name: string;
         gardenerId: string | null;
-        gardenId: string | null;
-        variety: string | null;
+        photoUrl: string | null;
+        deletedAt: Date | null;
+        plantedDate: Date | null;
         customName: string | null;
         species: string | null;
+        variety: string | null;
+        gardenId: string | null;
         locationType: string | null;
         potSizeInches: number | null;
         potType: string | null;
         healthStatus: string;
-        plantedDate: Date | null;
         healthNotes: string | null;
     }>;
     getPlantDetails(user: AuthUser, id: string): Promise<{
         garden: {
             id: string;
-            name: string;
             createdAt: Date;
             updatedAt: Date;
-            area: number | null;
             status: string;
+            name: string;
             gardenerId: string;
             gardenType: import(".prisma/client").$Enums.GardenType;
             location: string | null;
+            area: number | null;
             sunlightExposure: string | null;
             wateringSource: string | null;
             healthScore: number;
@@ -478,8 +478,8 @@ export declare class GardensController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
             gardenerId: string;
+            title: string;
             nextDueDate: Date;
             gardenId: string | null;
             plantId: string;
@@ -513,21 +513,21 @@ export declare class GardensController {
         }[];
     } & {
         id: string;
-        name: string;
-        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        name: string;
         gardenerId: string | null;
-        gardenId: string | null;
-        variety: string | null;
+        photoUrl: string | null;
+        deletedAt: Date | null;
+        plantedDate: Date | null;
         customName: string | null;
         species: string | null;
+        variety: string | null;
+        gardenId: string | null;
         locationType: string | null;
         potSizeInches: number | null;
         potType: string | null;
         healthStatus: string;
-        plantedDate: Date | null;
         healthNotes: string | null;
     }>;
     listCareTasks(user: AuthUser, dueToday?: string): import(".prisma/client").Prisma.PrismaPromise<({
@@ -544,8 +544,8 @@ export declare class GardensController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
         gardenerId: string;
+        title: string;
         nextDueDate: Date;
         gardenId: string | null;
         plantId: string;
@@ -559,8 +559,8 @@ export declare class GardensController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
         gardenerId: string;
+        title: string;
         nextDueDate: Date;
         gardenId: string | null;
         plantId: string;
@@ -574,8 +574,8 @@ export declare class GardensController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        title: string;
         gardenerId: string;
+        title: string;
         nextDueDate: Date;
         gardenId: string | null;
         plantId: string;
@@ -650,14 +650,14 @@ export declare class GardensController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
-        recordedById: string;
-        expenseDate: Date;
-        receiptPhotoUrl: string | null;
+        description: string | null;
         gardenId: string;
         plantId: string | null;
         categoryName: string;
+        expenseDate: Date;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     }>;
     listExpenses(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         garden: {
@@ -672,54 +672,54 @@ export declare class GardensController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
-        recordedById: string;
-        expenseDate: Date;
-        receiptPhotoUrl: string | null;
+        description: string | null;
         gardenId: string;
         plantId: string | null;
         categoryName: string;
+        expenseDate: Date;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     })[]>;
     deleteExpense(user: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
-        recordedById: string;
-        expenseDate: Date;
-        receiptPhotoUrl: string | null;
+        description: string | null;
         gardenId: string;
         plantId: string | null;
         categoryName: string;
+        expenseDate: Date;
+        receiptPhotoUrl: string | null;
+        recordedById: string;
     }>;
     findOne(user: AuthUser, id: string): Promise<{
         plants: {
             id: string;
-            name: string;
-            photoUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
-            deletedAt: Date | null;
+            name: string;
             gardenerId: string | null;
-            gardenId: string | null;
-            variety: string | null;
+            photoUrl: string | null;
+            deletedAt: Date | null;
+            plantedDate: Date | null;
             customName: string | null;
             species: string | null;
+            variety: string | null;
+            gardenId: string | null;
             locationType: string | null;
             potSizeInches: number | null;
             potType: string | null;
             healthStatus: string;
-            plantedDate: Date | null;
             healthNotes: string | null;
         }[];
         schedules: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
             gardenerId: string;
+            title: string;
             nextDueDate: Date;
             gardenId: string | null;
             plantId: string;
@@ -731,35 +731,35 @@ export declare class GardensController {
         }[];
     } & {
         id: string;
-        name: string;
         createdAt: Date;
         updatedAt: Date;
-        area: number | null;
         status: string;
+        name: string;
         gardenerId: string;
         gardenType: import(".prisma/client").$Enums.GardenType;
         location: string | null;
+        area: number | null;
         sunlightExposure: string | null;
         wateringSource: string | null;
         healthScore: number;
     }>;
     addPlantToGarden(user: AuthUser, id: string, dto: CreatePlantDto): Promise<{
         id: string;
-        name: string;
-        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        name: string;
         gardenerId: string | null;
-        gardenId: string | null;
-        variety: string | null;
+        photoUrl: string | null;
+        deletedAt: Date | null;
+        plantedDate: Date | null;
         customName: string | null;
         species: string | null;
+        variety: string | null;
+        gardenId: string | null;
         locationType: string | null;
         potSizeInches: number | null;
         potType: string | null;
         healthStatus: string;
-        plantedDate: Date | null;
         healthNotes: string | null;
     }>;
     listGardenPlants(user: AuthUser, id: string): Promise<({
@@ -767,8 +767,8 @@ export declare class GardensController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
             gardenerId: string;
+            title: string;
             nextDueDate: Date;
             gardenId: string | null;
             plantId: string;
@@ -788,21 +788,21 @@ export declare class GardensController {
         }[];
     } & {
         id: string;
-        name: string;
-        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
+        name: string;
         gardenerId: string | null;
-        gardenId: string | null;
-        variety: string | null;
+        photoUrl: string | null;
+        deletedAt: Date | null;
+        plantedDate: Date | null;
         customName: string | null;
         species: string | null;
+        variety: string | null;
+        gardenId: string | null;
         locationType: string | null;
         potSizeInches: number | null;
         potType: string | null;
         healthStatus: string;
-        plantedDate: Date | null;
         healthNotes: string | null;
     })[]>;
 }

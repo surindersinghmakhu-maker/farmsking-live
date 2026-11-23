@@ -382,11 +382,12 @@ export function FarmerPlanUpgradeModal({
         billingPeriodDays: Number(days),
       });
 
-      if (res?.cashfreeSessionId) {
+      const targetGatewayUrl = res?.cashfreePaymentLink || (res?.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null);
+      if (targetGatewayUrl) {
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
-          window.location.href = `https://payments.cashfree.com/order/#${res.cashfreeSessionId}`;
+          window.location.href = targetGatewayUrl;
         } else {
-          await Linking.openURL(`https://payments.cashfree.com/order/#${res.cashfreeSessionId}`);
+          await Linking.openURL(targetGatewayUrl);
         }
       } else if (res?.cashfreeSubscriptionLink) {
         await Linking.openURL(res.cashfreeSubscriptionLink);

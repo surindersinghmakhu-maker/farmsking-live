@@ -1447,12 +1447,13 @@ export default function ShopScreen() {
       } else if (paymentMethod === 'ONLINE') {
         try {
           const res = await initiateCashfree.mutateAsync({ id: order.id });
-          if (res?.paymentSessionId) {
+          const checkoutUrl = (res as any)?.paymentLink || (res?.paymentSessionId ? `https://payments.cashfree.com/order/#${res.paymentSessionId}` : null);
+          if (checkoutUrl) {
             if (Platform.OS === 'web') {
-              window.location.href = `https://payments.cashfree.com/order/#${res.paymentSessionId}`;
+              window.location.href = checkoutUrl;
               return;
             } else {
-              await Linking.openURL(`https://payments.cashfree.com/order/#${res.paymentSessionId}`);
+              await Linking.openURL(checkoutUrl);
             }
           }
         } catch (e: any) {

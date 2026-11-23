@@ -209,8 +209,7 @@ export function CropDoctorCareView() {
   const handleRequestAdvisorReview = async (cropId: string, label: string) => {
     tap();
     if (hireStatus !== 'ACTIVE') {
-      const message = 'You must have an active Advisor Plan and assigned Advisor to submit crops for advisor review.';
-      Platform.OS === 'web' ? alert(message) : Alert.alert('Advisor Required', message);
+      setIsCropCareModalOpen(true);
       return;
     }
     setSubmittingCropId(cropId);

@@ -9,6 +9,7 @@ export declare class CashfreeController {
     createSplitOrder(dto: CreateSplitOrderDto): Promise<{
         orderId: any;
         paymentSessionId: any;
+        paymentLink: string;
         orderStatus: any;
     }>;
     createOrder(user: AuthUser, dto: {
@@ -20,6 +21,7 @@ export declare class CashfreeController {
     }): Promise<{
         orderId: any;
         paymentSessionId: any;
+        paymentLink: string;
         orderStatus: any;
     }>;
     createSubscription(user: AuthUser, dto: {

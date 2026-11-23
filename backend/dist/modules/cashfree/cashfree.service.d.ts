@@ -10,11 +10,13 @@ export declare class CashfreeService {
     private readonly secretKey;
     private readonly baseUrl;
     constructor(configService: ConfigService, prisma: PrismaService);
+    getCheckoutBaseUrl(): string;
     private getHeaders;
     createVendorOnCashfree(dto: CreateCashfreeVendorDto): Promise<any>;
     createSplitOrder(dto: CreateSplitOrderDto): Promise<{
         orderId: any;
         paymentSessionId: any;
+        paymentLink: string;
         orderStatus: any;
     }>;
     createStandardOrder(dto: {
@@ -26,6 +28,7 @@ export declare class CashfreeService {
     }): Promise<{
         orderId: any;
         paymentSessionId: any;
+        paymentLink: string;
         orderStatus: any;
     }>;
     createSubscription(dto: {

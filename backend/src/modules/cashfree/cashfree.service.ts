@@ -28,6 +28,14 @@ export class CashfreeService {
       : 'https://sandbox.cashfree.com/pg';
   }
 
+  getCheckoutBaseUrl(): string {
+    const env = this.configService.get<string>('CASHFREE_ENV') || 'SANDBOX';
+    const isSandbox = env.toUpperCase() !== 'PRODUCTION' || this.appId.startsWith('TEST');
+    return isSandbox
+      ? 'https://payments-test.cashfree.com/order/#'
+      : 'https://payments.cashfree.com/order/#';
+  }
+
   private getHeaders() {
     return {
       'x-client-id': this.appId,
@@ -160,6 +168,7 @@ export class CashfreeService {
       return {
         orderId: resData.order_id,
         paymentSessionId: resData.payment_session_id,
+        paymentLink: `${this.getCheckoutBaseUrl()}${resData.payment_session_id}`,
         orderStatus: resData.order_status,
       };
     } catch (error) {
@@ -207,6 +216,7 @@ export class CashfreeService {
       return {
         orderId: resData.order_id,
         paymentSessionId: resData.payment_session_id,
+        paymentLink: `${this.getCheckoutBaseUrl()}${resData.payment_session_id}`,
         orderStatus: resData.order_status,
       };
     } catch (error) {

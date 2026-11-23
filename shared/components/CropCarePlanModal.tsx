@@ -93,11 +93,12 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
         advisorKingId: !isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
       });
 
-      if (res.cashfreeSessionId) {
+      const targetGatewayUrl = (res as any)?.cashfreePaymentLink || (res.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null);
+      if (targetGatewayUrl) {
         if (Platform.OS === 'web') {
-          window.location.href = `https://payments.cashfree.com/order/#${res.cashfreeSessionId}`;
+          window.location.href = targetGatewayUrl;
         } else {
-          await Linking.openURL(`https://payments.cashfree.com/order/#${res.cashfreeSessionId}`);
+          await Linking.openURL(targetGatewayUrl);
         }
       } else if (res.upiLink) {
         await Linking.openURL(res.upiLink).catch(() => {});

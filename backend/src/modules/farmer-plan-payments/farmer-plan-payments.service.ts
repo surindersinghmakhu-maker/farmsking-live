@@ -134,6 +134,7 @@ export class FarmerPlanPaymentsService {
     });
 
     let cashfreeSessionId: string | null = null;
+    let cashfreePaymentLink: string | null = null;
     if (activeGateway === 'CASHFREE') {
       try {
         const cashfreeRes = await this.cashfreeService.createStandardOrder({
@@ -144,6 +145,7 @@ export class FarmerPlanPaymentsService {
           customerName: farmer.name,
         });
         cashfreeSessionId = cashfreeRes.paymentSessionId;
+        cashfreePaymentLink = cashfreeRes.paymentLink;
       } catch (err) {
         // Fallback gracefully so farmer can always pay via direct UPI
       }
@@ -154,6 +156,7 @@ export class FarmerPlanPaymentsService {
       activeGateway,
       upiLink,
       cashfreeSessionId,
+      cashfreePaymentLink,
     };
   }
 

@@ -157,20 +157,6 @@ export default function CartScreen() {
       if (paymentMethod === 'ONLINE') {
         try {
           const res = await initiateCashfree.mutateAsync({ id: order.id });
-          if (res?.isTestPayment) {
-            const placedOrderNum = order?.orderNumber || 'CONFIRMED';
-            clearCart();
-            setCouponCode('');
-            setAppliedDiscount(null);
-            const msg = `🎉 Test Payment Successful! Order #${placedOrderNum} is Confirmed, Paid & queued for vendor fulfillment.`;
-            if (Platform.OS === 'web') {
-              alert(msg);
-            } else {
-              Alert.alert('Payment Successful 🎉', msg);
-            }
-            router.push('/(user)/(tabs)/orders' as any);
-            return;
-          }
           if (res?.paymentSessionId) {
             const checkoutUrl = `https://payments.cashfree.com/order/#${res.paymentSessionId}`;
             if (Platform.OS === 'web') {

@@ -359,7 +359,7 @@ export function FarmerPlanUpgradeModal({
     setPickedPlan(plan);
     const activeVariants = pricingList.filter((it: FarmerPlanPricing) => it.plan === plan && it.isActive !== false);
     if (activeVariants.length > 0 && !selectedDaysMap[plan]) {
-      setSelectedDaysMap((prev) => ({ ...prev, [plan]: Number(activeVariants[0].billingPeriodDays) }));
+      setSelectedDaysMap((prev: Record<string, number>) => ({ ...prev, [plan]: Number(activeVariants[0].billingPeriodDays) }));
     }
     setShowChart(false);
   };
@@ -613,7 +613,7 @@ export function FarmerPlanUpgradeModal({
                                   ]}
                                   onPress={() => {
                                     setPickedPlan(p);
-                                    setSelectedDaysMap((prev) => ({ ...prev, [p]: Number(v.billingPeriodDays) }));
+                                    setSelectedDaysMap((prev: Record<string, number>) => ({ ...prev, [p]: Number(v.billingPeriodDays) }));
                                   }}
                                 >
                                   <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDurSelected ? '#ffffff' : '#334155' }}>
@@ -668,7 +668,7 @@ export function FarmerPlanUpgradeModal({
                 <View style={{ marginTop: 4 }}>
                   <TouchableOpacity
                     style={styles.seePlansBtn}
-                    onPress={() => setShowCouponInput((v) => !v)}
+                    onPress={() => setShowCouponInput((v: boolean) => !v)}
                     activeOpacity={0.8}
                   >
                     <Ionicons name="pricetag-outline" size={14} color={theme.primary} />
@@ -704,7 +704,7 @@ export function FarmerPlanUpgradeModal({
               ) : null}
 
               {/* COMPARISON CHART ACCORDION */}
-              <TouchableOpacity style={styles.seePlansBtn} onPress={() => setShowChart((v) => !v)}>
+              <TouchableOpacity style={styles.seePlansBtn} onPress={() => setShowChart((v: boolean) => !v)}>
                 <Ionicons name="stats-chart-outline" size={14} color={theme.primary} />
                 <Text style={styles.seePlansBtnText}>{showChart ? 'Hide Plan Features' : 'Compare VIP Pass Features'}</Text>
                 <Ionicons name={showChart ? 'chevron-up' : 'chevron-down'} size={14} color={theme.primary} />

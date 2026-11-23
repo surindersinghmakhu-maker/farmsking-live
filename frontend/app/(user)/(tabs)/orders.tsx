@@ -162,18 +162,7 @@ function OrderCard({ order }: { order: CustomerOrder }) {
   const handlePayNow = async () => {
     try {
       const res = await initiateCashfree.mutateAsync({ id: order.id });
-      if (res?.isTestPayment) {
-        queryClient.invalidateQueries({ queryKey: ['orders'] });
-        queryClient.invalidateQueries({ queryKey: ['my-orders'] });
-        const msg = `🎉 Test Payment Successful! Order #${order.orderNumber} is Confirmed, Paid & queued for vendor fulfillment.`;
-        if (Platform.OS === 'web') {
-          alert(msg);
-        } else {
-          Alert.alert('Payment Successful 🎉', msg);
-        }
-        return;
-      }
-      if (res.paymentSessionId) {
+      if (res?.paymentSessionId) {
         if (Platform.OS === 'web') {
           window.location.href = `https://payments.cashfree.com/order/#${res.paymentSessionId}`;
         } else {

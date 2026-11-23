@@ -71,10 +71,10 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const selectedAdv = availableAdvisors.find((a) => a.id === selectedAdvisorId);
   const isSeniorDoctor = (selectedAdv?.role as any) === 'DOCTOR' || !!(selectedAdv as any)?.isSeniorDoctor;
 
-  const packagePricing = {
-    PRESCRIPTION: Number(selectedAdv?.feePerConsultation) || 99,
-    SEASON: Number(selectedAdv?.feePerCropSeason) || 499,
-    VIP: Number(selectedAdv?.feeVipMonthly) || 1999,
+  const packagePricing: Record<'PRESCRIPTION' | 'SEASON' | 'VIP', number> = {
+    PRESCRIPTION: Number((selectedAdv as any)?.feePerConsultation) || 99,
+    SEASON: Number((selectedAdv as any)?.feePerCropSeason) || 499,
+    VIP: Number((selectedAdv as any)?.feeVipMonthly) || 1999,
   };
 
   const totalPayable = packagePricing[selectedPackage];
@@ -148,7 +148,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
         doctorRole: isSeniorDoctor ? 'Senior Crop Doctor' : 'Certified Farm Advisor',
         specialization: selectedAdv?.specialization || 'Crop Pathology & Field Health',
         kingId: selectedAdv?.kingId || previewData.code,
-        phone: selectedAdv?.mobile || (selectedAdv as any)?.phone || null,
+        phone: (selectedAdv as any)?.mobile || (selectedAdv as any)?.phone || null,
         planKey: (previewData.plan as any) || 'GOLD',
         packageName: 'Coupon Redeemed Plan',
         validUntil: new Date(Date.now() + (previewData.daysGranted || 30) * 24 * 3600 * 1000).toLocaleDateString('en-IN', {

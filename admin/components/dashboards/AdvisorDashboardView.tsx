@@ -25,10 +25,12 @@ import type { FarmerWeatherAlert } from '@/src/api/weather.api';
 import { CropActivitySchedule, AdvisorReviewCropCycle, CropProblem } from '@/src/types/api';
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
+import { DoctorMessengerModal } from '@/src/components/chat/DoctorMessengerModal';
+import { DoctorSettingsConsole } from '@/src/components/DoctorSettingsConsole';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useMyWallet } from '@/src/hooks/useWallet';
 
-type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS' | 'FEES';
+type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS' | 'SETTINGS';
 
 function isScheduleFinishedOrMissing(crop: AdvisorReviewCropCycle): boolean {
   if (!crop.assignedSchedule || !crop.assignedSchedule.trim()) {
@@ -91,15 +93,15 @@ function formatWater(water?: string | null): string {
 }
 
 const TAB_META: Record<TabKey, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; border: string }> = {
-  SUBMISSIONS: { label: 'Requests & Audits', icon: 'cloud-upload', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.12)', border: 'rgba(56, 189, 248, 0.35)' },
+  SUBMISSIONS: { label: 'Requests', icon: 'cloud-upload', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.12)', border: 'rgba(56, 189, 248, 0.35)' },
   DELAYED: { label: 'Delayed Sprays', icon: 'alert-circle', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.35)' },
   TODAY: { label: "Today's Schedule", icon: 'today', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.35)' },
   WEATHER: { label: 'Weather Alerts', icon: 'rainy', color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.12)', border: 'rgba(14, 165, 233, 0.35)' },
   NO_SCHEDULE: { label: 'Unscheduled Crops', icon: 'warning', color: '#fb923c', bg: 'rgba(251, 146, 60, 0.12)', border: 'rgba(251, 146, 60, 0.35)' },
   PROBLEMS: { label: 'Problem Tickets', icon: 'medkit', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.12)', border: 'rgba(244, 63, 94, 0.35)' },
-  FEES: { label: 'Earnings & Governance', icon: 'wallet', color: '#00ff87', bg: 'rgba(0, 255, 135, 0.12)', border: 'rgba(0, 255, 135, 0.35)' },
+  SETTINGS: { label: 'Settings & Plans', icon: 'settings-outline', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)', border: 'rgba(16, 185, 129, 0.35)' },
 };
-const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_SCHEDULE', 'PROBLEMS', 'FEES'];
+const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_SCHEDULE', 'PROBLEMS', 'SETTINGS'];
 
 export interface AuditTableRow {
   id: string;
@@ -381,7 +383,7 @@ export const AdvisorDashboardView: React.FC = () => {
     WEATHER: weatherAlerts?.length ?? 0,
     NO_SCHEDULE: noScheduleCrops.length,
     PROBLEMS: pendingProblems.length,
-    FEES: 0,
+    SETTINGS: 0,
   };
   const isLoadingByTab: Record<TabKey, boolean> = {
     SUBMISSIONS: isLoadingPendingCrops || isLoadingCallRequests || isLoadingPendingFarmers || isLoadingProblems,
@@ -390,11 +392,12 @@ export const AdvisorDashboardView: React.FC = () => {
     WEATHER: isLoadingWeatherAlerts,
     NO_SCHEDULE: isLoadingAcceptedCrops,
     PROBLEMS: isLoadingProblems,
-    FEES: false,
+    SETTINGS: false,
   };
 
   const defaultTab = useMemo<TabKey>(() => TAB_ORDER.find((k) => counts[k] > 0) ?? 'TODAY', []); // eslint-disable-line react-hooks/exhaustive-deps
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
+  const [isMessengerOpen, setIsMessengerOpen] = useState(false);
 
   const handleReject = (cropId: string, cropName: string) => {
     const doReject = () => rejectCrop.mutate({ id: cropId });
@@ -416,8 +419,8 @@ export const AdvisorDashboardView: React.FC = () => {
         <RoleHeader
           currentRole="FARM_ADVISOR"
           profileName={user?.name || 'Advisor'}
-          subtitle="Farm Advisor & Agronomist"
           avatarUrl={user?.photoUrl || undefined}
+          onMessengerPress={() => setIsMessengerOpen(true)}
         />
 
         <View style={styles.content}>
@@ -571,6 +574,12 @@ export const AdvisorDashboardView: React.FC = () => {
             isHostOrAdmin={true}
           />
 
+          <DoctorMessengerModal
+            visible={isMessengerOpen}
+            onClose={() => setIsMessengerOpen(false)}
+            onOpenGroupCall={() => setShowVoiceCallModal(true)}
+          />
+
           {/* Single tabbed card replaces 4 stacked sections — one clear focus at a time */}
           <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, shadowColor: tConfig.shadowColor || '#00ff87' }]}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabRow}>
@@ -682,7 +691,7 @@ export const AdvisorDashboardView: React.FC = () => {
                             color={requestsAuditTab === 'PENDING' ? (isLight ? '#059669' : '#00ff87') : (isLight ? '#64748b' : '#94a3b8')}
                           />
                           <Text style={[styles.requestsMainTabText, { color: requestsAuditTab === 'PENDING' ? (isLight ? '#065f46' : '#ffffff') : (isLight ? '#64748b' : '#94a3b8') }]}>
-                            Pending Requests
+                            Pending
                           </Text>
                           <View style={[
                             styles.requestsMainTabBadge,
@@ -725,7 +734,7 @@ export const AdvisorDashboardView: React.FC = () => {
                             color={requestsAuditTab === 'HISTORY' ? (isLight ? '#059669' : '#00ff87') : (isLight ? '#64748b' : '#94a3b8')}
                           />
                           <Text style={[styles.requestsMainTabText, { color: requestsAuditTab === 'HISTORY' ? (isLight ? '#065f46' : '#ffffff') : (isLight ? '#64748b' : '#94a3b8') }]}>
-                            Audit History
+                            History
                           </Text>
                           <View style={[
                             styles.requestsMainTabBadge,
@@ -1134,110 +1143,8 @@ export const AdvisorDashboardView: React.FC = () => {
                     </View>
                   )}
                 </View>
-              ) : activeTab === 'FEES' ? (
-                <View style={{ gap: 14 }}>
-                  {/* Executive Header */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                    <View style={{ gap: 2 }}>
-                      <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: textColor }}>
-                        Consultation Earnings & Statutory Settlement
-                      </Text>
-                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: subTextColor }}>
-                        Transparent Digital Agronomy Settlement Architecture · ISO 9001:2015 Audited
-                      </Text>
-                    </View>
-
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 6,
-                        backgroundColor: '#10b981',
-                        paddingHorizontal: 14,
-                        paddingVertical: 8,
-                        borderRadius: RADIUS.pill,
-                      }}
-                      activeOpacity={0.85}
-                      onPress={() => router.push('/(partner)/(tabs)/wallet' as never)}
-                    >
-                      <Ionicons name="wallet-outline" size={15} color="#ffffff" />
-                      <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                        Open Advisor Wallet (₹{(wallet?.balance ?? 0).toLocaleString('en-IN')})
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* E-Prescription Calculation Card */}
-                  <View style={{ backgroundColor: isLight ? '#ffffff' : cardBg, borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.2, borderColor: isLight ? '#bbf7d0' : cardBorder }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="receipt-outline" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-                        <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: textColor }}>
-                          E-Prescription & Consultation Settlement Model
-                        </Text>
-                      </View>
-                      <View style={{ backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.xs }}>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>80.3% NET PAYOUT</Text>
-                      </View>
-                    </View>
-
-                    <View style={{ gap: 8 }}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: isLight ? '#334155' : '#cbd5e1' }}>Farmer Consultation Charge (Set Rate):</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>₹100.00</Text>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>FarmsKing Platform Infrastructure & R&D (15%):</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹15.00</Text>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>Statutory GST (18% on Platform Fee):</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.70</Text>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>Secure Payment Gateway Processing (2%):</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.00</Text>
-                      </View>
-
-                      <View style={{ height: 1, backgroundColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)', marginVertical: 4 }} />
-
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Ionicons name="checkmark-circle" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-                          <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>
-                            Net Credited to Advisor Wallet:
-                          </Text>
-                        </View>
-                        <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>₹80.30</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Statutory & ISO Disclaimers */}
-                  <View style={{ backgroundColor: isLight ? '#f8fafc' : cardBg, borderRadius: RADIUS.md, padding: 14, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : cardBorder, gap: 8 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="shield-checkmark" size={15} color="#38bdf8" />
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isLight ? '#0284c7' : '#38bdf8' }}>
-                        Statutory Compliance & Banking Settlement
-                      </Text>
-                    </View>
-                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor, lineHeight: 16 }}>
-                      All advisory fees are collected digitally via RBI-approved payment gateways (Cashfree / UPI AutoPay) and automatically reconciled under ISO 9001:2015 agronomy quality management protocols. Wallet balances can be withdrawn directly to your verified bank account at any time.
-                    </Text>
-                    <View style={{ height: 1, backgroundColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)' }} />
-                    <View style={{ gap: 2 }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isLight ? '#475569' : '#cbd5e1' }}>
-                        FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U62013PB2026PTC070389 · PAN: AAHCF3566C
-                      </Text>
-                      <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' }}>
-                        Registered Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601 · DPDPA 2023 Compliant
-                      </Text>
-                    </View>
-                  </View>
-                </View>
+              ) : activeTab === 'SETTINGS' ? (
+                <DoctorSettingsConsole advisorId={user?.id} />
               ) : (
                 <ScheduleList
                   items={activeTab === 'DELAYED' ? delayedSchedule : todaySchedule}

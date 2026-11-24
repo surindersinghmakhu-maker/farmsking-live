@@ -203,7 +203,7 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
       {headerComponent}
 
       <View style={styles.container}>
-        {/* SLEEK CROP GALLERY OVERVIEW CARD */}
+        {/* SLEEK COMPACT CROP GALLERY OVERVIEW STRIP */}
         <LinearGradient
           colors={['#090e17', '#0f172a', '#062817']}
           start={{ x: 0, y: 0 }}
@@ -211,18 +211,19 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
           style={styles.heroCard}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-            <View style={{ gap: 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons name="images" size={16} color="#4ade80" />
               <Text style={styles.heroTitle}>Crop Gallery</Text>
               <Text style={styles.heroSubtitle}>
-                7-Day Field Photo & Video Records (Sunday–Saturday)
+                · 7-Day Field Photo Records
               </Text>
             </View>
             {(() => {
               const cw = getCalendarWeekRange();
               return (
-                <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.18)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#4ade80' }}>
+                <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.18)', paddingHorizontal: 8, paddingVertical: 2.5, borderRadius: 5, borderWidth: 1, borderColor: '#4ade80' }}>
                   <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#4ade80', letterSpacing: 0.3 }}>
-                    CYCLE DAY {cw.dayNumber}/7 ({cw.dayName.toUpperCase()})
+                    DAY {cw.dayNumber}/7 ({cw.dayName.toUpperCase()}) · {cw.daysRemaining}D LEFT
                   </Text>
                 </View>
               );
@@ -232,17 +233,16 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
 
         {/* SECTION HEADING */}
         <View style={styles.sectionHeaderRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Ionicons name="images" size={18} color={isDark ? '#4ade80' : '#15803d'} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Your Crops Gallery ({crops.length})
+              Active Crops ({crops.length})
             </Text>
           </View>
           {isLoadingStatuses ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <ActivityIndicator size="small" color="#16a34a" />
-              <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: subTextColor }}>
-                Syncing gallery...
+              <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: subTextColor }}>
+                Syncing...
               </Text>
             </View>
           ) : null}
@@ -250,10 +250,10 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
 
         {crops.length === 0 ? (
           <View style={[styles.emptyHubBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <Ionicons name="leaf-outline" size={34} color={subTextColor} />
+            <Ionicons name="leaf-outline" size={30} color={subTextColor} />
             <Text style={[styles.emptyHubTitle, { color: textColor }]}>No Active Crops Found</Text>
             <Text style={[styles.emptyHubSub, { color: subTextColor }]}>
-              Add a crop first in the Active Crops tab, then you can create 7-day Crop Gallery uploads for each plot.
+              Add a crop first in the Active Crops tab to record weekly photos.
             </Text>
           </View>
         ) : (
@@ -276,8 +276,7 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
               };
 
               const hasUploadedPhotosThisWeek = Boolean(st.activePhotos && st.activePhotos.length > 0);
-              const dayOfCycle = cw.dayNumber; // Sunday is 1, Saturday is 7
-              const progressPct = Math.min(100, Math.max(14, Math.round((dayOfCycle / 7) * 100)));
+              const dayOfCycle = cw.dayNumber;
 
               return (
                 <View
@@ -295,73 +294,36 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                     },
                   ]}
                 >
-                  {/* HEADER: CROP NAME + STATUS PILL */}
+                  {/* TOP ROW: CROP TITLE + STATUS BADGE */}
                   <View style={styles.cropCardHeader}>
-                    <View style={{ flex: 1, gap: 2 }}>
+                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       <Text style={[styles.cropTitle, { color: textColor }]} numberOfLines={1}>
                         {crop.cropName}
                       </Text>
                       <Text style={[styles.cropSub, { color: subTextColor }]} numberOfLines={1}>
-                        {crop.fieldName} {crop.area ? `· ${crop.area}` : ''}
+                        · {crop.fieldName}{crop.area ? ` (${crop.area})` : ''}
                       </Text>
                     </View>
 
                     {hasUploadedPhotosThisWeek ? (
                       <View style={styles.statusPillActive}>
-                        <Ionicons name="checkmark-circle" size={12} color="#15803d" />
+                        <Ionicons name="checkmark-circle" size={11} color="#15803d" />
                         <Text style={styles.statusPillActiveText}>
-                          Active · Day {dayOfCycle}/7 ({cw.dayName})
+                          {st.activePhotoCount}/5 Photos{st.hasActiveVideo ? ' · Video' : ''}
                         </Text>
                       </View>
                     ) : (
-                      <View style={[styles.statusPillReady, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', borderColor: cardBorder }]}>
-                        <Ionicons name="calendar-outline" size={12} color={subTextColor} />
-                        <Text style={[styles.statusPillReadyText, { color: subTextColor }]}>
-                          Week Day {dayOfCycle}/7 ({cw.dayName})
-                        </Text>
+                      <View style={[styles.statusPillReady, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#fef3c7', borderColor: isDark ? cardBorder : '#fde68a' }]}>
+                        <Ionicons name="time-outline" size={11} color="#b45309" />
+                        <Text style={styles.statusPillReadyText}>Pending</Text>
                       </View>
                     )}
                   </View>
 
-                  {/* SUNDAY TO SATURDAY CYCLE TRACKER BAR */}
-                  <View
-                    style={[
-                      styles.cycleBox,
-                      { backgroundColor: innerBg, borderColor: cardBorder },
-                    ]}
-                  >
-                    <View style={styles.cycleLabelRow}>
-                      <Text style={[styles.cycleLabel, { color: hasUploadedPhotosThisWeek ? '#15803d' : (isDark ? '#38bdf8' : '#0284c7') }]}>
-                        Day {dayOfCycle}/7 ({cw.dayName}) · {cw.daysRemaining}d left
-                      </Text>
-                      <View style={styles.contentsChipsRow}>
-                        <View style={styles.contentChip}>
-                          <Ionicons name="images" size={10} color={hasUploadedPhotosThisWeek ? '#15803d' : subTextColor} />
-                          <Text style={styles.contentChipText}>{st.activePhotoCount}/5 Photos</Text>
-                        </View>
-                        <View style={styles.contentChip}>
-                          <Ionicons name="videocam" size={10} color={st.hasActiveVideo ? '#dc2626' : subTextColor} />
-                          <Text style={styles.contentChipText}>
-                            {st.hasActiveVideo ? 'Video' : 'No Vid'}
-                          </Text>
-                        </View>
-                        <View style={styles.contentChip}>
-                          <Ionicons name="mic" size={10} color={st.hasActiveAudio ? '#0284c7' : subTextColor} />
-                          <Text style={styles.contentChipText}>
-                            {st.hasActiveAudio ? 'Voice' : 'No Voice'}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.progressTrack}>
-                      <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: hasUploadedPhotosThisWeek ? '#16a34a' : '#0284c7' }]} />
-                    </View>
-                  </View>
-
-                  {/* ACTIVE PHOTOS PREVIEW STRIP (WHEN SAVED) OR NO PHOTO PREVIEW */}
+                  {/* MIDDLE ROW: MINI THUMBNAILS OR SINGLE-LINE PROMPT */}
                   {hasUploadedPhotosThisWeek ? (
                     <View style={styles.cardPhotoStrip}>
-                      {st.activePhotos.slice(0, 6).map((photoUrl, pIdx) => {
+                      {st.activePhotos.slice(0, 5).map((photoUrl, pIdx) => {
                         const resolved = resolveCropMediaDisplayUri(photoUrl) || photoUrl;
                         return (
                           <TouchableOpacity
@@ -375,99 +337,98 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                               style={styles.cardPhotoThumbImg}
                               resizeMode="cover"
                             />
-                            <View style={styles.cardPhotoThumbBadge}>
-                              <Text style={styles.cardPhotoThumbBadgeText}>#{pIdx + 1}</Text>
-                            </View>
                           </TouchableOpacity>
                         );
                       })}
-                      {st.activePhotos.length < 6 ? (
+                      {st.hasActiveVideo && (
+                        <View style={styles.mediaTypeIndicator}>
+                          <Ionicons name="videocam" size={10} color="#ef4444" />
+                          <Text style={styles.mediaTypeText}>Video</Text>
+                        </View>
+                      )}
+                      {st.hasActiveAudio && (
+                        <View style={styles.mediaTypeIndicator}>
+                          <Ionicons name="mic" size={10} color="#0284c7" />
+                        </View>
+                      )}
+                      {st.activePhotos.length < 5 ? (
                         <TouchableOpacity
                           style={styles.cardAddPhotoSlot}
                           activeOpacity={0.8}
                           onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
                         >
-                          <Ionicons name="camera-outline" size={14} color="#15803d" />
-                          <Text style={styles.cardAddPhotoSlotText}>+ Add</Text>
+                          <Ionicons name="add" size={13} color="#15803d" />
                         </TouchableOpacity>
                       ) : null}
                     </View>
                   ) : (
-                    /* COMPACT EMPTY PROMPT */
-                    <View
-                      style={[
-                        styles.cardEmptyPrompt,
-                        { borderColor: cardBorder, backgroundColor: innerBg },
-                      ]}
-                    >
-                      <Ionicons name="images-outline" size={16} color={subTextColor} />
-                      <Text style={[styles.cardEmptyPromptTitle, { color: textColor, flex: 1 }]}>
-                        No photos uploaded this week
+                    <View style={[styles.cardMiniEmptyStrip, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <Ionicons name="camera-outline" size={13} color={subTextColor} />
+                      <Text style={[styles.cardMiniEmptyText, { color: subTextColor }]}>
+                        No uploads this week · Day {dayOfCycle}/7 ({cw.dayName})
                       </Text>
-                      <TouchableOpacity
-                        style={styles.cardUploadMiniBtn}
-                        activeOpacity={0.85}
-                        onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
-                      >
-                        <Ionicons name="camera" size={12} color="#ffffff" />
-                        <Text style={styles.cardUploadMiniBtnText}>+ Upload</Text>
-                      </TouchableOpacity>
                     </View>
                   )}
 
-                  {/* ACTION BUTTONS */}
+                  {/* BOTTOM ROW: CYCLE DAYS & COMPACT ACTION BUTTONS */}
                   <View style={styles.cardActionsRow}>
-                    <TouchableOpacity
-                      style={[
-                        styles.primaryCardBtn,
-                        { backgroundColor: st.isActiveCycle ? '#0f172a' : '#16a34a' },
-                      ]}
-                      activeOpacity={0.85}
-                      onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
-                    >
-                      <Ionicons
-                        name={st.isActiveCycle ? 'eye' : 'add-circle'}
-                        size={14}
-                        color="#ffffff"
-                      />
-                      <Text style={styles.primaryCardBtnText}>
-                        {st.isActiveCycle ? 'Open Gallery' : 'Add to Gallery'}
-                      </Text>
-                    </TouchableOpacity>
+                    <Text style={[styles.cycleDayText, { color: subTextColor }]}>
+                      Day {dayOfCycle}/7 · {cw.daysRemaining}d left
+                    </Text>
 
-                    <TouchableOpacity
-                      style={[
-                        styles.secondaryCardBtn,
-                        {
-                          backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
-                          borderColor: cardBorder,
-                        },
-                      ]}
-                      activeOpacity={0.85}
-                      onPress={() => onOpenMediaRecord(crop, 'ARCHIVE')}
-                    >
-                      <Ionicons name="archive-outline" size={13} color={textColor} />
-                      <Text style={[styles.secondaryCardBtnText, { color: textColor }]}>
-                        Past Archive ({st.totalBatches})
-                      </Text>
-                    </TouchableOpacity>
-
-                    {onOpenCropActivities ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
                       <TouchableOpacity
                         style={[
-                          styles.iconOnlyBtn,
+                          styles.primaryCardBtn,
+                          { backgroundColor: hasUploadedPhotosThisWeek ? '#0f172a' : '#16a34a' },
+                        ]}
+                        activeOpacity={0.85}
+                        onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
+                      >
+                        <Ionicons
+                          name={hasUploadedPhotosThisWeek ? 'eye' : 'camera'}
+                          size={12}
+                          color="#ffffff"
+                        />
+                        <Text style={styles.primaryCardBtnText}>
+                          {hasUploadedPhotosThisWeek ? 'View' : 'Upload'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.secondaryCardBtn,
                           {
-                            backgroundColor: isDark ? '#1e293b' : '#eff6ff',
-                            borderColor: isDark ? 'rgba(56,189,248,0.35)' : '#bfdbfe',
+                            backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                            borderColor: cardBorder,
                           },
                         ]}
                         activeOpacity={0.85}
-                        onPress={() => onOpenCropActivities(crop)}
-                        accessibilityLabel={`Open Crop Activities for ${crop.cropName}`}
+                        onPress={() => onOpenMediaRecord(crop, 'ARCHIVE')}
                       >
-                        <Ionicons name="calendar-outline" size={14} color="#0284c7" />
+                        <Ionicons name="archive-outline" size={11} color={textColor} />
+                        <Text style={[styles.secondaryCardBtnText, { color: textColor }]}>
+                          Archive ({st.totalBatches})
+                        </Text>
                       </TouchableOpacity>
-                    ) : null}
+
+                      {onOpenCropActivities ? (
+                        <TouchableOpacity
+                          style={[
+                            styles.iconOnlyBtn,
+                            {
+                              backgroundColor: isDark ? '#1e293b' : '#eff6ff',
+                              borderColor: isDark ? 'rgba(56,189,248,0.35)' : '#bfdbfe',
+                            },
+                          ]}
+                          activeOpacity={0.85}
+                          onPress={() => onOpenCropActivities(crop)}
+                          accessibilityLabel={`Crop Activities`}
+                        >
+                          <Ionicons name="calendar-outline" size={13} color="#0284c7" />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
                   </View>
                 </View>
               );

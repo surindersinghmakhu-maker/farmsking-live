@@ -27,6 +27,12 @@ __decorate([
 ], InitiateFarmerPlanPaymentDto.prototype, "billingPeriodDays", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], InitiateFarmerPlanPaymentDto.prototype, "customAmount", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], InitiateFarmerPlanPaymentDto.prototype, "isAutoDebit", void 0);
@@ -56,4 +62,15 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], InitiateFarmerPlanPaymentDto.prototype, "cropCycleId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], InitiateFarmerPlanPaymentDto.prototype, "useWalletPoints", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], InitiateFarmerPlanPaymentDto.prototype, "pointsToDeduct", void 0);
 //# sourceMappingURL=initiate-farmer-plan-payment.dto.js.map

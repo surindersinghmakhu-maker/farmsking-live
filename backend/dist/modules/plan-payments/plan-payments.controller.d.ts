@@ -8,6 +8,8 @@ export declare class PlanPaymentsController {
     initiate(user: AuthUser, farmerId?: string): Promise<{
         activeGateway: string;
         upiLink: string;
+        payeeVpa: any;
+        payeeName: any;
         farmer: {
             id: string;
             kingId: string | null;

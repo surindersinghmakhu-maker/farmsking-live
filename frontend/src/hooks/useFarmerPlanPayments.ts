@@ -22,6 +22,9 @@ export function useInitiateFarmerPlanPayment() {
       advisorKingId,
       isAutoDebit,
       preferredGateway,
+      useWalletPoints,
+      pointsToDeduct,
+      customAmount,
     }: {
       targetPlan: FarmerPlanType;
       billingPeriodDays?: number;
@@ -32,6 +35,9 @@ export function useInitiateFarmerPlanPayment() {
       advisorKingId?: string;
       isAutoDebit?: boolean;
       preferredGateway?: 'CASHFREE' | 'RAZORPAY' | 'PHONEPE' | 'UPI_DIRECT';
+      useWalletPoints?: boolean;
+      pointsToDeduct?: number;
+      customAmount?: number;
     }) =>
       api.initiateFarmerPlanPayment(
         targetPlan,
@@ -43,6 +49,9 @@ export function useInitiateFarmerPlanPayment() {
         advisorKingId,
         isAutoDebit,
         preferredGateway,
+        useWalletPoints,
+        pointsToDeduct,
+        customAmount,
       ),
   });
 }

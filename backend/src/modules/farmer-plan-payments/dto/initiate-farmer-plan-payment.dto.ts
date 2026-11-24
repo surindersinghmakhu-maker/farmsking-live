@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { FarmerSubscriptionPlan } from '@prisma/client';
 
 export class InitiateFarmerPlanPaymentDto {
@@ -9,6 +9,11 @@ export class InitiateFarmerPlanPaymentDto {
   @IsInt()
   @Min(1)
   billingPeriodDays?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  customAmount?: number;
 
   @IsOptional()
   @IsBoolean()
@@ -33,4 +38,13 @@ export class InitiateFarmerPlanPaymentDto {
   @IsOptional()
   @IsString()
   cropCycleId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  useWalletPoints?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  pointsToDeduct?: number;
 }

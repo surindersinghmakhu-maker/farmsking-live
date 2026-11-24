@@ -16,11 +16,34 @@ import { GrantFarmerPlanDaysDto } from './dto/grant-farmer-plan-days.dto';
 import { UpdateFarmerPlanPricingDto } from './dto/update-farmer-plan-pricing.dto';
 import { ChooseAdvisorDto } from './dto/choose-advisor.dto';
 import { ApplyCouponToFarmerDto } from './dto/apply-coupon-to-farmer.dto';
+import { CancelFarmerPlanDto } from './dto/cancel-farmer-plan.dto';
+import { UpdateFarmerPlanConfigsDto } from './dto/update-farmer-plan-configs.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('farmer-plans')
 export class FarmerPlansController {
   constructor(private readonly farmerPlansService: FarmerPlansService) {}
+
+  /** Public: get live farmer plan configurations, feature checkboxes & special offers */
+  @Public()
+  @Get('configs')
+  getPlanConfigs() {
+    return this.farmerPlansService.getPlanConfigs();
+  }
+
+  /** Admin/Super Admin: update farmer plan configurations, feature checkboxes, offers and store COD toggle */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Patch('configs')
+  updatePlanConfigs(@CurrentUser() user: AuthUser, @Body() dto: UpdateFarmerPlanConfigsDto) {
+    return this.farmerPlansService.updatePlanConfigs(user, dto);
+  }
+
+  /** Farmer: cancel accidental plan purchase within 24 hours of activation (100% refund credited as Wallet Points) */
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('cancel-request')
+  cancelPlanRequest(@CurrentUser() user: AuthUser, @Body() dto: CancelFarmerPlanDto) {
+    return this.farmerPlansService.cancelPlanRequest(user, dto);
+  }
 
   /** Farmer: view their current active plan details */
   @Roles(

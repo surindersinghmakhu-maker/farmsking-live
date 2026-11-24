@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WalletService } from '../wallet/wallet.service';
 import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { hasActiveRole } from '../../common/utils/auth-user.util';
 import { CreateAdvisorAssignmentDto } from './dto/create-advisor-assignment.dto';
@@ -15,6 +16,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     private readonly notificationsService: NotificationsService,
     private readonly walletService: WalletService,
     private readonly whatsAppGroupSyncService: WhatsAppGroupSyncService,
+    private readonly appSettingsService: AppSettingsService,
   ) {}
 
 
@@ -1236,5 +1238,137 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     }
 
     return updated;
+  }
+
+  /**
+   * Fetch complete Doctor Settings & Communication Channels
+   */
+  async getDoctorSettings(user: AuthUser, targetAdvisorId?: string) {
+    const advisorId = targetAdvisorId || user.id;
+    const advisor = await this.prisma.user.findUnique({
+      where: { id: advisorId },
+      select: {
+        id: true,
+        name: true,
+        mobile: true,
+        kingId: true,
+        photoUrl: true,
+        qualification: true,
+        profileTitle: true,
+        specialization: true,
+        bio: true,
+        feePerConsultation: true,
+        feePerCropSeason: true,
+        feeVipMonthly: true,
+        specializedCrops: true,
+        canTakeCalls: true,
+        whatsappGroupEnabled: true,
+      },
+    });
+
+    if (!advisor) {
+      throw new NotFoundException('Advisor not found.');
+    }
+
+    const appSetting = await this.appSettingsService.get();
+    const storedDoctorSettings = (appSetting.featureFlags as any)?.doctorSettings?.[advisorId] || {};
+
+    return {
+      advisorId,
+      advisorName: advisor.name,
+      advisorMobile: advisor.mobile,
+      advisorKingId: advisor.kingId,
+
+      // 1. Contact Privacy & Channels
+      showMobileNumber: storedDoctorSettings.showMobileNumber ?? false,
+      enableWhatsApp: storedDoctorSettings.enableWhatsApp ?? (advisor.whatsappGroupEnabled ?? true),
+      enableGsmCalling: storedDoctorSettings.enableGsmCalling ?? (advisor.canTakeCalls ?? false),
+      enableInAppAudioCall: storedDoctorSettings.enableInAppAudioCall ?? true,
+      enableVideoCall: storedDoctorSettings.enableVideoCall ?? true,
+
+      // 2. Plans & Pricing
+      monthlyFee: storedDoctorSettings.monthlyFee ?? Number(advisor.feeVipMonthly ?? 299),
+      monthlyCallLimit: storedDoctorSettings.monthlyCallLimit ?? 5,
+      monthlyInAppCallLimit: storedDoctorSettings.monthlyInAppCallLimit ?? 3,
+      monthlyVideoCallLimit: storedDoctorSettings.monthlyVideoCallLimit ?? 2,
+      monthlyVideoAllowed: storedDoctorSettings.monthlyVideoAllowed ?? true,
+      monthlyChatEnabled: storedDoctorSettings.monthlyChatEnabled ?? true,
+
+      cropSeasonFee: storedDoctorSettings.cropSeasonFee ?? Number(advisor.feePerCropSeason ?? 499),
+      cropSeasonCallLimit: storedDoctorSettings.cropSeasonCallLimit ?? 10,
+      cropSeasonVideoAllowed: storedDoctorSettings.cropSeasonVideoAllowed ?? true,
+
+      singleConsultationFee: storedDoctorSettings.singleConsultationFee ?? Number(advisor.feePerConsultation ?? 150),
+      allCropsSelected: storedDoctorSettings.allCropsSelected ?? true,
+      specializedCrops: storedDoctorSettings.specializedCrops ?? advisor.specializedCrops ?? ['Wheat', 'Paddy', 'Cotton', 'Mustard', 'Vegetables'],
+      freeConsultationEnabled: storedDoctorSettings.freeConsultationEnabled ?? false,
+
+      // 3. Availability & Practice Timings
+      availabilityStatus: storedDoctorSettings.availabilityStatus ?? 'AVAILABLE',
+      workingHoursStart: storedDoctorSettings.workingHoursStart ?? '09:00 AM',
+      workingHoursEnd: storedDoctorSettings.workingHoursEnd ?? '07:00 PM',
+      emergencyConsultation: storedDoctorSettings.emergencyConsultation ?? true,
+      welcomeGreeting: storedDoctorSettings.welcomeGreeting ?? 'Welcome to FarmsKing Agronomy Advisory. We are committed to protecting your crops and maximizing your yield.',
+
+      // 4. Agronomy Credential & Prescriptions Signature
+      icarRegistrationNumber: storedDoctorSettings.icarRegistrationNumber ?? '',
+      qualificationTitle: storedDoctorSettings.qualificationTitle ?? advisor.qualification ?? 'Certified Crop Doctor & Agronomist',
+      maxFarmerCapacity: storedDoctorSettings.maxFarmerCapacity ?? 100,
+    };
+  }
+
+  /**
+   * Update Doctor Settings & Communication Channels
+   */
+  async updateDoctorSettings(user: AuthUser, dto: any, targetAdvisorId?: string) {
+    const advisorId = targetAdvisorId || user.id;
+    const advisor = await this.prisma.user.findUnique({ where: { id: advisorId } });
+    if (!advisor) {
+      throw new NotFoundException('Advisor not found.');
+    }
+
+    const appSetting = await this.appSettingsService.get();
+    const existingFlags = (appSetting.featureFlags as any) || {};
+    const existingDoctorSettings = existingFlags.doctorSettings || {};
+
+    const updatedSetting = {
+      ...(existingDoctorSettings[advisorId] || {}),
+      ...dto,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const newFlags = {
+      ...existingFlags,
+      doctorSettings: {
+        ...existingDoctorSettings,
+        [advisorId]: updatedSetting,
+      },
+    };
+
+    await this.prisma.appSetting.update({
+      where: { id: 'default' },
+      data: { featureFlags: newFlags },
+    });
+
+    // Synchronize to User Profile fields
+    const userUpdate: any = {};
+    if (dto.singleConsultationFee !== undefined) userUpdate.feePerConsultation = dto.singleConsultationFee;
+    if (dto.cropSeasonFee !== undefined) userUpdate.feePerCropSeason = dto.cropSeasonFee;
+    if (dto.monthlyFee !== undefined) userUpdate.feeVipMonthly = dto.monthlyFee;
+    if (dto.specializedCrops !== undefined) userUpdate.specializedCrops = dto.specializedCrops;
+    if (dto.qualificationTitle !== undefined) userUpdate.qualification = dto.qualificationTitle;
+    if (dto.enableWhatsApp !== undefined) userUpdate.whatsappGroupEnabled = dto.enableWhatsApp;
+    if (dto.enableGsmCalling !== undefined || dto.enableInAppAudioCall !== undefined) {
+      userUpdate.canTakeCalls = Boolean(dto.enableGsmCalling || dto.enableInAppAudioCall);
+    }
+
+    if (Object.keys(userUpdate).length > 0) {
+      await this.prisma.user.update({
+        where: { id: advisorId },
+        data: userUpdate,
+      }).catch(() => {});
+    }
+
+    return this.getDoctorSettings(user, advisorId);
   }
 }

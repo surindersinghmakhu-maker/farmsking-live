@@ -1,4 +1,4 @@
-﻿import { apiClient } from './client';
+import { apiClient } from './client';
 
 export type FarmerPlanType = 'FREE' | 'PRO' | 'SMART' | 'SUPER' | 'SILVER' | 'GOLD' | 'ROYAL';
 
@@ -460,6 +460,56 @@ export function checkCardPermission(
     default:
       return { allowed: true, requiredCard: 'Kisan Card', message: '' };
   }
+}
+
+export interface FarmerPlanTierConfig {
+  key: 'PRO' | 'SMART' | 'SUPER';
+  name: string;
+  badge: string;
+  subtitle: string;
+  price: number;
+  mrp: number;
+  billingPeriodDays: number;
+  features: {
+    bahiKhata: boolean;
+    cropLogs: boolean;
+    voiceAiMic: boolean;
+    weatherEnabled: boolean;
+    arhtiyaCalc: boolean;
+    labourMgmt: boolean;
+    workerLogin: boolean;
+    mandiAi: boolean;
+    satelliteNDVI: boolean;
+    unlimitedCrops: boolean;
+    advisorIncluded: boolean;
+    storeDiscount: boolean;
+  };
+  offer: {
+    enabled: boolean;
+    name: string;
+    offerPrice: number;
+    validTill: string;
+  };
+}
+
+export interface FarmerPlanConfigsResponse {
+  configs: Record<string, FarmerPlanTierConfig>;
+  storeCodEnabled: boolean;
+}
+
+export async function getFarmerPlanConfigs(): Promise<FarmerPlanConfigsResponse> {
+  const { data } = await apiClient.get<FarmerPlanConfigsResponse>('/farmer-plans/configs');
+  return data;
+}
+
+export async function updateFarmerPlanConfigs(payload: { configs?: Record<string, any>; storeCodEnabled?: boolean }) {
+  const { data } = await apiClient.patch('/farmer-plans/configs', payload);
+  return data;
+}
+
+export async function cancelFarmerPlanRequest(reason?: string, requestId?: string) {
+  const { data } = await apiClient.post('/farmer-plans/cancel-request', { reason, requestId });
+  return data;
 }
 
 

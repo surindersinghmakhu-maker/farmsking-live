@@ -21,6 +21,10 @@ export interface PlanPaymentRequest {
 
 export interface InitiatePlanPaymentResponse extends PlanPaymentRequest {
   upiLink: string;
+  payeeVpa?: string;
+  payeeName?: string;
+  activeGateway?: string;
+  paymentLink?: string | null;
 }
 
 export async function initiatePlanPayment(farmerId?: string): Promise<InitiatePlanPaymentResponse> {

@@ -76,11 +76,22 @@ let FarmerPlanPaymentsService = FarmerPlanPaymentsService_1 = class FarmerPlanPa
                 orderBy: { billingPeriodDays: 'desc' },
             });
         }
-        if (!pricing) {
+        if (!pricing && (dto.customAmount === undefined || dto.customAmount === null)) {
             throw new common_1.BadRequestException('Pricing for this plan is not configured yet. Please contact support.');
         }
-        const baseAmount = Number(pricing.price);
-        const daysGranted = pricing.billingPeriodDays;
+        let baseAmount = dto.customAmount !== undefined && dto.customAmount !== null
+            ? Number(dto.customAmount)
+            : pricing
+                ? Number(pricing.price)
+                : 0;
+        const daysGranted = dto.billingPeriodDays ?? pricing?.billingPeriodDays ?? 30;
+        const appSettings = await this.appSettingsService.get();
+        if (dto.customAmount === undefined || dto.customAmount === null) {
+            const planConfig = appSettings?.featureFlags?.farmerPlanConfigs?.[dto.targetPlan];
+            if (planConfig?.offer?.enabled && Number(planConfig.offer?.offerPrice) > 0) {
+                baseAmount = Number(planConfig.offer.offerPrice);
+            }
+        }
         let proratedCredit = 0;
         if (isCurrentActive && targetRank > currentRank && effective.endDate) {
             const daysRemaining = Math.max(0, Math.ceil((effective.endDate.getTime() - now.getTime()) / DAY_MS));
@@ -93,7 +104,16 @@ let FarmerPlanPaymentsService = FarmerPlanPaymentsService_1 = class FarmerPlanPa
             const rawCredit = (daysRemaining / currentTotalDays) * currentPrice;
             proratedCredit = Math.round(Math.min(rawCredit, baseAmount) * 100) / 100;
         }
-        const amount = Math.max(0, Math.round((baseAmount - proratedCredit) * 100) / 100);
+        let amount = Math.max(0, Math.round((baseAmount - proratedCredit) * 100) / 100);
+        let walletPointsUsed = 0;
+        if (dto.useWalletPoints) {
+            const currentWalletPoints = await this.walletService.getBalance(targetFarmerId);
+            if (currentWalletPoints > 0) {
+                walletPointsUsed = Math.min(currentWalletPoints, amount);
+                amount = Math.max(0, Math.round((amount - walletPointsUsed) * 100) / 100);
+                await this.walletService.debit(targetFarmerId, walletPointsUsed, `Redeemed ${walletPointsUsed} FarmsKing Points for ${dto.targetPlan} Plan subscription`, { relatedUserId: targetFarmerId });
+            }
+        }
         const request = await this.prisma.farmerPlanPaymentRequest.create({
             data: {
                 farmerId: targetFarmerId,
@@ -108,10 +128,37 @@ let FarmerPlanPaymentsService = FarmerPlanPaymentsService_1 = class FarmerPlanPa
             include: DETAIL_INCLUDE,
         });
         const integrations = await this.appSettingsService.getIntegrations();
-        const appSettings = await this.appSettingsService.get();
         const activeGateway = integrations.gateway?.activeGateway || integrations.gateway?.routing?.farmerPlanGateway || 'PHONEPE';
         const upiPayeeVpa = integrations.gateway.providers.upiDirect?.upiId || appSettings.upiId || 'surindersinghmakhu-5@oksbi';
         const upiPayeeName = integrations.gateway.providers.upiDirect?.payeeName || appSettings.upiPayeeName || 'FarmsKing Technologies';
+        if (amount === 0) {
+            await this.farmerPlansService.applyPlanChange(targetFarmerId, dto.targetPlan, daysGranted, undefined, dto.selectedAdvisorId || dto.selectedDoctorId);
+            const confirmedRequest = await this.prisma.farmerPlanPaymentRequest.update({
+                where: { id: request.id },
+                data: {
+                    status: client_1.PlanPaymentStatus.CONFIRMED,
+                    confirmedAt: new Date(),
+                },
+                include: DETAIL_INCLUDE,
+            });
+            return {
+                ...confirmedRequest,
+                status: 'CONFIRMED',
+                confirmed: true,
+                activated: true,
+                activeGateway: 'WALLET_POINTS',
+                paidViaPoints: walletPointsUsed,
+                paymentLink: null,
+                phonepeRedirectUrl: null,
+                cashfreeSessionId: null,
+                cashfreePaymentLink: null,
+                razorpayShortUrl: null,
+                upiLink: null,
+                payeeVpa: upiPayeeVpa,
+                payeeName: upiPayeeName,
+                message: 'Plan activated instantly using FarmsKing Points!',
+            };
+        }
         const upiLink = (0, upi_util_1.buildUpiPaymentLink)({
             amount,
             note: `FK-${dto.targetPlan}-${(farmer.kingId || farmer.id).slice(0, 8)}`,

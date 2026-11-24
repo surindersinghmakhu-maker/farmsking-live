@@ -30,6 +30,7 @@ import { CopyButton } from '@/src/components/CopyButton';
 import { DoctorChangeDisclaimerModal } from '@/src/components/DoctorChangeDisclaimerModal';
 import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
 import { CropSelectionModal } from '@/src/components/CropSelectionModal';
+import { FarmerPlanUpgradeModal } from './FarmerPlanUpgradeModal';
 import { useMyCrops } from '@/src/hooks/useCrops';
 import { useCreateCallRequest } from '@/src/hooks/useCallRequests';
 import { useExecutiveTheme } from '@/src/store/theme-context';
@@ -109,6 +110,7 @@ export default function UniversalMembershipPass({
   const [appliedCouponNotice, setAppliedCouponNotice] = useState<string | null>(null);
   const [isChoosingAdvisor, setIsChoosingAdvisor] = useState(false);
   const [isCropCareModalOpen, setIsCropCareModalOpen] = useState(false);
+  const [isFarmerPlanModalOpen, setIsFarmerPlanModalOpen] = useState(false);
   const [disclaimerModalVisible, setDisclaimerModalVisible] = useState(false);
   const [targetAdvisorToRequest, setTargetAdvisorToRequest] = useState<{ id: string; name: string } | null>(null);
   const { data: myRealCrops = [] } = useMyCrops();
@@ -201,10 +203,18 @@ export default function UniversalMembershipPass({
   const handlePurchasePlan = async (targetPlan: any, billingPeriodDays: number) => {
     tap();
     try {
-      const res = await initiatePlanPayment.mutateAsync({
+      const res: any = await initiatePlanPayment.mutateAsync({
         targetPlan,
         billingPeriodDays,
       });
+
+      if (res?.confirmed || res?.activated) {
+        const msg = `🎉 ${targetPlan} pass activated successfully!`;
+        if (Platform.OS === 'web') alert(msg);
+        else Alert.alert('Pass Activated', msg);
+        refetchPlan();
+        return;
+      }
 
       const targetGatewayUrl =
         (res as any)?.paymentLink ||
@@ -213,7 +223,8 @@ export default function UniversalMembershipPass({
         (res.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null) ||
         (res as any)?.razorpayShortUrl;
 
-      if (targetGatewayUrl) {
+      const isHttpGateway = typeof targetGatewayUrl === 'string' && (targetGatewayUrl.startsWith('https://') || targetGatewayUrl.startsWith('http://'));
+      if (isHttpGateway) {
         if (Platform.OS === 'web') {
           window.location.href = targetGatewayUrl;
         } else {
@@ -571,7 +582,7 @@ export default function UniversalMembershipPass({
                         <TouchableOpacity
                           style={[styles.upgradeBtn, { backgroundColor: isLiteCurrent ? '#047857' : '#0284c7' }]}
                           disabled={initiatePlanPayment.isPending}
-                          onPress={() => handlePurchasePlan('PRO', 180)}
+                          onPress={() => setIsFarmerPlanModalOpen(true)}
                         >
                           <Text style={styles.upgradeBtnText}>
                             {isLiteCurrent ? 'Renew Lite Plan (+180 Days) ⚡' : isLiteUpgrade ? 'Upgrade to Lite Plan ⚡' : 'Get Lite Plan ⚡'}
@@ -649,7 +660,7 @@ export default function UniversalMembershipPass({
                           <TouchableOpacity
                             style={[styles.upgradeBtn, { backgroundColor: isVipCurrent ? '#047857' : '#10b981', flex: 1 }]}
                             disabled={initiatePlanPayment.isPending}
-                            onPress={() => handlePurchasePlan('SMART', 365)}
+                            onPress={() => setIsFarmerPlanModalOpen(true)}
                           >
                             <Text style={styles.upgradeBtnText}>
                               {isVipCurrent ? 'Renew VIP Plan (+365 Days) 👑' : isVipUpgrade ? 'Upgrade VIP (Prorated) 👑' : 'Upgrade VIP 👑'}
@@ -1018,6 +1029,12 @@ export default function UniversalMembershipPass({
         }))}
         isInstantCall={isInstantCallMode}
         isLoading={chooseAdvisor.isPending || createCallRequest.isPending}
+      />
+
+      {/* Farmer VIP Plan Management & Upgrade Modal */}
+      <FarmerPlanUpgradeModal
+        visible={isFarmerPlanModalOpen}
+        onClose={() => setIsFarmerPlanModalOpen(false)}
       />
     </View>
   );

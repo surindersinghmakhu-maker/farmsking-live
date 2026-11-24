@@ -30,9 +30,20 @@ const grant_farmer_plan_days_dto_1 = require("./dto/grant-farmer-plan-days.dto")
 const update_farmer_plan_pricing_dto_1 = require("./dto/update-farmer-plan-pricing.dto");
 const choose_advisor_dto_1 = require("./dto/choose-advisor.dto");
 const apply_coupon_to_farmer_dto_1 = require("./dto/apply-coupon-to-farmer.dto");
+const cancel_farmer_plan_dto_1 = require("./dto/cancel-farmer-plan.dto");
+const update_farmer_plan_configs_dto_1 = require("./dto/update-farmer-plan-configs.dto");
 let FarmerPlansController = class FarmerPlansController {
     constructor(farmerPlansService) {
         this.farmerPlansService = farmerPlansService;
+    }
+    getPlanConfigs() {
+        return this.farmerPlansService.getPlanConfigs();
+    }
+    updatePlanConfigs(user, dto) {
+        return this.farmerPlansService.updatePlanConfigs(user, dto);
+    }
+    cancelPlanRequest(user, dto) {
+        return this.farmerPlansService.cancelPlanRequest(user, dto);
     }
     getMyPlan(user) {
         return this.farmerPlansService.getMyPlan(user);
@@ -102,6 +113,31 @@ let FarmerPlansController = class FarmerPlansController {
     }
 };
 exports.FarmerPlansController = FarmerPlansController;
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('configs'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], FarmerPlansController.prototype, "getPlanConfigs", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Patch)('configs'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_farmer_plan_configs_dto_1.UpdateFarmerPlanConfigsDto]),
+    __metadata("design:returntype", void 0)
+], FarmerPlansController.prototype, "updatePlanConfigs", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('cancel-request'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, cancel_farmer_plan_dto_1.CancelFarmerPlanDto]),
+    __metadata("design:returntype", void 0)
+], FarmerPlansController.prototype, "cancelPlanRequest", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
     (0, common_1.Get)('my-plan'),

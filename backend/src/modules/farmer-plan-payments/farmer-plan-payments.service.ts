@@ -86,12 +86,26 @@ export class FarmerPlanPaymentsService {
       });
     }
 
-    if (!pricing) {
+    if (!pricing && (dto.customAmount === undefined || dto.customAmount === null)) {
       throw new BadRequestException('Pricing for this plan is not configured yet. Please contact support.');
     }
 
-    const baseAmount = Number(pricing.price);
-    const daysGranted = pricing.billingPeriodDays;
+    let baseAmount = dto.customAmount !== undefined && dto.customAmount !== null
+      ? Number(dto.customAmount)
+      : pricing
+        ? Number(pricing.price)
+        : 0;
+    const daysGranted = dto.billingPeriodDays ?? pricing?.billingPeriodDays ?? 30;
+
+    const appSettings = await this.appSettingsService.get();
+
+    // Check if an Admin-configured special offer is active for this tier (if customAmount is not set)
+    if (dto.customAmount === undefined || dto.customAmount === null) {
+      const planConfig = (appSettings?.featureFlags as any)?.farmerPlanConfigs?.[dto.targetPlan];
+      if (planConfig?.offer?.enabled && Number(planConfig.offer?.offerPrice) > 0) {
+        baseAmount = Number(planConfig.offer.offerPrice);
+      }
+    }
 
     // Option 3: Prorated Adjustment when Upgrading to a Higher Tier
     let proratedCredit = 0;
@@ -107,7 +121,23 @@ export class FarmerPlanPaymentsService {
       proratedCredit = Math.round(Math.min(rawCredit, baseAmount) * 100) / 100;
     }
 
-    const amount = Math.max(0, Math.round((baseAmount - proratedCredit) * 100) / 100);
+    let amount = Math.max(0, Math.round((baseAmount - proratedCredit) * 100) / 100);
+
+    // Wallet Points Redemption Checkbox (1 Point = ₹1 INR)
+    let walletPointsUsed = 0;
+    if (dto.useWalletPoints) {
+      const currentWalletPoints = await this.walletService.getBalance(targetFarmerId);
+      if (currentWalletPoints > 0) {
+        walletPointsUsed = Math.min(currentWalletPoints, amount);
+        amount = Math.max(0, Math.round((amount - walletPointsUsed) * 100) / 100);
+        await this.walletService.debit(
+          targetFarmerId,
+          walletPointsUsed,
+          `Redeemed ${walletPointsUsed} FarmsKing Points for ${dto.targetPlan} Plan subscription`,
+          { relatedUserId: targetFarmerId },
+        );
+      }
+    }
 
     const request = await this.prisma.farmerPlanPaymentRequest.create({
       data: {
@@ -124,10 +154,47 @@ export class FarmerPlanPaymentsService {
     });
 
     const integrations = await this.appSettingsService.getIntegrations();
-    const appSettings = await this.appSettingsService.get();
     const activeGateway = integrations.gateway?.activeGateway || integrations.gateway?.routing?.farmerPlanGateway || 'PHONEPE';
     const upiPayeeVpa = integrations.gateway.providers.upiDirect?.upiId || appSettings.upiId || 'surindersinghmakhu-5@oksbi';
     const upiPayeeName = integrations.gateway.providers.upiDirect?.payeeName || appSettings.upiPayeeName || 'FarmsKing Technologies';
+
+    // If fully covered by Wallet Points (₹0 payable), activate instantly!
+    if (amount === 0) {
+      await this.farmerPlansService.applyPlanChange(
+        targetFarmerId,
+        dto.targetPlan,
+        daysGranted,
+        undefined,
+        dto.selectedAdvisorId || dto.selectedDoctorId,
+      );
+
+      const confirmedRequest = await this.prisma.farmerPlanPaymentRequest.update({
+        where: { id: request.id },
+        data: {
+          status: PlanPaymentStatus.CONFIRMED,
+          confirmedAt: new Date(),
+        },
+        include: DETAIL_INCLUDE,
+      });
+
+      return {
+        ...confirmedRequest,
+        status: 'CONFIRMED',
+        confirmed: true,
+        activated: true,
+        activeGateway: 'WALLET_POINTS',
+        paidViaPoints: walletPointsUsed,
+        paymentLink: null,
+        phonepeRedirectUrl: null,
+        cashfreeSessionId: null,
+        cashfreePaymentLink: null,
+        razorpayShortUrl: null,
+        upiLink: null,
+        payeeVpa: upiPayeeVpa,
+        payeeName: upiPayeeName,
+        message: 'Plan activated instantly using FarmsKing Points!',
+      };
+    }
 
     const upiLink = buildUpiPaymentLink({
       amount,

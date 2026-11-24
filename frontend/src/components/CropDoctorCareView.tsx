@@ -193,6 +193,8 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
       ratingCount?: number;
       isPrimary?: boolean;
       supervisedCrops: Array<{ id: string; name: string; plotName?: string }>;
+      monthlyIncludedCrops?: number;
+      freeSlotsRemaining?: number;
     }> = [];
 
     const seenIds = new Set<string>();
@@ -212,6 +214,8 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
         ratingCount: adv.ratingCount,
         isPrimary: true,
         supervisedCrops: [],
+        monthlyIncludedCrops: Number((adv as any).monthlyIncludedCrops || 3),
+        freeSlotsRemaining: Number((adv as any).monthlyIncludedCrops || 3),
       });
     }
 
@@ -241,9 +245,16 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
             ratingCount: (adv as any).ratingCount,
             isPrimary: false,
             supervisedCrops: [cropInfo],
+            monthlyIncludedCrops: Number((adv as any).monthlyIncludedCrops || 3),
+            freeSlotsRemaining: Number((adv as any).monthlyIncludedCrops || 3),
           });
         }
       }
+    });
+
+    list.forEach((adv) => {
+      const max = adv.monthlyIncludedCrops || 3;
+      adv.freeSlotsRemaining = Math.max(0, max - adv.supervisedCrops.length);
     });
 
     return list;
@@ -286,16 +297,19 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
 
   const acceptedRealCrops = useMemo(() => (myCrops ?? []).filter((c) => c.advisorReviewStatus === 'ACCEPTED'), [myCrops]);
 
-  const handleRequestAdvisorReview = async (cropId: string, label: string) => {
+  const handleRequestAdvisorReview = async (cropId: string, label: string, targetAdvisorId?: string) => {
     tap();
-    if (hireStatus !== 'ACTIVE') {
+    if (hireStatus !== 'ACTIVE' && !targetAdvisorId) {
       setIsCropCareModalOpen(true);
       return;
     }
     setSubmittingCropId(cropId);
     try {
-      await submitCropToAdvisor.mutateAsync(cropId);
-      const message = `${label} request sent to your advisor!`;
+      await submitCropToAdvisor.mutateAsync({
+        id: cropId,
+        payload: targetAdvisorId ? { advisorId: targetAdvisorId } : undefined,
+      });
+      const message = `${label} adopted successfully under doctor supervision!`;
       Platform.OS === 'web' ? alert(`🤝 ${message}`) : Alert.alert('Request Sent 🤝', message);
     } catch (err: any) {
       const message = err?.response?.data?.message ?? 'Could not send this request. Please try again.';
@@ -454,10 +468,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
             <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(0, 255, 135, 0.15)' : '#dcfce7' }]}>
               <Ionicons name="shield-checkmark" size={40} color={isDark ? '#00ff87' : '#15803d'} />
             </View>
-            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>Pan-India Crop Doctor Hub</Text>
-            <Text style={[styles.description, { color: isDark ? colors.textMuted : '#334155' }]}>
-              Adopt certified agronomists and plant pathology doctors for your crops. Select from pay-per-prescription SOS diagnosis, 120-day crop season care, or monthly retainers.
-            </Text>
+            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>Crop Doctor Hub</Text>
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, width: '100%', maxWidth: 500 }}>
               <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={() => setIsCropCareModalOpen(true)}>
@@ -491,18 +502,70 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                       </Text>
                     </View>
 
-                    <TouchableOpacity
-                      style={[styles.shareBtn, { backgroundColor: colors.primary }]}
-                      activeOpacity={0.85}
-                      onPress={() => {
-                        tap();
-                        setAdoptionTargetCrop(crop);
-                        setIsSecondOpinionMode(false);
-                      }}
-                    >
-                      <Ionicons name="person-add-outline" size={14} color="#ffffff" />
-                      <Text style={styles.shareBtnText}>Adopt Doctor</Text>
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+                      {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 ? (
+                        <TouchableOpacity
+                          style={[styles.shareBtn, { backgroundColor: '#16a34a' }]}
+                          activeOpacity={0.85}
+                          disabled={submittingCropId === crop.id}
+                          onPress={() => handleRequestAdvisorReview(crop.id, `${crop.plot?.name || 'Plot'} (${crop.cropName})`, activeAdvisors[0].id)}
+                        >
+                          {submittingCropId === crop.id ? (
+                            <ActivityIndicator color="#ffffff" size="small" />
+                          ) : (
+                            <>
+                              <Ionicons name="sparkles" size={13} color="#ffffff" />
+                              <Text style={styles.shareBtnText}>
+                                Adopt Free ({activeAdvisors[0].freeSlotsRemaining} left)
+                              </Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      ) : null}
+
+                      <TouchableOpacity
+                        style={[
+                          styles.shareBtn,
+                          {
+                            backgroundColor:
+                              activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                                ? (isDark ? 'rgba(56, 189, 248, 0.15)' : '#e0f2fe')
+                                : colors.primary,
+                            borderWidth:
+                              activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 ? 1 : 0,
+                            borderColor: isDark ? 'rgba(56, 189, 248, 0.4)' : '#38bdf8',
+                          },
+                        ]}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          tap();
+                          setAdoptionTargetCrop(crop);
+                          setIsSecondOpinionMode(false);
+                        }}
+                      >
+                        <Ionicons
+                          name="person-add-outline"
+                          size={14}
+                          color={
+                            activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                              ? (isDark ? '#38bdf8' : '#0284c7')
+                              : '#ffffff'
+                          }
+                        />
+                        <Text
+                          style={[
+                            styles.shareBtnText,
+                            activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 && {
+                              color: isDark ? '#38bdf8' : '#0284c7',
+                            },
+                          ]}
+                        >
+                          {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                            ? 'Send to Other Doctor'
+                            : 'Adopt Doctor'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 ))}
               </View>
@@ -775,9 +838,33 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                     </View>
                   </View>
 
+                  {/* Plan Quota Details */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9', flexWrap: 'wrap', gap: 6 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted }}>
+                      Plan Quota:{' '}
+                      <Text style={{ fontFamily: FONT.bold, color: colors.text }}>
+                        {adv.supervisedCrops.length} of {adv.monthlyIncludedCrops || 3} Crops Supervised
+                      </Text>
+                    </Text>
+                    {(adv.freeSlotsRemaining ?? 0) > 0 ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#dcfce7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: isDark ? 'rgba(74, 222, 128, 0.3)' : '#86efac' }}>
+                        <Ionicons name="sparkles" size={10} color="#16a34a" />
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#16a34a' }}>
+                          {adv.freeSlotsRemaining} Free Slot(s) Available
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.semiBold, color: colors.textMuted }}>
+                          Quota Full ({adv.monthlyIncludedCrops}/{adv.monthlyIncludedCrops})
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
                   {/* Supervised crops pill if any */}
                   {adv.supervisedCrops.length > 0 && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                       <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: colors.textMuted }}>Supervised Crops:</Text>
                       {adv.supervisedCrops.map((c) => (
                         <View key={c.id} style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: colors.cardBorder }}>
@@ -1138,8 +1225,39 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
 
                             {advStatus === 'NONE' && (
                               <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+                                {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 ? (
+                                  <TouchableOpacity
+                                    style={[styles.shareBtn, { backgroundColor: '#16a34a' }]}
+                                    activeOpacity={0.85}
+                                    disabled={submittingCropId === crop.id}
+                                    onPress={() => handleRequestAdvisorReview(crop.id, label, activeAdvisors[0].id)}
+                                  >
+                                    {submittingCropId === crop.id ? (
+                                      <ActivityIndicator color="#ffffff" size="small" />
+                                    ) : (
+                                      <>
+                                        <Ionicons name="sparkles" size={13} color="#ffffff" />
+                                        <Text style={styles.shareBtnText}>
+                                          Adopt with Dr. {activeAdvisors[0].name} (Free Quota)
+                                        </Text>
+                                      </>
+                                    )}
+                                  </TouchableOpacity>
+                                ) : null}
+
                                 <TouchableOpacity
-                                  style={[styles.shareBtn, { backgroundColor: colors.primary }]}
+                                  style={[
+                                    styles.shareBtn,
+                                    {
+                                      backgroundColor:
+                                        activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                                          ? (isDark ? 'rgba(56, 189, 248, 0.15)' : '#e0f2fe')
+                                          : colors.primary,
+                                      borderWidth:
+                                        activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 ? 1 : 0,
+                                      borderColor: isDark ? 'rgba(56, 189, 248, 0.4)' : '#38bdf8',
+                                    },
+                                  ]}
                                   activeOpacity={0.8}
                                   onPress={() => {
                                     tap();
@@ -1147,8 +1265,27 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                                     setIsSecondOpinionMode(false);
                                   }}
                                 >
-                                  <Ionicons name="person-add-outline" size={14} color="#ffffff" />
-                                  <Text style={styles.shareBtnText}>Adopt Doctor</Text>
+                                  <Ionicons
+                                    name="person-add-outline"
+                                    size={14}
+                                    color={
+                                      activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                                        ? (isDark ? '#38bdf8' : '#0284c7')
+                                        : '#ffffff'
+                                    }
+                                  />
+                                  <Text
+                                    style={[
+                                      styles.shareBtnText,
+                                      activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 && {
+                                        color: isDark ? '#38bdf8' : '#0284c7',
+                                      },
+                                    ]}
+                                  >
+                                    {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                                      ? 'Send to Another Doctor'
+                                      : 'Adopt Doctor'}
+                                  </Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity

@@ -127,13 +127,14 @@ export function CropDoctorAdoptionModal({
     const PLATFORM_INFRA_FEE_PERCENT = 10.0;
     const platformFee = Math.max(1, Math.round((advisorFee * PLATFORM_INFRA_FEE_PERCENT) / 100));
 
-    // 4. Statutory GST (18% Govt. Tax on digital cloud infrastructure service)
+    // 4. Statutory GST (19% Govt. Tax on Doctor Fee + Cloud Infrastructure Fee)
     // Official government compliance establishing legal corporate standing.
-    const GST_RATE_PERCENT = 18.0;
-    const gstTax = Math.max(1, Math.round((platformFee * GST_RATE_PERCENT) / 100));
+    const GST_RATE_PERCENT = 19.0;
+    const taxableBase = advisorFee + platformFee;
+    const gstTax = Math.max(1, Math.round((taxableBase * GST_RATE_PERCENT) / 100));
 
     // 5. Total Amount Payable by Farmer
-    const totalPayable = advisorFee + platformFee + gstTax;
+    const totalPayable = taxableBase + gstTax;
 
     return {
       advisorFee,
@@ -497,19 +498,19 @@ export function CropDoctorAdoptionModal({
                         <Text style={styles.statutoryVal}>₹{pricingBreakdown.platformFee}</Text>
                       </View>
 
-                      {/* LINE 3: STATUTORY GST (18%) */}
+                      {/* LINE 3: STATUTORY GST (19%) */}
                       <View style={styles.statutoryRow}>
                         <View style={{ flex: 1, paddingRight: 10 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                             <Text style={styles.statutoryLabel}>
-                              Statutory GST (18% Govt. Tax)
+                              Statutory GST (19% Govt. Tax)
                             </Text>
                             <View style={styles.govtTaxPill}>
-                              <Text style={styles.govtTaxPillText}>CGST 9% + SGST 9%</Text>
+                              <Text style={styles.govtTaxPillText}>CGST 9.5% + SGST 9.5%</Text>
                             </View>
                           </View>
                           <Text style={styles.statutorySub}>
-                            Government of India recognized tax invoice with SAC code generated under statutory law
+                            Government recognized digital tax invoice generated under statutory corporate law
                           </Text>
                         </View>
                         <Text style={styles.statutoryVal}>₹{pricingBreakdown.gstTax}</Text>

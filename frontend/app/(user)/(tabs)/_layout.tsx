@@ -101,6 +101,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   farmers: { key: 'tabFarms', title: 'Farms', icon: 'leaf-outline', iconFilled: 'leaf' },
   schedule: { key: 'tabSchedule', title: 'Schedule', icon: 'calendar-outline', iconFilled: 'calendar' },
   chat: { key: 'tabChat', title: 'Chat', icon: 'chatbubble-outline', iconFilled: 'chatbubble' },
+  settings: { key: 'tabFeatures' as any, title: 'Settings', icon: 'settings-outline', iconFilled: 'settings' },
   referrals: { key: 'tabReferrals', title: 'Referrals', icon: 'people-outline', iconFilled: 'people' },
   wallet: { key: 'tabMyBusiness', title: 'Wallet', icon: 'wallet-outline', iconFilled: 'wallet' },
   'admin-orders': { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
@@ -119,7 +120,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
 const ALL_TABS: TabName[] = [
   'index', 'ai-doctor', 'admin_shop', 'farm', 'garden', 'records',
   'categories', 'cart', 'orders',
-  'farmers', 'schedule', 'chat',
+  'farmers', 'schedule', 'chat', 'settings',
   'referrals', 'wallet',
   'admin-orders', 'admin-products',
   'super-users', 'super-coupons', 'super-accounts', 'super-settings',

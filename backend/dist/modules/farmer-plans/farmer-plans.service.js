@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FarmerPlansService = exports.RENEW_HISTORY_MONTHS = exports.GRACE_PERIOD_DAYS = exports.DEFAULT_FARMER_VIP_PROMO_END = exports.EXPIRY_WARNING_DAYS = exports.PLAN_RANK = exports.PREMIUM_PLAN_MAX_ADVISOR_CROPS = exports.STANDARD_PLAN_MAX_ADVISOR_CROPS = exports.FREE_PLAN_MAX_ACTIVE_CROPS = exports.FREE_PLAN_MAX_CROPS = void 0;
+exports.FarmerPlansService = exports.RENEW_HISTORY_MONTHS = exports.GRACE_PERIOD_DAYS = exports.DEFAULT_FARMER_VIP_PROMO_END = exports.EXPIRY_WARNING_DAYS = exports.PLAN_RANK = exports.PREMIUM_PLAN_MAX_ADVISOR_CROPS = exports.STANDARD_PLAN_MAX_ADVISOR_CROPS = exports.FREE_PLAN_MAX_ACTIVE_CROPS = exports.FREE_PLAN_MAX_CROPS = exports.DEFAULT_FARMER_PLAN_CONFIGS = void 0;
 const crypto_1 = require("crypto");
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
@@ -19,6 +19,95 @@ const wallet_service_1 = require("../wallet/wallet.service");
 const notifications_service_1 = require("../notifications/notifications.service");
 const auth_user_util_1 = require("../../common/utils/auth-user.util");
 const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
+exports.DEFAULT_FARMER_PLAN_CONFIGS = {
+    PRO: {
+        key: 'PRO',
+        name: 'Kisan Plan',
+        badge: 'POPULAR',
+        subtitle: 'Digital Bahi-Khata, crop logs & Voice AI recording for individual farmers',
+        price: 199,
+        mrp: 499,
+        billingPeriodDays: 365,
+        features: {
+            bahiKhata: true,
+            cropLogs: true,
+            voiceAiMic: true,
+            weatherEnabled: true,
+            arhtiyaCalc: true,
+            labourMgmt: false,
+            workerLogin: false,
+            mandiAi: false,
+            satelliteNDVI: false,
+            unlimitedCrops: false,
+            advisorIncluded: false,
+            storeDiscount: false,
+        },
+        offer: {
+            enabled: false,
+            name: 'Special Seasonal Discount',
+            offerPrice: 149,
+            validTill: '',
+        },
+    },
+    SMART: {
+        key: 'SMART',
+        name: 'Boss Plan',
+        badge: 'RECOMMENDED',
+        subtitle: 'Complete farm management + labour tracking & worker login delegation',
+        price: 499,
+        mrp: 999,
+        billingPeriodDays: 365,
+        features: {
+            bahiKhata: true,
+            cropLogs: true,
+            voiceAiMic: true,
+            weatherEnabled: true,
+            arhtiyaCalc: true,
+            labourMgmt: true,
+            workerLogin: true,
+            mandiAi: true,
+            satelliteNDVI: false,
+            unlimitedCrops: true,
+            advisorIncluded: false,
+            storeDiscount: true,
+        },
+        offer: {
+            enabled: false,
+            name: 'Festival Special Offer',
+            offerPrice: 399,
+            validTill: '',
+        },
+    },
+    SUPER: {
+        key: 'SUPER',
+        name: 'Farmer VIP Plan',
+        badge: 'BEST VALUE',
+        subtitle: 'VIP satellite telemetry, mandi intelligence & dedicated agronomy advisory',
+        price: 999,
+        mrp: 1999,
+        billingPeriodDays: 365,
+        features: {
+            bahiKhata: true,
+            cropLogs: true,
+            voiceAiMic: true,
+            weatherEnabled: true,
+            arhtiyaCalc: true,
+            labourMgmt: true,
+            workerLogin: true,
+            mandiAi: true,
+            satelliteNDVI: true,
+            unlimitedCrops: true,
+            advisorIncluded: true,
+            storeDiscount: true,
+        },
+        offer: {
+            enabled: false,
+            name: 'Mega Baisakhi Dhamaka',
+            offerPrice: 799,
+            validTill: '',
+        },
+    },
+};
 exports.FREE_PLAN_MAX_CROPS = 3;
 exports.FREE_PLAN_MAX_ACTIVE_CROPS = 1;
 exports.STANDARD_PLAN_MAX_ADVISOR_CROPS = 5;
@@ -1583,6 +1672,176 @@ let FarmerPlansService = class FarmerPlansService {
             fileName: pdfFileName,
             content: rawContent,
             htmlPdfContent: pdfHtmlContent,
+        };
+    }
+    async getPlanConfigs() {
+        const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+        const storedConfigs = settings?.featureFlags?.farmerPlanConfigs;
+        const storeCodEnabled = settings?.featureFlags?.storeCodEnabled ?? true;
+        const configs = {};
+        for (const tier of ['PRO', 'SMART', 'SUPER']) {
+            configs[tier] = {
+                ...exports.DEFAULT_FARMER_PLAN_CONFIGS[tier],
+                ...(storedConfigs?.[tier] || {}),
+                features: {
+                    ...exports.DEFAULT_FARMER_PLAN_CONFIGS[tier]?.features,
+                    ...(storedConfigs?.[tier]?.features || {}),
+                },
+                offer: {
+                    ...exports.DEFAULT_FARMER_PLAN_CONFIGS[tier]?.offer,
+                    ...(storedConfigs?.[tier]?.offer || {}),
+                },
+            };
+        }
+        return {
+            configs,
+            storeCodEnabled,
+        };
+    }
+    async updatePlanConfigs(user, dto) {
+        const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+        const currentFlags = settings?.featureFlags || {};
+        const updatedFlags = {
+            ...currentFlags,
+            ...(dto.configs ? { farmerPlanConfigs: dto.configs } : {}),
+            ...(typeof dto.storeCodEnabled === 'boolean' ? { storeCodEnabled: dto.storeCodEnabled } : {}),
+        };
+        await this.prisma.appSetting.update({
+            where: { id: 'default' },
+            data: { featureFlags: updatedFlags },
+        });
+        if (dto.configs) {
+            for (const [key, val] of Object.entries(dto.configs)) {
+                const planEnum = key;
+                if (val && typeof val === 'object' && val.price) {
+                    const days = val.billingPeriodDays || 365;
+                    await this.prisma.farmerPlanPricing.upsert({
+                        where: { plan_billingPeriodDays: { plan: planEnum, billingPeriodDays: days } },
+                        create: {
+                            plan: planEnum,
+                            price: Number(val.price),
+                            mrp: val.mrp ? Number(val.mrp) : Number(val.price) * 2,
+                            billingPeriodDays: days,
+                            partnerShareType: client_1.DiscountValueType.PERCENTAGE,
+                            partnerShareValue: 10,
+                            advisorIncluded: Boolean(val.features?.advisorIncluded),
+                            chatEnabled: Boolean(val.features?.advisorIncluded),
+                            weatherEnabled: Boolean(val.features?.weatherEnabled),
+                            isActive: true,
+                        },
+                        update: {
+                            price: Number(val.price),
+                            mrp: val.mrp ? Number(val.mrp) : undefined,
+                            advisorIncluded: Boolean(val.features?.advisorIncluded),
+                            chatEnabled: Boolean(val.features?.advisorIncluded),
+                            weatherEnabled: Boolean(val.features?.weatherEnabled),
+                            isActive: true,
+                        },
+                    });
+                }
+            }
+        }
+        return {
+            success: true,
+            message: 'Farmer plan features and offers updated successfully.',
+            configs: dto.configs,
+            storeCodEnabled: dto.storeCodEnabled,
+        };
+    }
+    async cancelPlanRequest(user, dto) {
+        const farmerId = user.id;
+        const now = new Date();
+        const currentPlan = await this.prisma.farmerPlan.findUnique({ where: { farmerId } });
+        if (!currentPlan || currentPlan.plan === client_1.FarmerSubscriptionPlan.FREE) {
+            throw new common_1.BadRequestException('No active paid plan found to cancel.');
+        }
+        const startTime = currentPlan.startDate ? new Date(currentPlan.startDate).getTime() : 0;
+        const hoursElapsed = (now.getTime() - startTime) / (1000 * 60 * 60);
+        if (hoursElapsed > 24) {
+            throw new common_1.BadRequestException(`Plan cancellation window has expired (${Math.round(hoursElapsed)} hours since activation). As per statutory policy, cancellations are only permitted within 24 hours of plan activation.`);
+        }
+        let refundPoints = 0;
+        const latestPayment = await this.prisma.farmerPlanPaymentRequest.findFirst({
+            where: { farmerId, status: client_1.PlanPaymentStatus.CONFIRMED },
+            orderBy: { confirmedAt: 'desc' },
+        });
+        if (latestPayment && Number(latestPayment.amount) > 0) {
+            refundPoints = Number(latestPayment.amount);
+        }
+        else {
+            const pricing = await this.prisma.farmerPlanPricing.findFirst({ where: { plan: currentPlan.plan } });
+            refundPoints = pricing ? Number(pricing.price) : 0;
+        }
+        if (refundPoints > 0) {
+            await this.walletService.credit(farmerId, refundPoints, `100% Refund for cancelled ${currentPlan.plan} Plan within 24h window (Credited as ${refundPoints} FarmsKing Points)`, { relatedUserId: farmerId });
+        }
+        try {
+            const bonusTx = await this.prisma.walletTransaction.findFirst({
+                where: {
+                    relatedUserId: farmerId,
+                    type: client_1.WalletTransactionType.CREDIT,
+                    reason: { contains: 'Plan' },
+                    createdAt: { gte: new Date(now.getTime() - 25 * 3600 * 1000) },
+                },
+            });
+            if (bonusTx) {
+                await this.walletService.debit(bonusTx.userId, Number(bonusTx.amount), `Commission reversal: Farmer cancelled ${currentPlan.plan} plan within 24-hour window`, { relatedUserId: farmerId });
+            }
+        }
+        catch (commErr) {
+            console.warn('Commission reversal warning:', commErr);
+        }
+        const sleepRecord = await this.prisma.farmerPlanHistory.findFirst({
+            where: { farmerId, status: client_1.FarmerPlanRecordStatus.SLEEP },
+            orderBy: { createdAt: 'desc' },
+        });
+        if (sleepRecord && (sleepRecord.remainingDays || 0) > 0) {
+            const resumedEndDate = new Date(now.getTime() + (sleepRecord.remainingDays || 30) * DAY_MS);
+            await this.prisma.farmerPlan.update({
+                where: { farmerId },
+                data: {
+                    plan: sleepRecord.plan,
+                    startDate: now,
+                    endDate: resumedEndDate,
+                    expiredAt: null,
+                },
+            });
+            await this.prisma.farmerPlanHistory.update({
+                where: { id: sleepRecord.id },
+                data: { status: client_1.FarmerPlanRecordStatus.ACTIVE },
+            });
+        }
+        else {
+            await this.prisma.farmerPlan.update({
+                where: { farmerId },
+                data: {
+                    plan: client_1.FarmerSubscriptionPlan.FREE,
+                    endDate: null,
+                    expiredAt: now,
+                },
+            });
+        }
+        await this.prisma.farmerPlanHistory.create({
+            data: {
+                farmerId,
+                plan: currentPlan.plan,
+                status: client_1.FarmerPlanRecordStatus.REVOKED,
+                daysGranted: 0,
+                startDate: now,
+                endDate: now,
+                notes: `Cancelled by user within 24-hour window. ${refundPoints > 0 ? `₹${refundPoints} refunded as ${refundPoints} Wallet Points.` : 'No payment refund needed.'}${dto.reason ? ` Reason: ${dto.reason}` : ''}`,
+            },
+        });
+        await this.prisma.advisorAssignment.updateMany({
+            where: { farmerId, status: client_1.AdvisorAssignmentStatus.ACTIVE },
+            data: { status: client_1.AdvisorAssignmentStatus.REVOKED, deletedAt: now },
+        });
+        await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, 'Plan Cancelled & Refunded ⚡', `Your ${currentPlan.plan} plan has been cancelled within the 24-hour window. ${refundPoints > 0 ? `${refundPoints} Points have been credited to your FarmsKing Wallet.` : 'Your subscription has reverted to the Free tier.'}`);
+        return {
+            success: true,
+            message: `Plan successfully cancelled within 24 hours. ${refundPoints > 0 ? `${refundPoints} Points have been credited back to your FarmsKing Wallet.` : ''}`,
+            refundedPoints: refundPoints,
+            activePlan: sleepRecord ? sleepRecord.plan : 'FREE',
         };
     }
 };

@@ -11,6 +11,97 @@ import { RedeemFarmerPlanCouponDto } from './dto/redeem-farmer-plan-coupon.dto';
 import { GrantFarmerPlanDaysDto } from './dto/grant-farmer-plan-days.dto';
 import { UpdateFarmerPlanPricingDto } from './dto/update-farmer-plan-pricing.dto';
 import { ApplyCouponToFarmerDto } from './dto/apply-coupon-to-farmer.dto';
+import { CancelFarmerPlanDto } from './dto/cancel-farmer-plan.dto';
+import { UpdateFarmerPlanConfigsDto } from './dto/update-farmer-plan-configs.dto';
+export declare const DEFAULT_FARMER_PLAN_CONFIGS: {
+    PRO: {
+        key: string;
+        name: string;
+        badge: string;
+        subtitle: string;
+        price: number;
+        mrp: number;
+        billingPeriodDays: number;
+        features: {
+            bahiKhata: boolean;
+            cropLogs: boolean;
+            voiceAiMic: boolean;
+            weatherEnabled: boolean;
+            arhtiyaCalc: boolean;
+            labourMgmt: boolean;
+            workerLogin: boolean;
+            mandiAi: boolean;
+            satelliteNDVI: boolean;
+            unlimitedCrops: boolean;
+            advisorIncluded: boolean;
+            storeDiscount: boolean;
+        };
+        offer: {
+            enabled: boolean;
+            name: string;
+            offerPrice: number;
+            validTill: string;
+        };
+    };
+    SMART: {
+        key: string;
+        name: string;
+        badge: string;
+        subtitle: string;
+        price: number;
+        mrp: number;
+        billingPeriodDays: number;
+        features: {
+            bahiKhata: boolean;
+            cropLogs: boolean;
+            voiceAiMic: boolean;
+            weatherEnabled: boolean;
+            arhtiyaCalc: boolean;
+            labourMgmt: boolean;
+            workerLogin: boolean;
+            mandiAi: boolean;
+            satelliteNDVI: boolean;
+            unlimitedCrops: boolean;
+            advisorIncluded: boolean;
+            storeDiscount: boolean;
+        };
+        offer: {
+            enabled: boolean;
+            name: string;
+            offerPrice: number;
+            validTill: string;
+        };
+    };
+    SUPER: {
+        key: string;
+        name: string;
+        badge: string;
+        subtitle: string;
+        price: number;
+        mrp: number;
+        billingPeriodDays: number;
+        features: {
+            bahiKhata: boolean;
+            cropLogs: boolean;
+            voiceAiMic: boolean;
+            weatherEnabled: boolean;
+            arhtiyaCalc: boolean;
+            labourMgmt: boolean;
+            workerLogin: boolean;
+            mandiAi: boolean;
+            satelliteNDVI: boolean;
+            unlimitedCrops: boolean;
+            advisorIncluded: boolean;
+            storeDiscount: boolean;
+        };
+        offer: {
+            enabled: boolean;
+            name: string;
+            offerPrice: number;
+            validTill: string;
+        };
+    };
+};
 export declare const FREE_PLAN_MAX_CROPS = 3;
 export declare const FREE_PLAN_MAX_ACTIVE_CROPS = 1;
 export declare const STANDARD_PLAN_MAX_ADVISOR_CROPS = 5;
@@ -655,4 +746,20 @@ export declare class FarmerPlansService implements OnModuleInit {
         content: string;
         htmlPdfContent: any;
     };
+    getPlanConfigs(): Promise<{
+        configs: Record<string, any>;
+        storeCodEnabled: any;
+    }>;
+    updatePlanConfigs(user: AuthUser, dto: UpdateFarmerPlanConfigsDto): Promise<{
+        success: boolean;
+        message: string;
+        configs: Record<string, any> | undefined;
+        storeCodEnabled: boolean | undefined;
+    }>;
+    cancelPlanRequest(user: AuthUser, dto: CancelFarmerPlanDto): Promise<{
+        success: boolean;
+        message: string;
+        refundedPoints: number;
+        activePlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+    }>;
 }

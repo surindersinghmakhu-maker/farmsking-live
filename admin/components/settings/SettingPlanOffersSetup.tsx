@@ -22,11 +22,28 @@ import {
   useFarmerPlanPricing,
   useUpdateFarmerPlanPricing,
   useAllFarmerPlanCoupons,
+  useFarmerPlanConfigs,
+  useUpdateFarmerPlanConfigs,
 } from '@/src/hooks/useFarmerPlan';
 import { useAllCoupons } from '@/src/hooks/useCoupons';
 import { AppSettings, UpdateAppSettingsPayload } from '@/src/api/appSettings.api';
-import { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
+import { FarmerPlanPricing, FarmerPlanType, FarmerPlanTierConfig } from '@/src/api/farmerPlans.api';
 import { formatInr } from '@/src/utils/formatInr';
+
+const PLAN_FEATURE_KEYS: { key: string; label: string; description: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { key: 'bahiKhata', label: 'Digital Bahi-Khata & Khatavani Ledger', description: 'Comprehensive farmer bookkeeping, debit/credit logs & seasonal accounts', icon: 'book-outline' },
+  { key: 'cropLogs', label: 'Crop Cultivation Logs & Acreage Tracking', description: 'Real-time crop stage tracking, seed quantity, and harvest estimates', icon: 'leaf-outline' },
+  { key: 'voiceAiMic', label: 'Voice AI Assistant Mic Logging', description: 'Hands-free multilingual speech-to-text farm record entries', icon: 'mic-outline' },
+  { key: 'weatherEnabled', label: 'Hyperlocal Weather Alerts & Spray Advisory', description: 'Precipitation radar, humidity, wind velocity, and optimal spray window', icon: 'cloudy-outline' },
+  { key: 'arhtiyaCalc', label: 'Arhtiya Commission & Interest Calculator', description: 'Automated 1.5%/month monthly compounded mandi commission agent calculations', icon: 'calculator-outline' },
+  { key: 'labourMgmt', label: 'Labour Wages & Daily Attendance Tracking', description: 'Daily worker logs, piece-rate wages, overtime, and advance payouts', icon: 'people-outline' },
+  { key: 'workerLogin', label: 'Worker & Supervisor Sub-Account Login', description: 'Dedicated mobile logins for farm workers and supervisors without exposing finances', icon: 'key-outline' },
+  { key: 'mandiAi', label: 'Live Mandi Rates & AI Price Predictions', description: 'Real-time APMC mandi commodity prices across Punjab, Haryana, Rajasthan, MP', icon: 'trending-up-outline' },
+  { key: 'satelliteNDVI', label: 'Satellite NDVI Field Health Telemetry', description: 'ISRO / Sentinel multispectral plant moisture, chlorophyll, and canopy stress maps', icon: 'planet-outline' },
+  { key: 'unlimitedCrops', label: 'Unlimited Crops Management', description: 'Permits managing unlimited simultaneous crop plots without 3-crop free ceiling', icon: 'grid-outline' },
+  { key: 'advisorIncluded', label: 'Dedicated Certified Farm Advisor & Chat', description: 'Dedicated personal certified agronomy doctor consultation and direct chat thread', icon: 'medkit-outline' },
+  { key: 'storeDiscount', label: 'Certified AgriStore VIP Product Discounts', description: 'Exclusive VIP partner factory-direct pricing on certified seeds, spray & machinery', icon: 'pricetag-outline' },
+];
 
 type PlanOffersCategoryFilter =
   | 'SUBSCRIPTION_PLANS'
@@ -64,6 +81,86 @@ export default function SettingPlanOffersSetup() {
   // Mutations
   const updateAppMutation = useUpdateAppSettings();
   const updatePricingMutation = useUpdateFarmerPlanPricing();
+
+  // Farmer Plan Configurations & Feature Checkboxes
+  const { data: configsData, refetch: refetchConfigs } = useFarmerPlanConfigs();
+  const updateConfigsMutation = useUpdateFarmerPlanConfigs();
+
+  const [tierConfigs, setTierConfigs] = useState<Record<string, any>>({});
+  const [selectedTierTab, setSelectedTierTab] = useState<'PRO' | 'SMART' | 'SUPER'>('PRO');
+  const [storeCodEnabled, setStoreCodEnabled] = useState(true);
+  const [isSavingConfigs, setIsSavingConfigs] = useState(false);
+
+  useEffect(() => {
+    if (configsData) {
+      if (configsData.configs) setTierConfigs(configsData.configs);
+      if (typeof configsData.storeCodEnabled === 'boolean') setStoreCodEnabled(configsData.storeCodEnabled);
+    }
+  }, [configsData]);
+
+  const handleToggleFeature = (tierKey: string, featureKey: string) => {
+    setTierConfigs((prev) => {
+      const currentTier = prev[tierKey] || {};
+      const currentFeatures = currentTier.features || {};
+      return {
+        ...prev,
+        [tierKey]: {
+          ...currentTier,
+          features: {
+            ...currentFeatures,
+            [featureKey]: !currentFeatures[featureKey],
+          },
+        },
+      };
+    });
+  };
+
+  const handleUpdateTierField = (tierKey: string, field: string, value: any) => {
+    setTierConfigs((prev) => {
+      const currentTier = prev[tierKey] || {};
+      return {
+        ...prev,
+        [tierKey]: {
+          ...currentTier,
+          [field]: value,
+        },
+      };
+    });
+  };
+
+  const handleUpdateTierOffer = (tierKey: string, field: string, value: any) => {
+    setTierConfigs((prev) => {
+      const currentTier = prev[tierKey] || {};
+      const currentOffer = currentTier.offer || {};
+      return {
+        ...prev,
+        [tierKey]: {
+          ...currentTier,
+          offer: {
+            ...currentOffer,
+            [field]: value,
+          },
+        },
+      };
+    });
+  };
+
+  const handleSaveTierConfigs = async () => {
+    try {
+      setIsSavingConfigs(true);
+      await updateConfigsMutation.mutateAsync({
+        configs: tierConfigs,
+        storeCodEnabled,
+      });
+      await refetchConfigs();
+      await refetchPricing();
+      showToast('Farmer plan features, pricing & offers saved successfully!');
+    } catch (err: any) {
+      showToast(`Save failed: ${err?.message || 'Error updating configs'}`);
+    } finally {
+      setIsSavingConfigs(false);
+    }
+  };
 
   // Local state
   const [appForm, setAppForm] = useState<Partial<AppSettings>>({});
@@ -499,6 +596,356 @@ export default function SettingPlanOffersSetup() {
                   ))}
                 </View>
               )}
+            </View>
+
+            {/* 🌾 Farmer Plan Features, Checkboxes & Promotional Offers Governance */}
+            <View style={{ marginTop: 24, borderTopWidth: 2, borderTopColor: cardBorder, paddingTop: 18 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 34, height: 34, borderRadius: 8, backgroundColor: isLight ? '#e0f2fe' : '#0369a1', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="checkbox-outline" size={18} color="#0284c7" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: textColor }}>
+                      Farmer Plan Features, Checkboxes & Festival Offers
+                    </Text>
+                    <Text style={{ fontSize: 11.5, color: subTextColor }}>
+                      Admin decides which features are active on which plan tier, custom rates & promotional discount offers
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#15803d',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: RADIUS.md,
+                    opacity: isSavingConfigs ? 0.7 : 1,
+                  }}
+                  onPress={handleSaveTierConfigs}
+                  disabled={isSavingConfigs}
+                >
+                  {isSavingConfigs ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="cloud-upload-outline" size={15} color="#ffffff" />
+                  )}
+                  <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 }}>
+                    {isSavingConfigs ? 'Saving...' : 'Save Features & Offers'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Tier Selection Tabs */}
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                {[
+                  { key: 'PRO' as const, label: '🌾 Kisan Plan (PRO)', color: '#0284c7', bg: isLight ? '#e0f2fe' : '#075985' },
+                  { key: 'SMART' as const, label: '👷 Boss Plan (SMART)', color: '#1d4ed8', bg: isLight ? '#dbeafe' : '#1e40af' },
+                  { key: 'SUPER' as const, label: '👑 Farmer VIP Plan (SUPER)', color: '#b45309', bg: isLight ? '#fef3c7' : '#78350f' },
+                ].map((tierTab) => {
+                  const isSelected = selectedTierTab === tierTab.key;
+                  return (
+                    <TouchableOpacity
+                      key={tierTab.key}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 10,
+                        paddingHorizontal: 12,
+                        borderRadius: RADIUS.md,
+                        borderWidth: 2,
+                        borderColor: isSelected ? tierTab.color : cardBorder,
+                        backgroundColor: isSelected ? (isLight ? '#ffffff' : '#1e293b') : innerBg,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      onPress={() => setSelectedTierTab(tierTab.key)}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12.5,
+                          fontFamily: isSelected ? FONT.extraBold : FONT.medium,
+                          color: isSelected ? tierTab.color : subTextColor,
+                        }}
+                      >
+                        {tierTab.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Active Tier Config Form */}
+              {(() => {
+                const activeTier = tierConfigs[selectedTierTab] || {};
+                const activeOffer = activeTier.offer || {};
+                const activeFeatures = activeTier.features || {};
+
+                return (
+                  <View style={{ gap: 16 }}>
+                    {/* Basic Meta Grid */}
+                    <View style={styles.fieldsGrid}>
+                      <View style={styles.fieldItem}>
+                        <Text style={[styles.label, { color: textColor }]}>Display Plan Name</Text>
+                        <TextInput
+                          style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                          value={String(activeTier.name || '')}
+                          placeholder={selectedTierTab === 'PRO' ? 'Kisan Plan' : selectedTierTab === 'SMART' ? 'Boss Plan' : 'Farmer VIP Plan'}
+                          placeholderTextColor="#94a3b8"
+                          onChangeText={(v) => handleUpdateTierField(selectedTierTab, 'name', v)}
+                        />
+                      </View>
+
+                      <View style={styles.fieldItem}>
+                        <Text style={[styles.label, { color: textColor }]}>Badge Label</Text>
+                        <TextInput
+                          style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                          value={String(activeTier.badge || '')}
+                          placeholder="POPULAR / RECOMMENDED / BEST VALUE"
+                          placeholderTextColor="#94a3b8"
+                          onChangeText={(v) => handleUpdateTierField(selectedTierTab, 'badge', v)}
+                        />
+                      </View>
+
+                      <View style={styles.fieldItem}>
+                        <Text style={[styles.label, { color: textColor }]}>Standard Price (₹)</Text>
+                        <TextInput
+                          style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                          keyboardType="numeric"
+                          value={String(activeTier.price ?? '')}
+                          placeholder="199"
+                          placeholderTextColor="#94a3b8"
+                          onChangeText={(v) => handleUpdateTierField(selectedTierTab, 'price', parseFloat(v) || 0)}
+                        />
+                      </View>
+
+                      <View style={styles.fieldItem}>
+                        <Text style={[styles.label, { color: textColor }]}>M.R.P. (₹ Strike-through)</Text>
+                        <TextInput
+                          style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                          keyboardType="numeric"
+                          value={String(activeTier.mrp ?? '')}
+                          placeholder="499"
+                          placeholderTextColor="#94a3b8"
+                          onChangeText={(v) => handleUpdateTierField(selectedTierTab, 'mrp', parseFloat(v) || 0)}
+                        />
+                      </View>
+
+                      <View style={styles.fieldItem}>
+                        <Text style={[styles.label, { color: textColor }]}>Billing Duration (Days)</Text>
+                        <TextInput
+                          style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                          keyboardType="numeric"
+                          value={String(activeTier.billingPeriodDays ?? 365)}
+                          placeholder="365"
+                          placeholderTextColor="#94a3b8"
+                          onChangeText={(v) => handleUpdateTierField(selectedTierTab, 'billingPeriodDays', parseInt(v, 10) || 365)}
+                        />
+                      </View>
+
+                      <View style={styles.fieldItem}>
+                        <Text style={[styles.label, { color: textColor }]}>Subtitle / Description</Text>
+                        <TextInput
+                          style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                          value={String(activeTier.subtitle || '')}
+                          placeholder="Short summary of this plan"
+                          placeholderTextColor="#94a3b8"
+                          onChangeText={(v) => handleUpdateTierField(selectedTierTab, 'subtitle', v)}
+                        />
+                      </View>
+                    </View>
+
+                    {/* 🔥 Promotional / Special Occasion Festival Offer Section */}
+                    <View
+                      style={{
+                        backgroundColor: isLight ? '#fffbeb' : '#291803',
+                        borderWidth: 1.5,
+                        borderColor: '#f59e0b',
+                        borderRadius: RADIUS.lg,
+                        padding: 14,
+                        gap: 12,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                          <Ionicons name="flame" size={20} color="#ea580c" />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: isLight ? '#92400e' : '#fef3c7' }}>
+                              Special Occasion / Festival Offer Scheme
+                            </Text>
+                            <Text style={{ fontSize: 11, color: isLight ? '#b45309' : '#fde68a' }}>
+                              Admin can set a special discount price, occasion name (e.g. Baisakhi Dhamaka, Diwali Offer) and expiry date
+                            </Text>
+                          </View>
+                        </View>
+                        <Switch
+                          value={Boolean(activeOffer.enabled)}
+                          onValueChange={(v) => handleUpdateTierOffer(selectedTierTab, 'enabled', v)}
+                          trackColor={{ false: '#64748b', true: '#ea580c' }}
+                        />
+                      </View>
+
+                      {activeOffer.enabled && (
+                        <View style={[styles.fieldsGrid, { marginTop: 4 }]}>
+                          <View style={styles.fieldItem}>
+                            <Text style={[styles.label, { color: textColor }]}>Festival / Offer Name</Text>
+                            <TextInput
+                              style={[styles.input, { backgroundColor: isLight ? '#ffffff' : '#1e293b', borderColor: '#f59e0b', color: textColor }]}
+                              value={String(activeOffer.name || '')}
+                              placeholder="e.g. Baisakhi Special Dhamaka"
+                              placeholderTextColor="#94a3b8"
+                              onChangeText={(v) => handleUpdateTierOffer(selectedTierTab, 'name', v)}
+                            />
+                          </View>
+
+                          <View style={styles.fieldItem}>
+                            <Text style={[styles.label, { color: textColor }]}>Offer Price (₹ Payable by Farmer)</Text>
+                            <TextInput
+                              style={[styles.input, { backgroundColor: isLight ? '#ffffff' : '#1e293b', borderColor: '#f59e0b', color: textColor }]}
+                              keyboardType="numeric"
+                              value={String(activeOffer.offerPrice ?? '')}
+                              placeholder="e.g. 149"
+                              placeholderTextColor="#94a3b8"
+                              onChangeText={(v) => handleUpdateTierOffer(selectedTierTab, 'offerPrice', parseFloat(v) || 0)}
+                            />
+                          </View>
+
+                          <View style={styles.fieldItem}>
+                            <Text style={[styles.label, { color: textColor }]}>Offer Valid Till (YYYY-MM-DD)</Text>
+                            <TextInput
+                              style={[styles.input, { backgroundColor: isLight ? '#ffffff' : '#1e293b', borderColor: '#f59e0b', color: textColor }]}
+                              value={String(activeOffer.validTill || '')}
+                              placeholder="e.g. 2026-05-31"
+                              placeholderTextColor="#94a3b8"
+                              onChangeText={(v) => handleUpdateTierOffer(selectedTierTab, 'validTill', v)}
+                            />
+                          </View>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Feature Checkboxes Grid */}
+                    <View>
+                      <View style={{ marginBottom: 10 }}>
+                        <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: textColor }}>
+                          Features Checkboxes for {selectedTierTab} Plan
+                        </Text>
+                        <Text style={{ fontSize: 11, color: subTextColor }}>
+                          Click any feature checkbox to toggle ON (included) or OFF (excluded) for this plan tier
+                        </Text>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                        {PLAN_FEATURE_KEYS.map((item) => {
+                          const isChecked = Boolean(activeFeatures[item.key]);
+                          return (
+                            <TouchableOpacity
+                              key={item.key}
+                              style={{
+                                width: isDesktop ? '48.8%' : '100%',
+                                flexDirection: 'row',
+                                alignItems: 'flex-start',
+                                gap: 10,
+                                padding: 12,
+                                borderRadius: RADIUS.md,
+                                borderWidth: 1.5,
+                                borderColor: isChecked ? '#16a34a' : cardBorder,
+                                backgroundColor: isChecked ? (isLight ? '#f0fdf4' : '#052e16') : innerBg,
+                              }}
+                              onPress={() => handleToggleFeature(selectedTierTab, item.key)}
+                              activeOpacity={0.7}
+                            >
+                              <Ionicons
+                                name={isChecked ? 'checkbox' : 'square-outline'}
+                                size={20}
+                                color={isChecked ? '#16a34a' : '#94a3b8'}
+                                style={{ marginTop: 1 }}
+                              />
+                              <View style={{ flex: 1 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                  <Ionicons name={item.icon} size={14} color={isChecked ? '#16a34a' : subTextColor} />
+                                  <Text
+                                    style={{
+                                      fontSize: 12.5,
+                                      fontFamily: isChecked ? FONT.bold : FONT.medium,
+                                      color: isChecked ? (isLight ? '#14532d' : '#86efac') : textColor,
+                                    }}
+                                  >
+                                    {item.label}
+                                  </Text>
+                                </View>
+                                <Text style={{ fontSize: 10.5, color: subTextColor, marginTop: 2, lineHeight: 14 }}>
+                                  {item.description}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
+
+                    {/* Store Cash on Delivery (COD) Control */}
+                    <View
+                      style={{
+                        backgroundColor: isLight ? '#f1f5f9' : '#0f172a',
+                        borderWidth: 1.5,
+                        borderColor: cardBorder,
+                        borderRadius: RADIUS.lg,
+                        padding: 14,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 12 }}>
+                        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isLight ? '#e2e8f0' : '#1e293b', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="bag-handle-outline" size={18} color="#0284c7" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>
+                            Enable Cash on Delivery (COD) for AgriStore
+                          </Text>
+                          <Text style={{ fontSize: 11, color: subTextColor }}>
+                            COD is allowed strictly for physical store packages only (subject to weight/spray rules). Software subscription plans never permit COD.
+                          </Text>
+                        </View>
+                      </View>
+                      <Switch
+                        value={storeCodEnabled}
+                        onValueChange={(v) => setStoreCodEnabled(v)}
+                        trackColor={{ false: '#64748b', true: '#0284c7' }}
+                      />
+                    </View>
+
+                    {/* Action Save Button */}
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#15803d',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        paddingVertical: 13,
+                        borderRadius: RADIUS.md,
+                        opacity: isSavingConfigs ? 0.7 : 1,
+                      }}
+                      onPress={handleSaveTierConfigs}
+                      disabled={isSavingConfigs}
+                    >
+                      {isSavingConfigs ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      ) : (
+                        <Ionicons name="checkmark-circle-outline" size={18} color="#ffffff" />
+                      )}
+                      <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 }}>
+                        {isSavingConfigs ? 'Saving Plan Configurations...' : 'Save Plan Features, Offers & COD Settings'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
             </View>
           </View>
         )}

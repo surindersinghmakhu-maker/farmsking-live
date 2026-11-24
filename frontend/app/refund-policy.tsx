@@ -244,8 +244,60 @@ export default function RefundPolicyScreen() {
               <View style={styles.bulletItem}>
                 <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
                 <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
-                  <Text style={{ fontFamily: FONT.bold }}>Digital Plans, Subscriptions &amp; Expert Consultations: </Text>
-                  Activated subscription plans and completed agronomy consultations are non-refundable once accessed; duplicate debits or failed activations are automatically refunded to the original payment mode within 5 to 7 working days.
+                  <Text style={{ fontFamily: FONT.bold }}>Farmer Platform Usage Plans &amp; 24-Hour Cancellation Window: </Text>
+                  Subscriptions activated by mistake can be cancelled within 24 hours of activation. 100% of the paid amount is credited back to the farmer's FarmsKing Wallet as Points (1 Point = ₹1 INR). No cash or bank refunds are permitted. Referral and partner commissions are held for 24 hours to guarantee zero misuse.
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Section 5: Farmer Software Subscription Plans & Governance Rules */}
+          <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(2,132,199,0.1)' : 'rgba(56,189,248,0.15)' }]}>
+                <Ionicons name="ribbon-outline" size={18} color={isDay ? '#0284c7' : '#38bdf8'} />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
+                5. Farmer Software Plans, Prorated Upgrades &amp; Wallet Points Policy
+              </Text>
+            </View>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              FarmsKing platform usage plans (Kisan Plan, Boss Plan, Farmer VIP Plan) empower farmers with digital farm bookkeeping, Khatavani, Arhtiya interest calculators, labour attendance, supervisor logins, and satellite field telemetry:
+            </Text>
+            <View style={styles.bulletList}>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>Strict Downgrade Guard: </Text>
+                  Farmers on a higher active subscription tier cannot downgrade to a lower tier until their active subscription has fully expired.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>Prorated Upgrade Calculations: </Text>
+                  Upgrading to a higher plan automatically prorates the remaining active days of your existing plan based on the actual price paid, subtracting the unused value from the new plan fee.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>24-Hour Accidental Cancellation Window: </Text>
+                  If a plan was purchased by mistake, you can cancel it within 24 hours of activation via the app or support desk. 100% of the paid money will be refunded immediately into your FarmsKing Wallet as Points (1 Point = ₹1 INR). No cash/bank refunds are permitted under statutory guidelines.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>24-Hour Commission Verification Hold: </Text>
+                  Any partner, doctor, or agent referral commission generated from a farmer plan is held in verification status for 24 hours, releasing only after the 24-hour window concludes without cancellation.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>Zero Cash on Delivery on Software Subscriptions: </Text>
+                  Cash on Delivery (COD) is strictly prohibited for digital plans and memberships. COD is permitted exclusively for physical AgriStore shipments, subject to administrative controls.
                 </Text>
               </View>
             </View>

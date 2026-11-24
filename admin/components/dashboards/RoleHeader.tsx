@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { RoleThemes, UserRole } from '@/constants/Colors';
 import { FONT, RADIUS, THEME_4D } from '@/constants/theme';
 import { useUnreadNotificationCount } from '@/src/hooks/useNotifications';
+import { useChatUnreadCount } from '@/src/hooks/useChat';
 import { Avatar } from '@/src/components/Avatar';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
@@ -23,6 +24,7 @@ interface RoleHeaderProps {
   planBadge?: React.ReactNode;
   onAvatarPress?: () => void;
   onSecondaryAvatarPress?: () => void;
+  onMessengerPress?: () => void;
 }
 
 const ROLE_DISPLAY: Record<string, { label: string; icon: string }> = {
@@ -58,7 +60,11 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   planBadge,
   onAvatarPress,
   onSecondaryAvatarPress,
+  onMessengerPress,
 }) => {
+  const isDoctorRole = currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR' || currentRole === 'ADVISOR';
+  const { data: chatUnreadData } = useChatUnreadCount(isDoctorRole);
+  const chatUnreadCount = chatUnreadData?.count ?? 0;
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const { colors, themeMode, setThemeMode } = useExecutiveTheme();
@@ -267,31 +273,52 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               </View>
             </View>
 
-            {subtitle && currentRole !== 'FARMER' ? <Text style={[styles.subtitleText, isLight && { color: '#059669' }]}>{subtitle}</Text> : null}
+            {subtitle && currentRole !== 'FARMER' && !isDoctorRole ? <Text style={[styles.subtitleText, isLight && { color: '#059669' }]}>{subtitle}</Text> : null}
           </View>
 
-          {/* Center Block: Profile Photo Avatar (Hidden for Admin / Super Admin) */}
+          {/* Center Block: Profile Photo Avatar & Messenger Action (Hidden for Admin / Super Admin) */}
           {currentRole !== 'ADMIN' && currentRole !== 'SUPER_ADMIN' && (
-            <View style={styles.avatarContainer}>
-              <TouchableOpacity
-                style={styles.avatarRing}
-                activeOpacity={0.8}
-                onPress={onAvatarPress || (() => router.push('/profile'))}
-              >
-                <Avatar uri={avatarUrl} size={54} />
-                {currentRole === 'LABOUR' && (
-                  <View style={styles.cameraIconBadge}>
-                    <Ionicons name="camera" size={9} color="#ffffff" />
-                  </View>
-                )}
-              </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={styles.avatarContainer}>
+                <TouchableOpacity
+                  style={styles.avatarRing}
+                  activeOpacity={0.8}
+                  onPress={onAvatarPress || (() => router.push('/profile'))}
+                >
+                  <Avatar uri={avatarUrl} size={54} />
+                  {currentRole === 'LABOUR' && (
+                    <View style={styles.cameraIconBadge}>
+                      <Ionicons name="camera" size={9} color="#ffffff" />
+                    </View>
+                  )}
+                </TouchableOpacity>
 
-              {/* Verified Symbol Badge attached to Profile Photo */}
-              {currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR' ? (
-                <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark-circle" size={15} color={THEME_4D.neonEmerald} />
-                </View>
-              ) : null}
+                {/* Verified Symbol Badge attached to Profile Photo */}
+                {currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR' ? (
+                  <View style={styles.verifiedBadge}>
+                    <Ionicons name="checkmark-circle" size={15} color={THEME_4D.neonEmerald} />
+                  </View>
+                ) : null}
+              </View>
+
+              {/* Dedicated Messenger Button next to Profile Photo for Doctors */}
+              {isDoctorRole && (
+                <TouchableOpacity
+                  style={styles.headerMessengerBtn}
+                  activeOpacity={0.85}
+                  onPress={onMessengerPress ? onMessengerPress : () => router.push('/(partner)/(tabs)/chat' as never)}
+                >
+                  <View style={styles.messengerIconBox}>
+                    <Ionicons name="chatbubbles" size={16} color="#ffffff" />
+                    {chatUnreadCount > 0 && (
+                      <View style={styles.messengerDot}>
+                        <Text style={styles.messengerDotText}>{chatUnreadCount > 9 ? '9+' : chatUnreadCount}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.headerMessengerBtnText}>Messenger</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -692,5 +719,45 @@ const styles = StyleSheet.create({
     marginTop: 2,
     maxWidth: 80,
     textAlign: 'center',
+  },
+  headerMessengerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#10b981',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.2,
+    borderColor: '#34d399',
+  },
+  messengerIconBox: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  messengerDot: {
+    position: 'absolute',
+    top: -5,
+    right: -7,
+    backgroundColor: '#ef4444',
+    minWidth: 14,
+    height: 14,
+    borderRadius: 7,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 2,
+    borderWidth: 1.2,
+    borderColor: '#ffffff',
+  },
+  messengerDotText: {
+    color: '#ffffff',
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+  },
+  headerMessengerBtnText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
   },
 });

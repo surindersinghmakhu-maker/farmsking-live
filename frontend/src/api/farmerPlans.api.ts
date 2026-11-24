@@ -477,6 +477,80 @@ export function checkCardPermission(
   }
 }
 
+export interface FarmerPlanTierConfig {
+  key: 'PRO' | 'SMART' | 'SUPER';
+  name: string;
+  badge: string;
+  subtitle: string;
+  price: number;
+  mrp: number;
+  billingPeriodDays: number;
+  features: {
+    bahiKhata: boolean;
+    cropLogs: boolean;
+    voiceAiMic: boolean;
+    weatherEnabled: boolean;
+    arhtiyaCalc: boolean;
+    labourMgmt: boolean;
+    workerLogin: boolean;
+    mandiAi: boolean;
+    satelliteNDVI: boolean;
+    unlimitedCrops: boolean;
+    advisorIncluded: boolean;
+    storeDiscount: boolean;
+  };
+  offer: {
+    enabled: boolean;
+    name: string;
+    offerPrice: number;
+    validTill: string;
+  };
+}
+
+export interface FarmerPlanConfigsResponse {
+  configs: Record<string, FarmerPlanTierConfig>;
+  storeCodEnabled: boolean;
+}
+
+export async function getFarmerPlanConfigs(): Promise<FarmerPlanConfigsResponse> {
+  const { data } = await apiClient.get<FarmerPlanConfigsResponse>('/farmer-plans/configs');
+  return data;
+}
+
+export async function updateFarmerPlanConfigs(payload: { configs?: Record<string, any>; storeCodEnabled?: boolean }) {
+  const { data } = await apiClient.patch('/farmer-plans/configs', payload);
+  return data;
+}
+
+export async function cancelFarmerPlanRequest(reason?: string, requestId?: string) {
+  const { data } = await apiClient.post('/farmer-plans/cancel-request', { reason, requestId });
+  return data;
+}
+
+export interface UpgradeQuoteResponse {
+  isAllowed: boolean;
+  isDowngrade?: boolean;
+  isUpgrade?: boolean;
+  isSameTierRenewal?: boolean;
+  currentPlan: FarmerPlanType;
+  targetPlan: FarmerPlanType;
+  targetPlanPrice: number;
+  unusedCreditAmount: number;
+  netPayableAmount: number;
+  daysRemaining: number;
+  daysGranted: number;
+  reason?: string;
+  savingsText?: string | null;
+  extensionNotice?: string | null;
+}
+
+export async function getUpgradeQuote(targetPlan: FarmerPlanType, billingPeriodDays?: number): Promise<UpgradeQuoteResponse> {
+  const { data } = await apiClient.get<UpgradeQuoteResponse>('/farmer-plans/upgrade-quote', {
+    params: { targetPlan, billingPeriodDays },
+  });
+  return data;
+}
+
 
 
 

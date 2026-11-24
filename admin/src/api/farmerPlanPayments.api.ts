@@ -35,6 +35,10 @@ export interface InitiateFarmerPlanPaymentResponse extends FarmerPlanPaymentRequ
   upiLink?: string;
   payeeVpa?: string;
   payeeName?: string;
+  confirmed?: boolean;
+  activated?: boolean;
+  paidViaPoints?: number;
+  message?: string;
 }
 
 export async function initiateFarmerPlanPayment(
@@ -45,10 +49,27 @@ export async function initiateFarmerPlanPayment(
   selectedAdvisorId?: string,
   doctorKingId?: string,
   advisorKingId?: string,
+  isAutoDebit?: boolean,
+  preferredGateway?: 'CASHFREE' | 'RAZORPAY' | 'PHONEPE' | 'UPI_DIRECT',
+  useWalletPoints?: boolean,
+  pointsToDeduct?: number,
+  customAmount?: number,
 ): Promise<InitiateFarmerPlanPaymentResponse> {
   const { data } = await apiClient.post<InitiateFarmerPlanPaymentResponse>(
     '/farmer-plan-payments',
-    { targetPlan, billingPeriodDays, selectedDoctorId, selectedAdvisorId, doctorKingId, advisorKingId },
+    {
+      targetPlan,
+      billingPeriodDays,
+      selectedDoctorId,
+      selectedAdvisorId,
+      doctorKingId,
+      advisorKingId,
+      isAutoDebit,
+      preferredGateway,
+      useWalletPoints,
+      pointsToDeduct,
+      customAmount,
+    },
     { params: farmerId ? { farmerId } : {} },
   );
   return data;

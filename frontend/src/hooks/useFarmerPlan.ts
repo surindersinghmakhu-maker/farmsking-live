@@ -26,6 +26,11 @@ import {
   downloadAdminDocContent,
   getFarmerPlanHistory,
   activateTrial,
+  getFarmerPlanConfigs,
+  updateFarmerPlanConfigs,
+  cancelFarmerPlanRequest,
+  getUpgradeQuote,
+  UpgradeQuoteResponse,
 } from '../api/farmerPlans.api';
 
 
@@ -296,6 +301,49 @@ export function useActivateTrial() {
       queryClient.invalidateQueries({ queryKey: ['farmerPlanHistory'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
     },
+  });
+}
+
+export function useFarmerPlanConfigs() {
+  return useQuery({
+    queryKey: ['farmerPlanConfigs'],
+    queryFn: getFarmerPlanConfigs,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useUpdateFarmerPlanConfigs() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateFarmerPlanConfigs,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['farmerPlanConfigs'] });
+      queryClient.invalidateQueries({ queryKey: ['farmerPlanPricing'] });
+      queryClient.invalidateQueries({ queryKey: ['appSettings'] });
+    },
+  });
+}
+
+export function useCancelFarmerPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ reason, requestId }: { reason?: string; requestId?: string }) =>
+      cancelFarmerPlanRequest(reason, requestId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['farmerPlan'] });
+      queryClient.invalidateQueries({ queryKey: ['farmerPlanHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet'] });
+      queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    },
+  });
+}
+
+export function useUpgradeQuote(targetPlan: FarmerPlanType | null, billingPeriodDays?: number, enabled = true) {
+  return useQuery({
+    queryKey: ['upgradeQuote', targetPlan, billingPeriodDays],
+    queryFn: () => getUpgradeQuote(targetPlan!, billingPeriodDays),
+    enabled: enabled && !!targetPlan && targetPlan !== 'FREE',
   });
 }
 

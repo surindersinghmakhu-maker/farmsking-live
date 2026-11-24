@@ -217,14 +217,66 @@ export default function TermsOfServiceScreen() {
             </Text>
           </View>
 
-          {/* Section 6: Grievance Desk */}
+          {/* Section 6: Farmer Software Subscription Plans, Prorated Upgrades & 24-Hour Policy */}
+          <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(16,185,129,0.1)' : 'rgba(52,211,153,0.15)' }]}>
+                <Ionicons name="ribbon-outline" size={18} color={isDay ? '#16a34a' : '#34d399'} />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
+                6. Platform Usage Subscription Plans &amp; Wallet Points Governance
+              </Text>
+            </View>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              FarmsKing subscription plans (Kisan Plan, Boss Plan, Farmer VIP Plan) are software services enabling digital Bahi-Khata bookkeeping, crop cycle logs, Arhtiya interest calculators, labour logs, supervisor delegation, and live mandi intelligence:
+            </Text>
+            <View style={styles.bulletList}>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>No Downgrades during Active Validity: </Text>
+                  Users on higher tiers cannot downgrade to lower tiers while active.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>Prorated Upgrade Credit: </Text>
+                  Unused active days are calculated from the actual price paid and deducted from higher plan upgrades.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>24-Hour Cancellation &amp; Wallet Points Credit: </Text>
+                  Subscriptions activated by mistake can be cancelled within 24 hours. 100% of the paid fee is credited back to the user's FarmsKing Wallet as Points (1 Point = ₹1 INR). No cash or bank transfers are permitted.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>24-Hour Commission Hold: </Text>
+                  Partner, doctor, and agent commissions from subscriptions remain on a 24-hour verification hold before final wallet settlement.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>Zero Cash on Delivery (COD) on Software Plans: </Text>
+                  COD is exclusively restricted to physical AgriStore packages and is never available for software subscriptions.
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Section 7: Grievance Desk */}
           <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
             <View style={styles.cardHeaderRow}>
               <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(5,150,105,0.1)' : 'rgba(52,211,153,0.15)' }]}>
                 <Ionicons name="person-outline" size={18} color={isDay ? '#059669' : '#34d399'} />
               </View>
               <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
-                6. Statutory Grievance Redressal Desk
+                7. Statutory Grievance Redressal Desk
               </Text>
             </View>
             <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>

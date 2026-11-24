@@ -8,9 +8,27 @@ import { GrantFarmerPlanDaysDto } from './dto/grant-farmer-plan-days.dto';
 import { UpdateFarmerPlanPricingDto } from './dto/update-farmer-plan-pricing.dto';
 import { ChooseAdvisorDto } from './dto/choose-advisor.dto';
 import { ApplyCouponToFarmerDto } from './dto/apply-coupon-to-farmer.dto';
+import { CancelFarmerPlanDto } from './dto/cancel-farmer-plan.dto';
+import { UpdateFarmerPlanConfigsDto } from './dto/update-farmer-plan-configs.dto';
 export declare class FarmerPlansController {
     private readonly farmerPlansService;
     constructor(farmerPlansService: FarmerPlansService);
+    getPlanConfigs(): Promise<{
+        configs: Record<string, any>;
+        storeCodEnabled: any;
+    }>;
+    updatePlanConfigs(user: AuthUser, dto: UpdateFarmerPlanConfigsDto): Promise<{
+        success: boolean;
+        message: string;
+        configs: Record<string, any> | undefined;
+        storeCodEnabled: boolean | undefined;
+    }>;
+    cancelPlanRequest(user: AuthUser, dto: CancelFarmerPlanDto): Promise<{
+        success: boolean;
+        message: string;
+        refundedPoints: number;
+        activePlan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+    }>;
     getMyPlan(user: AuthUser): Promise<{
         hasUsedTrial: boolean;
         limits: {

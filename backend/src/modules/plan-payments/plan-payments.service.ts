@@ -88,7 +88,13 @@ export class PlanPaymentsService {
       payeeVpa: upiId || 'surindersinghmakhu-8@okicici',
       payeeName: upiPayeeName ?? undefined,
     });
-    return { ...request, activeGateway, upiLink };
+    return {
+      ...request,
+      activeGateway,
+      upiLink,
+      payeeVpa: upiId || 'surindersinghmakhu-8@okicici',
+      payeeName: upiPayeeName || 'FarmsKing Technologies',
+    };
   }
 
   listMine(user: AuthUser) {

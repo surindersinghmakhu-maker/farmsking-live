@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const notifications_module_1 = require("../notifications/notifications.module");
 const wallet_module_1 = require("../wallet/wallet.module");
 const whatsapp_module_1 = require("../whatsapp/whatsapp.module");
+const app_settings_module_1 = require("../app-settings/app-settings.module");
 const advisor_assignment_controller_1 = require("./advisor-assignment.controller");
 const advisor_assignment_service_1 = require("./advisor-assignment.service");
 let AdvisorAssignmentModule = class AdvisorAssignmentModule {
@@ -18,7 +19,7 @@ let AdvisorAssignmentModule = class AdvisorAssignmentModule {
 exports.AdvisorAssignmentModule = AdvisorAssignmentModule;
 exports.AdvisorAssignmentModule = AdvisorAssignmentModule = __decorate([
     (0, common_1.Module)({
-        imports: [notifications_module_1.NotificationsModule, wallet_module_1.WalletModule, whatsapp_module_1.WhatsappBotModule],
+        imports: [notifications_module_1.NotificationsModule, wallet_module_1.WalletModule, whatsapp_module_1.WhatsappBotModule, app_settings_module_1.AppSettingsModule],
         controllers: [advisor_assignment_controller_1.AdvisorAssignmentController],
         providers: [advisor_assignment_service_1.AdvisorAssignmentService],
         exports: [advisor_assignment_service_1.AdvisorAssignmentService],

@@ -475,78 +475,96 @@ export default function CartScreen() {
             </View>
 
             {/* 💳 Payment Method Box */}
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name="card-outline" size={18} color="#15803d" />
-                <Text style={styles.sectionTitle}>Select Payment Method</Text>
-              </View>
+            {(() => {
+              const isStoreCodEnabled = (settings?.featureFlags as any)?.storeCodEnabled ?? true;
+              return (
+                <View style={styles.card}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons name="card-outline" size={18} color="#15803d" />
+                    <Text style={styles.sectionTitle}>Select Payment Method</Text>
+                  </View>
 
-              <View style={{ gap: 8 }}>
-                <TouchableOpacity
-                  style={[styles.payOption, paymentMethod === 'COD' && styles.payOptionActive]}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    tap();
-                    setPaymentMethod('COD');
-                  }}
-                >
-                  <Ionicons
-                    name={paymentMethod === 'COD' ? 'radio-button-on' : 'radio-button-off'}
-                    size={18}
-                    color={paymentMethod === 'COD' ? '#15803d' : '#94a3b8'}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.payOptionTitle}>Cash on Delivery (COD)</Text>
-                    <Text style={styles.payOptionSub}>Pay cash when products are delivered to your doorstep</Text>
-                  </View>
-                  <View style={styles.verifiedTag}>
-                    <Text style={styles.verifiedTagText}>Safe & Verified</Text>
-                  </View>
-                </TouchableOpacity>
+                  <View style={{ gap: 8 }}>
+                    <TouchableOpacity
+                      style={[
+                        styles.payOption,
+                        paymentMethod === 'COD' && styles.payOptionActive,
+                        !isStoreCodEnabled && { opacity: 0.55, backgroundColor: '#f8fafc' },
+                      ]}
+                      activeOpacity={isStoreCodEnabled ? 0.8 : 1}
+                      onPress={() => {
+                        if (!isStoreCodEnabled) return;
+                        tap();
+                        setPaymentMethod('COD');
+                      }}
+                    >
+                      <Ionicons
+                        name={paymentMethod === 'COD' ? 'radio-button-on' : 'radio-button-off'}
+                        size={18}
+                        color={paymentMethod === 'COD' ? '#15803d' : '#94a3b8'}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.payOptionTitle}>
+                          Cash on Delivery (COD) {!isStoreCodEnabled ? '(Disabled by Admin)' : ''}
+                        </Text>
+                        <Text style={styles.payOptionSub}>
+                          {!isStoreCodEnabled
+                            ? 'COD is currently disabled by Admin. Please choose Online / UPI payment.'
+                            : 'Pay cash when products are delivered to your doorstep'}
+                        </Text>
+                      </View>
+                      <View style={[styles.verifiedTag, !isStoreCodEnabled && { backgroundColor: '#fee2e2' }]}>
+                        <Text style={[styles.verifiedTagText, !isStoreCodEnabled && { color: '#dc2626' }]}>
+                          {!isStoreCodEnabled ? 'Disabled' : 'Store Only'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.payOption, paymentMethod === 'ONLINE' && styles.payOptionActive]}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    tap();
-                    setPaymentMethod('ONLINE');
-                  }}
-                >
-                  <Ionicons
-                    name={paymentMethod === 'ONLINE' ? 'radio-button-on' : 'radio-button-off'}
-                    size={18}
-                    color={paymentMethod === 'ONLINE' ? '#15803d' : '#94a3b8'}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.payOptionTitle}>Instant Online / UPI / Cards</Text>
-                    <Text style={styles.payOptionSub}>Zero gateway fee via UPI, Google Pay, PhonePe & NetBanking</Text>
+                    <TouchableOpacity
+                      style={[styles.payOption, paymentMethod === 'ONLINE' && styles.payOptionActive]}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        tap();
+                        setPaymentMethod('ONLINE');
+                      }}
+                    >
+                      <Ionicons
+                        name={paymentMethod === 'ONLINE' ? 'radio-button-on' : 'radio-button-off'}
+                        size={18}
+                        color={paymentMethod === 'ONLINE' ? '#15803d' : '#94a3b8'}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.payOptionTitle}>Instant Online / UPI / Cards</Text>
+                        <Text style={styles.payOptionSub}>Zero gateway fee via UPI, Google Pay, PhonePe & NetBanking</Text>
+                      </View>
+                      <Ionicons name="flash" size={16} color="#f59e0b" />
+                    </TouchableOpacity>
                   </View>
-                  <Ionicons name="flash" size={16} color="#f59e0b" />
-                </TouchableOpacity>
-              </View>
 
-              {walletBalance > 0 && (
-                <TouchableOpacity
-                  style={[styles.walletBox, useWalletBalance && styles.walletBoxActive]}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    tap();
-                    setUseWalletBalance(!useWalletBalance);
-                  }}
-                >
-                  <Ionicons
-                    name={useWalletBalance ? 'checkbox' : 'square-outline'}
-                    size={20}
-                    color={useWalletBalance ? '#15803d' : '#64748b'}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.walletTitle}>Use FarmsKing Royal Wallet Balance</Text>
-                    <Text style={styles.walletSub}>Available Balance: ₹{walletBalance.toLocaleString('en-IN')}</Text>
-                  </View>
-                  <Text style={styles.walletDeduct}>-₹{walletDeduction.toLocaleString('en-IN')}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+                  {walletBalance > 0 && (
+                    <TouchableOpacity
+                      style={[styles.walletBox, useWalletBalance && styles.walletBoxActive]}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        setUseWalletBalance(!useWalletBalance);
+                      }}
+                    >
+                      <Ionicons
+                        name={useWalletBalance ? 'checkbox' : 'square-outline'}
+                        size={20}
+                        color={useWalletBalance ? '#15803d' : '#64748b'}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.walletTitle}>Redeem FarmsKing Points (1 Point = ₹1)</Text>
+                        <Text style={styles.walletSub}>Available Balance: {walletBalance.toLocaleString('en-IN')} Points (= ₹{walletBalance.toLocaleString('en-IN')})</Text>
+                      </View>
+                      <Text style={styles.walletDeduct}>-{walletDeduction.toLocaleString('en-IN')} Points</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })()}
 
             {/* 🧾 Live Bill Summary Card */}
             <View style={[styles.card, styles.billCard]}>
@@ -576,8 +594,8 @@ export default function CartScreen() {
 
               {walletDeduction > 0 && (
                 <View style={styles.billRow}>
-                  <Text style={[styles.billLabel, { color: '#0284c7' }]}>Wallet Deduction:</Text>
-                  <Text style={[styles.billValue, { color: '#0284c7' }]}>-₹{walletDeduction.toLocaleString('en-IN')}</Text>
+                  <Text style={[styles.billLabel, { color: '#0284c7' }]}>FarmsKing Points Redeemed:</Text>
+                  <Text style={[styles.billValue, { color: '#0284c7' }]}>-{walletDeduction} Points (-₹{walletDeduction})</Text>
                 </View>
               )}
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -12,6 +12,7 @@ import { ListFarmersQueryDto } from './dto/list-farmers-query.dto';
 import { RejectAssignmentDto } from './dto/reject-assignment.dto';
 import { CreateAdvisorPlanDto } from './dto/create-advisor-plan.dto';
 import { AdminApprovePlanDto, AdminRejectPlanDto } from './dto/admin-review-plan.dto';
+import { UpdateDoctorSettingsDto } from './dto/update-doctor-settings.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('advisor-assignments')
@@ -178,5 +179,21 @@ export class AdvisorAssignmentController {
     @Body() dto?: AdminRejectPlanDto,
   ) {
     return this.advisorAssignmentService.adminRejectAdvisorPlan(user, id, dto?.reason);
+  }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.FARMER, Role.GARDENER, Role.CUSTOMER)
+  @Get('doctor-settings')
+  getDoctorSettings(@CurrentUser() user: AuthUser, @Query('advisorId') advisorId?: string) {
+    return this.advisorAssignmentService.getDoctorSettings(user, advisorId);
+  }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Patch('doctor-settings')
+  updateDoctorSettings(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateDoctorSettingsDto,
+    @Query('advisorId') advisorId?: string,
+  ) {
+    return this.advisorAssignmentService.updateDoctorSettings(user, dto, advisorId);
   }
 }

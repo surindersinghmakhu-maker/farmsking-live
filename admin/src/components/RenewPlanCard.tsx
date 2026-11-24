@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Linking, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '../../constants/Colors';
@@ -97,13 +97,15 @@ export function RenewModal({ visible, onClose, farmerId }: { visible: boolean; o
   );
 }
 
-/** Generates a fixed-amount UPI link for the membership, opens the farmer's UPI app, then lets them mark it paid for admin verification. */
+/** Generates a fixed-amount UPI QR for the membership, displays on PC screen or opens on mobile, then lets them submit the 12-digit UTR for admin verification. */
 function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () => void }) {
   const initiate = useInitiatePlanPayment();
   const submit = useSubmitPlanPayment();
   const [request, setRequest] = useState<InitiatePlanPaymentResponse | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [utr, setUtr] = useState('');
+  const [copiedVpa, setCopiedVpa] = useState(false);
 
   const handleGenerate = async () => {
     setError(null);
@@ -115,20 +117,33 @@ function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
     }
   };
 
+  const handleCopyVpa = (vpa: string) => {
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(vpa);
+    }
+    setCopiedVpa(true);
+    setTimeout(() => setCopiedVpa(false), 2500);
+  };
+
   const handleOpenUpiApp = async () => {
     if (!request) return;
     tap();
     try {
       await Linking.openURL(request.upiLink);
     } catch {
-      setError('No UPI app found on this device.');
+      setError('No UPI app found on this device. Please scan the QR code above.');
     }
   };
 
   const handleSubmit = async () => {
     if (!request) return;
+    if (!utr.trim()) {
+      setError('Please enter the 12-digit UPI UTR / Transaction reference number.');
+      return;
+    }
+    setError(null);
     try {
-      await submit.mutateAsync({ id: request.id });
+      await submit.mutateAsync({ id: request.id, utr: utr.trim() });
       setSubmitted(true);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Could not submit payment for verification.');
@@ -139,8 +154,8 @@ function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
     return (
       <View style={{ gap: 10 }}>
         <View style={styles.successBox}>
-          <Ionicons name="time" size={20} color="#16a34a" />
-          <Text style={styles.successText}>Payment submitted! An admin will verify and confirm it shortly — you'll get a notification once it's approved.</Text>
+          <Ionicons name="checkmark-circle" size={22} color="#16a34a" />
+          <Text style={styles.successText}>Payment submitted successfully! Your plan will be verified and activated shortly.</Text>
         </View>
         <TouchableOpacity style={styles.submitBtn} onPress={onDone}>
           <Text style={styles.submitBtnText}>Done</Text>
@@ -150,21 +165,62 @@ function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
   }
 
   if (request) {
+    const payeeVpa = request.payeeVpa || 'surindersinghmakhu-8@okicici';
     return (
       <View style={{ gap: 10 }}>
         <View style={styles.successBox}>
           <Ionicons name="pricetag" size={20} color="#16a34a" />
           <Text style={styles.successText}>
-            {request.subscription.plan.name}: pay ₹{request.amount} via UPI. Note carries your ID ({request.farmer.kingId ?? request.farmerId}) so it's easy to match.
+            {request.subscription.plan.name}: Pay ₹{request.amount} via UPI QR. Note: FK-{(request.farmer.kingId ?? request.farmerId).slice(0, 10)}
           </Text>
         </View>
+
+        {/* In-Modal Direct QR Code (Never opens blank upi:// tab on PC Web) */}
+        <View style={styles.qrCard}>
+          <Text style={styles.qrCardTitle}>Step 1: Scan QR Code with Any UPI App</Text>
+          <Text style={styles.qrCardSub}>Google Pay · PhonePe · Paytm · BHIM · Mobile Banking</Text>
+          <Image
+            source={{
+              uri: `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=1&ecc=H&data=${encodeURIComponent(request.upiLink)}`,
+            }}
+            style={styles.qrImg}
+            resizeMode="contain"
+          />
+          <View style={styles.vpaRow}>
+            <Text style={styles.vpaLabel}>UPI ID:</Text>
+            <Text style={styles.vpaVal}>{payeeVpa}</Text>
+            <TouchableOpacity style={styles.copyBtn} onPress={() => handleCopyVpa(payeeVpa)}>
+              <Ionicons name={copiedVpa ? 'checkmark' : 'copy-outline'} size={12} color="#ffffff" />
+              <Text style={styles.copyBtnText}>{copiedVpa ? 'Copied' : 'Copy'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Mobile Native App Intent Only (Zero blank tab on PC Web) */}
+        {Platform.OS !== 'web' && (
+          <TouchableOpacity style={styles.submitBtn} onPress={handleOpenUpiApp}>
+            <Text style={styles.submitBtnText}>Open in UPI App on Phone</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Step 2: 12-Digit UTR Input */}
+        <View style={{ gap: 4, marginTop: 4 }}>
+          <Text style={styles.label}>Step 2: Enter 12-Digit UPI Transaction / UTR Number</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 431289567812"
+            placeholderTextColor="#94a3b8"
+            value={utr}
+            onChangeText={setUtr}
+            keyboardType="number-pad"
+            maxLength={22}
+          />
+        </View>
+
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <TouchableOpacity style={styles.submitBtn} onPress={handleOpenUpiApp}>
-          <Text style={styles.submitBtnText}>Open in UPI App</Text>
-        </TouchableOpacity>
-        <Text style={styles.label}>Paid already? Tap below once the payment goes through — it opens for admin verification.</Text>
+
         <TouchableOpacity style={[styles.submitBtn, styles.submitBtnSecondary]} disabled={submit.isPending} onPress={handleSubmit}>
-          {submit.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>I've Paid</Text>}
+          {submit.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Verify & Confirm Renewal</Text>}
         </TouchableOpacity>
       </View>
     );
@@ -172,10 +228,10 @@ function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
 
   return (
     <View style={{ gap: 10 }}>
-      <Text style={styles.label}>Pay the fixed VIP Pass amount via UPI. An admin verifies it and confirms your renewal.</Text>
+      <Text style={styles.label}>Pay the fixed VIP Pass amount via UPI QR. An admin verifies your UTR to confirm your renewal.</Text>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <TouchableOpacity style={styles.submitBtn} disabled={initiate.isPending} onPress={handleGenerate}>
-        {initiate.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Get UPI Payment Link</Text>}
+        {initiate.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Get UPI Payment QR</Text>}
       </TouchableOpacity>
     </View>
   );
@@ -316,4 +372,13 @@ const styles = StyleSheet.create({
   successText: { flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#15803d' },
   warningBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#fffbeb', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: '#fde68a' },
   warningText: { flex: 1, fontSize: 12, fontFamily: FONT.medium, color: '#92400e', lineHeight: 16 },
+  qrCard: { backgroundColor: '#f8fafc', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', gap: 6 },
+  qrCardTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  qrCardSub: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' },
+  qrImg: { width: 170, height: 170, backgroundColor: '#ffffff', borderRadius: 8, marginVertical: 4, borderWidth: 1, borderColor: '#cbd5e1' },
+  vpaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ffffff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' },
+  vpaLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b' },
+  vpaVal: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  copyBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: theme.primary, paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm },
+  copyBtnText: { color: '#ffffff', fontSize: 10.5, fontFamily: FONT.bold },
 });

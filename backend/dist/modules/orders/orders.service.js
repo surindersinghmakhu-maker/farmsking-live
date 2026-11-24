@@ -155,6 +155,11 @@ let OrdersService = class OrdersService {
             }
         }
         const isCodRequested = dto.paymentMode === 'COD';
+        const storeSettings = (await this.appSettingsService.get());
+        const isStoreCodGlobalEnabled = storeSettings?.featureFlags?.storeCodEnabled ?? true;
+        if (isCodRequested && !isStoreCodGlobalEnabled) {
+            throw new common_1.BadRequestException('Cash on Delivery (COD) is currently disabled by Admin for store purchases. Please choose online payment or UPI.');
+        }
         if (isCodRequested && (totalWeightKg >= 25 || anyCodDisabled)) {
             throw new common_1.BadRequestException('Cash on Delivery is disabled for this order due to package weight (>= 25kg) or restricted items like Khad/Spray. Please choose online payment.');
         }

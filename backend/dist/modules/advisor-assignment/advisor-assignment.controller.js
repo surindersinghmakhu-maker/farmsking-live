@@ -26,6 +26,7 @@ const list_farmers_query_dto_1 = require("./dto/list-farmers-query.dto");
 const reject_assignment_dto_1 = require("./dto/reject-assignment.dto");
 const create_advisor_plan_dto_1 = require("./dto/create-advisor-plan.dto");
 const admin_review_plan_dto_1 = require("./dto/admin-review-plan.dto");
+const update_doctor_settings_dto_1 = require("./dto/update-doctor-settings.dto");
 let AdvisorAssignmentController = class AdvisorAssignmentController {
     constructor(advisorAssignmentService) {
         this.advisorAssignmentService = advisorAssignmentService;
@@ -98,6 +99,12 @@ let AdvisorAssignmentController = class AdvisorAssignmentController {
     }
     adminRejectAdvisorPlan(user, id, dto) {
         return this.advisorAssignmentService.adminRejectAdvisorPlan(user, id, dto?.reason);
+    }
+    getDoctorSettings(user, advisorId) {
+        return this.advisorAssignmentService.getDoctorSettings(user, advisorId);
+    }
+    updateDoctorSettings(user, dto, advisorId) {
+        return this.advisorAssignmentService.updateDoctorSettings(user, dto, advisorId);
     }
 };
 exports.AdvisorAssignmentController = AdvisorAssignmentController;
@@ -302,6 +309,25 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, admin_review_plan_dto_1.AdminRejectPlanDto]),
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "adminRejectAdvisorPlan", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.CUSTOMER),
+    (0, common_1.Get)('doctor-settings'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)('advisorId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "getDoctorSettings", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Patch)('doctor-settings'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Query)('advisorId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_doctor_settings_dto_1.UpdateDoctorSettingsDto, String]),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "updateDoctorSettings", null);
 exports.AdvisorAssignmentController = AdvisorAssignmentController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('advisor-assignments'),

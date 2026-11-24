@@ -170,7 +170,7 @@ export default function MoreScreen() {
     MY_PROFILE_ITEM,
     MY_ADDRESSES_ITEM,
     FARMER_ONLY_ITEM,
-    ...(isAdvisorRole
+    ...(role === 'GARDEN_ADVISOR'
       ? [
           {
             key: 'tabGardenDoctorStudio' as any,
@@ -178,13 +178,22 @@ export default function MoreScreen() {
             icon: 'medical-outline',
             href: '/(partner)/garden-doctor',
           },
+        ]
+      : []),
+    ...(isAdvisorRole
+      ? [
           {
             key: 'tabAdvisorWallet' as any,
             label: 'Advisor Wallet & Payouts',
             icon: 'wallet-outline',
             href: '/(partner)/(tabs)/wallet',
           },
-          ADVISOR_PROFILE_ITEM,
+          {
+            key: 'advisorProfile' as any,
+            label: role === 'GARDEN_ADVISOR' ? 'Garden Advisor Profile' : 'Crop Doctor Profile',
+            icon: 'briefcase-outline',
+            href: '/advisor-profile',
+          },
         ]
       : []),
     ...(isLabourRole ? [LABOUR_ITEM] : []),

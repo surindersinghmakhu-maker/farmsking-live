@@ -7,6 +7,7 @@
     "start": "node scripts/start.js",
     "build:web": "node frontend/build.js",
     "deploy": "node scripts/deploy.js",
+    "deloy": "node scripts/deploy.js",
     "deploye": "node scripts/deploy.js",
     "eploye": "node scripts/deploy.js",
     "deoky": "node scripts/deploy.js"

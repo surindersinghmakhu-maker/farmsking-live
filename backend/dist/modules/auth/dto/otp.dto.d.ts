@@ -35,6 +35,14 @@ export declare class CompleteOtpRegistrationDto {
     role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
     portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
     termsAccepted?: boolean;
+    pincode?: string;
+    state?: string;
+    district?: string;
+    village?: string;
+    postOffice?: string;
+    gpsLat?: number;
+    gpsLng?: number;
+    gpsLocationName?: string;
 }
 export declare class SendMobileOtpDto {
     mobile: string;

@@ -134,8 +134,8 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             ) : null}
           </View>
 
-          {/* Center Block: Profile Photo Avatar & Messenger Action Button */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {/* Center Block: Profile Photo Avatar in the Center */}
+          <View style={styles.avatarCenterBlock}>
             <View style={styles.avatarContainer}>
               <TouchableOpacity
                 style={[
@@ -149,7 +149,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
                 disabled={currentRole === 'ADMIN'}
                 onPress={onAvatarPress || (() => router.push('/profile'))}
               >
-                <Avatar uri={avatarUrl} size={54} />
+                <Avatar uri={avatarUrl} size={isDesktop ? 58 : 52} />
                 {currentRole === 'LABOUR' && (
                   <View style={styles.cameraIconBadge}>
                     <Ionicons name="camera" size={9} color="#ffffff" />
@@ -160,12 +160,14 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               {/* Verified Symbol Badge attached to Profile Photo */}
               {currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR' ? (
                 <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark-circle" size={15} color="#10b981" />
+                  <Ionicons name="checkmark-circle" size={16} color="#10b981" />
                 </View>
               ) : null}
             </View>
+          </View>
 
-            {/* Dedicated Messenger Button next to Profile Photo for Doctors */}
+          {/* Right Block: Messenger Action Button on Right Side */}
+          <View style={styles.headerRightActions}>
             {isDoctorRole && (
               <TouchableOpacity
                 style={[
@@ -186,10 +188,6 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
                 <Text style={styles.headerMessengerBtnText}>Messenger</Text>
               </TouchableOpacity>
             )}
-          </View>
-
-          {/* Right Block: Secondary Avatar or Plan Badge + Light/Dark Theme Switcher */}
-          <View style={styles.headerRightActions}>
             {secondaryAvatarUrl !== undefined || secondaryName ? (
               <View style={styles.secondaryAvatarBlock}>
                 <TouchableOpacity
@@ -359,11 +357,16 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     marginTop: 2,
   },
+  avatarCenterBlock: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
   avatarContainer: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
   },
   avatarRing: {
     width: 62,

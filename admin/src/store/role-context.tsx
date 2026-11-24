@@ -67,7 +67,16 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const hasAdvisorRole = assignedRoles.some(isAdvisorOrDoctor);
   const hasFarmerRole = assignedRoles.includes('FARMER');
 
-  const advisorRoleToUse = assignedRoles.find(isAdvisorOrDoctor) || (isAdvisorOrDoctor(primaryRole) ? primaryRole : 'FARM_ADVISOR');
+  const advisorRoleToUse: UserRole =
+    assignedRoles.includes('FARM_ADVISOR')
+      ? 'FARM_ADVISOR'
+      : assignedRoles.includes('ADVISOR')
+        ? 'FARM_ADVISOR'
+        : assignedRoles.includes('GARDEN_ADVISOR')
+          ? 'GARDEN_ADVISOR'
+          : isAdvisorOrDoctor(primaryRole)
+            ? (primaryRole === 'ADVISOR' ? 'FARM_ADVISOR' : primaryRole)
+            : 'FARM_ADVISOR';
 
   const defaultInitialRole = isStaffUser
     ? (user?.role as UserRole)
@@ -103,8 +112,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       setRoleState((prev) => {
         if (prev && assignedRoles.includes(prev)) return prev;
         if (savedRole && assignedRoles.includes(savedRole)) return savedRole;
-        const advisorRole = assignedRoles.find(isAdvisorOrDoctor);
-        if (advisorRole) return advisorRole;
+        if (hasAdvisorRole) return advisorRoleToUse;
         return primaryRole;
       });
     };

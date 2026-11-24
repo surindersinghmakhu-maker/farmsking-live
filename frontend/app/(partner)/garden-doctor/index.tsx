@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
+import { useRole } from '@/src/store/role-context';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useDoctorGardenDashboard } from '@/src/hooks/useGardens';
 import { useAcceptAssignment, useRejectAssignment } from '@/src/hooks/useAdvisorAssignments';
@@ -36,7 +37,18 @@ type DoctorStudioTab = 'QUEUE' | 'PATHOLOGY_FEED' | 'EARNINGS';
 export default function GardenDoctorStudioScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { role } = useRole();
   const { colors, isLight } = useExecutiveTheme();
+
+  React.useEffect(() => {
+    if (role !== 'GARDEN_ADVISOR') {
+      router.replace('/(partner)/(tabs)' as any);
+    }
+  }, [role, router]);
+
+  if (role !== 'GARDEN_ADVISOR') {
+    return null;
+  }
 
   const { data: dashboard, isLoading, refetch } = useDoctorGardenDashboard();
   const acceptAssignment = useAcceptAssignment();

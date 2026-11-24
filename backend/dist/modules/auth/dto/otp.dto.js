@@ -172,6 +172,54 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CompleteOtpRegistrationDto.prototype, "termsAccepted", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: '6-digit postal PIN code' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "pincode", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'State name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "state", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'District name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "district", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Village or city name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "village", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Post Office name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "postOffice", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'GPS Latitude' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CompleteOtpRegistrationDto.prototype, "gpsLat", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'GPS Longitude' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CompleteOtpRegistrationDto.prototype, "gpsLng", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'GPS Location Name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "gpsLocationName", void 0);
 class SendMobileOtpDto {
 }
 exports.SendMobileOtpDto = SendMobileOtpDto;

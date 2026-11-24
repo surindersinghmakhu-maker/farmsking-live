@@ -86,7 +86,16 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const hasGardenerRole = assignedRoles.includes('GARDENER');
   const hasTraderRole = assignedRoles.includes('TRADER' as UserRole);
 
-  const advisorRoleToUse = assignedRoles.find(isAdvisorOrDoctor) || (isAdvisorOrDoctor(primaryRole) ? primaryRole : 'FARM_ADVISOR');
+  const advisorRoleToUse: UserRole =
+    assignedRoles.includes('FARM_ADVISOR')
+      ? 'FARM_ADVISOR'
+      : assignedRoles.includes('ADVISOR')
+        ? 'FARM_ADVISOR'
+        : assignedRoles.includes('GARDEN_ADVISOR')
+          ? 'GARDEN_ADVISOR'
+          : isAdvisorOrDoctor(primaryRole)
+            ? (primaryRole === 'ADVISOR' ? 'FARM_ADVISOR' : primaryRole)
+            : 'FARM_ADVISOR';
 
   const resolvePortalDefaultRole = (): UserRole => {
     if (!user?.id) return primaryRole;

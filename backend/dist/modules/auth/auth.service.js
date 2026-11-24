@@ -2123,6 +2123,32 @@ let AuthService = AuthService_1 = class AuthService {
         const assignedRoles = chosenRole === client_1.Role.CUSTOMER ? [client_1.Role.CUSTOMER] : [client_1.Role.CUSTOMER, chosenRole];
         const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
         const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
+        let state = dto.state?.trim() || undefined;
+        let district = dto.district?.trim() || undefined;
+        let postOffice = dto.postOffice?.trim() || undefined;
+        let village = dto.village?.trim() || undefined;
+        const pincode = dto.pincode?.trim() || undefined;
+        if (pincode && /^\d{6}$/.test(pincode) && (!state || !district)) {
+            try {
+                const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+                if (response.ok) {
+                    const body = await response.json();
+                    const record = Array.isArray(body) ? body[0] : null;
+                    if (record && record.Status === 'Success' && record.PostOffice?.length) {
+                        const firstOffice = record.PostOffice[0];
+                        if (!state)
+                            state = firstOffice.State;
+                        if (!district)
+                            district = firstOffice.District;
+                        if (!postOffice)
+                            postOffice = firstOffice.Name;
+                    }
+                }
+            }
+            catch (err) {
+                console.warn('[completeOtpRegistration] Postal lookup notice:', err);
+            }
+        }
         const newUser = await this.prisma.user.create({
             data: {
                 kingId,
@@ -2133,6 +2159,14 @@ let AuthService = AuthService_1 = class AuthService {
                 passwordHash,
                 isPhoneVerified: true,
                 termsAcceptedAt: dto.termsAccepted ? new Date() : undefined,
+                pincode,
+                state,
+                district,
+                village,
+                postOffice,
+                gpsLat: dto.gpsLat,
+                gpsLng: dto.gpsLng,
+                gpsLocationName: dto.gpsLocationName?.trim() || (district && state ? `${district}, ${state}` : undefined),
             },
         });
         try {

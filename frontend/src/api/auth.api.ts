@@ -148,6 +148,14 @@ export interface CompleteOtpRegistrationPayload {
   role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
   portal?: LoginPortalMode;
   termsAccepted?: boolean;
+  pincode?: string;
+  state?: string;
+  district?: string;
+  village?: string;
+  postOffice?: string;
+  gpsLat?: number;
+  gpsLng?: number;
+  gpsLocationName?: string;
 }
 
 export async function completeOtpRegistrationApi(

@@ -521,6 +521,20 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                             </>
                           )}
                         </TouchableOpacity>
+                      ) : activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) <= 0 ? (
+                        <TouchableOpacity
+                          style={[styles.shareBtn, { backgroundColor: '#7c3aed' }]}
+                          activeOpacity={0.85}
+                          onPress={() => {
+                            tap();
+                            setIsCropCareModalOpen(true);
+                          }}
+                        >
+                          <Ionicons name="trending-up" size={13} color="#ffffff" />
+                          <Text style={styles.shareBtnText}>
+                            Upgrade Plan with Dr. {activeAdvisors[0].name.split(' ')[0]}
+                          </Text>
+                        </TouchableOpacity>
                       ) : null}
 
                       <TouchableOpacity
@@ -854,13 +868,63 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                         </Text>
                       </View>
                     ) : (
-                      <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.semiBold, color: colors.textMuted }}>
-                          Quota Full ({adv.monthlyIncludedCrops}/{adv.monthlyIncludedCrops})
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(234, 179, 8, 0.15)' : '#fef3c7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: isDark ? 'rgba(234, 179, 8, 0.3)' : '#fde68a' }}>
+                        <Ionicons name="alert-circle" size={10} color="#b45309" />
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>
+                          Quota Limit Reached ({adv.monthlyIncludedCrops}/{adv.monthlyIncludedCrops})
                         </Text>
                       </View>
                     )}
                   </View>
+
+                  {/* Quota Full Upgrade Recommendation Strip */}
+                  {(adv.freeSlotsRemaining ?? 0) <= 0 && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        backgroundColor: isDark ? 'rgba(124, 58, 237, 0.12)' : '#f5f3ff',
+                        borderColor: isDark ? 'rgba(124, 58, 237, 0.3)' : '#ddd6fe',
+                        borderWidth: 1,
+                        borderRadius: RADIUS.md,
+                        padding: 10,
+                        marginTop: 8,
+                        gap: 8,
+                      }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Ionicons name="trending-up" size={13} color="#7c3aed" />
+                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#c4b5fd' : '#6d28d9' }}>
+                            Upgrade Dr. {adv.name.split(' ')[0]}'s Plan
+                          </Text>
+                        </View>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: colors.textMuted, marginTop: 2 }}>
+                          Crop quota is full ({adv.supervisedCrops.length}/{adv.monthlyIncludedCrops}). Upgrade to a higher plan to add more crops.
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#7c3aed',
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: RADIUS.sm,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          tap();
+                          setIsCropCareModalOpen(true);
+                        }}
+                      >
+                        <Ionicons name="sparkles" size={11} color="#ffffff" />
+                        <Text style={{ color: '#ffffff', fontSize: 11, fontFamily: FONT.bold }}>Upgrade</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
 
                   {/* Supervised crops pill if any */}
                   {adv.supervisedCrops.length > 0 && (
@@ -1242,6 +1306,20 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                                         </Text>
                                       </>
                                     )}
+                                  </TouchableOpacity>
+                                ) : activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) <= 0 ? (
+                                  <TouchableOpacity
+                                    style={[styles.shareBtn, { backgroundColor: '#7c3aed' }]}
+                                    activeOpacity={0.85}
+                                    onPress={() => {
+                                      tap();
+                                      setIsCropCareModalOpen(true);
+                                    }}
+                                  >
+                                    <Ionicons name="trending-up" size={13} color="#ffffff" />
+                                    <Text style={styles.shareBtnText}>
+                                      Upgrade Plan with Dr. {activeAdvisors[0].name.split(' ')[0]}
+                                    </Text>
                                   </TouchableOpacity>
                                 ) : null}
 
@@ -1805,6 +1883,10 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
         onClose={() => {
           setAdoptionTargetCrop(null);
           setIsSecondOpinionMode(false);
+        }}
+        onUpgradePlan={() => {
+          setAdoptionTargetCrop(null);
+          setIsCropCareModalOpen(true);
         }}
       />
     </View>

@@ -300,7 +300,7 @@ export const DoctorMessengerModal: React.FC<DoctorMessengerModalProps> = ({
                       onPress={() => handleOpenThread(c.partner.id, c.partner.name)}
                     >
                       <View style={styles.avatarWrap}>
-                        <Avatar uri={c.partner.photoUrl} size={46} />
+                        <Avatar uri={c.partner.photoUrl} size={40} />
                         <View
                           style={[
                             styles.onlineDot,
@@ -419,9 +419,9 @@ const styles = StyleSheet.create({
   },
   dialogContainer: {
     width: '100%',
-    maxWidth: 580,
-    height: '84%',
-    maxHeight: 680,
+    maxWidth: 520,
+    height: '92%',
+    maxHeight: 640,
     borderRadius: RADIUS.xl,
     borderWidth: 1.5,
     overflow: 'hidden',
@@ -430,28 +430,29 @@ const styles = StyleSheet.create({
     ...premiumShadow('#000000', 'lg'),
   },
   dialogContainerDesktop: {
-    maxWidth: 620,
-    maxHeight: 720,
+    maxWidth: 500,
+    maxHeight: 600,
+    height: '84%',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     borderBottomWidth: 1,
   },
   headerIconBox: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     borderRadius: RADIUS.md,
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 15.5,
-    fontFamily: FONT.extraBold,
+    fontSize: 14,
+    fontFamily: FONT.bold,
   },
   subtitle: {
     fontSize: 11,
@@ -477,9 +478,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchWrapper: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 6,
   },
   searchBox: {
     flexDirection: 'row',
@@ -487,8 +488,9 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    height: 36,
   },
   searchInput: {
     flex: 1,
@@ -497,13 +499,13 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingBottom: 8,
   },
   chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: RADIUS.pill,
   },
   chipActive: {
@@ -534,10 +536,10 @@ const styles = StyleSheet.create({
   convoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    borderRadius: RADIUS.lg,
+    padding: 8,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    gap: 12,
+    gap: 10,
   },
   avatarWrap: {
     position: 'relative',

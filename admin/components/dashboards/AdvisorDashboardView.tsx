@@ -26,11 +26,10 @@ import { CropActivitySchedule, AdvisorReviewCropCycle, CropProblem } from '@/src
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
 import { DoctorMessengerModal } from '@/src/components/chat/DoctorMessengerModal';
-import { DoctorSettingsConsole } from '@/src/components/DoctorSettingsConsole';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useMyWallet } from '@/src/hooks/useWallet';
 
-type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS' | 'SETTINGS';
+type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS';
 
 function isScheduleFinishedOrMissing(crop: AdvisorReviewCropCycle): boolean {
   if (!crop.assignedSchedule || !crop.assignedSchedule.trim()) {
@@ -99,9 +98,8 @@ const TAB_META: Record<TabKey, { label: string; icon: keyof typeof Ionicons.glyp
   WEATHER: { label: 'Weather Alerts', icon: 'rainy', color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.12)', border: 'rgba(14, 165, 233, 0.35)' },
   NO_SCHEDULE: { label: 'Unscheduled Crops', icon: 'warning', color: '#fb923c', bg: 'rgba(251, 146, 60, 0.12)', border: 'rgba(251, 146, 60, 0.35)' },
   PROBLEMS: { label: 'Problem Tickets', icon: 'medkit', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.12)', border: 'rgba(244, 63, 94, 0.35)' },
-  SETTINGS: { label: 'Settings & Plans', icon: 'settings-outline', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)', border: 'rgba(16, 185, 129, 0.35)' },
 };
-const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_SCHEDULE', 'PROBLEMS', 'SETTINGS'];
+const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_SCHEDULE', 'PROBLEMS'];
 
 export interface AuditTableRow {
   id: string;
@@ -383,7 +381,6 @@ export const AdvisorDashboardView: React.FC = () => {
     WEATHER: weatherAlerts?.length ?? 0,
     NO_SCHEDULE: noScheduleCrops.length,
     PROBLEMS: pendingProblems.length,
-    SETTINGS: 0,
   };
   const isLoadingByTab: Record<TabKey, boolean> = {
     SUBMISSIONS: isLoadingPendingCrops || isLoadingCallRequests || isLoadingPendingFarmers || isLoadingProblems,
@@ -392,7 +389,6 @@ export const AdvisorDashboardView: React.FC = () => {
     WEATHER: isLoadingWeatherAlerts,
     NO_SCHEDULE: isLoadingAcceptedCrops,
     PROBLEMS: isLoadingProblems,
-    SETTINGS: false,
   };
 
   const defaultTab = useMemo<TabKey>(() => TAB_ORDER.find((k) => counts[k] > 0) ?? 'TODAY', []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1143,8 +1139,6 @@ export const AdvisorDashboardView: React.FC = () => {
                     </View>
                   )}
                 </View>
-              ) : activeTab === 'SETTINGS' ? (
-                <DoctorSettingsConsole advisorId={user?.id} />
               ) : (
                 <ScheduleList
                   items={activeTab === 'DELAYED' ? delayedSchedule : todaySchedule}

@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsString, IsOptional, IsEmail, Matches, IsBoolean } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString, IsOptional, IsEmail, Matches, IsBoolean, IsNumber } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SendLoginOtpDto {
@@ -129,6 +129,46 @@ export class CompleteOtpRegistrationDto {
   @IsOptional()
   @IsBoolean()
   termsAccepted?: boolean;
+
+  @ApiPropertyOptional({ description: '6-digit postal PIN code' })
+  @IsOptional()
+  @IsString()
+  pincode?: string;
+
+  @ApiPropertyOptional({ description: 'State name' })
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @ApiPropertyOptional({ description: 'District name' })
+  @IsOptional()
+  @IsString()
+  district?: string;
+
+  @ApiPropertyOptional({ description: 'Village or city name' })
+  @IsOptional()
+  @IsString()
+  village?: string;
+
+  @ApiPropertyOptional({ description: 'Post Office name' })
+  @IsOptional()
+  @IsString()
+  postOffice?: string;
+
+  @ApiPropertyOptional({ description: 'GPS Latitude' })
+  @IsOptional()
+  @IsNumber()
+  gpsLat?: number;
+
+  @ApiPropertyOptional({ description: 'GPS Longitude' })
+  @IsOptional()
+  @IsNumber()
+  gpsLng?: number;
+
+  @ApiPropertyOptional({ description: 'GPS Location Name' })
+  @IsOptional()
+  @IsString()
+  gpsLocationName?: string;
 }
 
 export class SendMobileOtpDto {

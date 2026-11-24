@@ -26,6 +26,7 @@ interface CropDoctorAdoptionModalProps {
   crop: CropCycle | null;
   onClose: () => void;
   isSecondOpinion?: boolean;
+  onUpgradePlan?: (doctorId?: string) => void;
 }
 
 type SelectedPlanType = 'INCLUDED_FREE' | 'PER_CROP' | 'MONTHLY_SUBSCRIPTION' | 'PAY_PER_CONSULTATION' | 'ADDITIONAL_CROP';
@@ -35,6 +36,7 @@ export function CropDoctorAdoptionModal({
   crop,
   onClose,
   isSecondOpinion = false,
+  onUpgradePlan,
 }: CropDoctorAdoptionModalProps) {
   const { data: advisors, isLoading } = useAvailableAdvisorsForCrop(crop?.id, visible);
   const { data: appSettings } = useAppSettings();
@@ -363,27 +365,57 @@ export function CropDoctorAdoptionModal({
                         </View>
                       </TouchableOpacity>
                     ) : selectedDoctor.quota?.quotaStatus === 'ADDITIONAL_CROP_FEE' && !isSecondOpinion ? (
-                      <TouchableOpacity
-                        style={[styles.planCard, selectedPlanModel === 'ADDITIONAL_CROP' && styles.planCardActive]}
-                        onPress={() => {
-                          tap();
-                          setSelectedPlanModel('ADDITIONAL_CROP');
-                        }}
-                      >
-                        <View style={styles.planCardLeft}>
-                          <View style={styles.planBadgeIndigo}>
-                            <Text style={styles.planBadgeTextIndigo}>MONTHLY ADD-ON</Text>
+                      <>
+                        {/* Quota Limit Reached & Upgrade Recommendation */}
+                        <View style={styles.quotaFullUpgradeCard}>
+                          <View style={{ flex: 1, gap: 3 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                              <Ionicons name="alert-circle" size={15} color="#7c3aed" />
+                              <Text style={styles.quotaFullUpgradeTitle}>
+                                Dr. {selectedDoctor.name}'s Quota is Full ({selectedDoctor.quota?.activeCropsUnderAdvisor}/{selectedDoctor.quota?.monthlyIncludedCrops})
+                              </Text>
+                            </View>
+                            <Text style={styles.quotaFullUpgradeDesc}>
+                              All included crop slots under Dr. {selectedDoctor.name} are active. Upgrade to a higher duration plan for full VIP coverage, or add as a single crop below.
+                            </Text>
                           </View>
-                          <Text style={styles.planName}>Additional Crop Monthly Care</Text>
-                          <Text style={styles.planDesc}>
-                            Extends your monthly care coverage to this extra crop with full weekly spray charts.
-                          </Text>
+                          {onUpgradePlan ? (
+                            <TouchableOpacity
+                              style={styles.quotaFullUpgradeBtn}
+                              activeOpacity={0.85}
+                              onPress={() => {
+                                tap();
+                                onUpgradePlan(selectedDoctor.id);
+                              }}
+                            >
+                              <Ionicons name="trending-up" size={13} color="#ffffff" />
+                              <Text style={styles.quotaFullUpgradeBtnText}>Upgrade Plan</Text>
+                            </TouchableOpacity>
+                          ) : null}
                         </View>
-                        <View style={styles.planPriceBox}>
-                          <Text style={styles.planPriceVal}>₹{selectedDoctor.quota?.additionalCropFee || 300}</Text>
-                          <Text style={styles.planPriceSub}>/ month</Text>
-                        </View>
-                      </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[styles.planCard, selectedPlanModel === 'ADDITIONAL_CROP' && styles.planCardActive]}
+                          onPress={() => {
+                            tap();
+                            setSelectedPlanModel('ADDITIONAL_CROP');
+                          }}
+                        >
+                          <View style={styles.planCardLeft}>
+                            <View style={styles.planBadgeIndigo}>
+                              <Text style={styles.planBadgeTextIndigo}>MONTHLY ADD-ON</Text>
+                            </View>
+                            <Text style={styles.planName}>Additional Crop Monthly Care</Text>
+                            <Text style={styles.planDesc}>
+                              Extends your monthly care coverage to this extra crop with full weekly spray charts.
+                            </Text>
+                          </View>
+                          <View style={styles.planPriceBox}>
+                            <Text style={styles.planPriceVal}>₹{selectedDoctor.quota?.additionalCropFee || 300}</Text>
+                            <Text style={styles.planPriceSub}>/ month</Text>
+                          </View>
+                        </TouchableOpacity>
+                      </>
                     ) : null}
 
                     {/* Standard Options */}
@@ -903,6 +935,43 @@ const styles = StyleSheet.create({
   planCardActive: {
     borderColor: '#00ff87',
     backgroundColor: 'rgba(0, 255, 135, 0.04)',
+  },
+  quotaFullUpgradeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(124, 58, 237, 0.12)',
+    borderColor: 'rgba(124, 58, 237, 0.35)',
+    borderWidth: 1.5,
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    marginBottom: 10,
+    gap: 10,
+  },
+  quotaFullUpgradeTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#c4b5fd',
+  },
+  quotaFullUpgradeDesc: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    lineHeight: 15,
+  },
+  quotaFullUpgradeBtn: {
+    backgroundColor: '#7c3aed',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  quotaFullUpgradeBtnText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
   },
   planCardLeft: {
     flex: 1,

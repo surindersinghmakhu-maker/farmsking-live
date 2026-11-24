@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
+import { useRole } from '@/src/store/role-context';
 import { useCreateAssistantDoctor, useMyAssistantDoctors } from '@/src/hooks/useUsersAdmin';
 import { useFarmersList, useFarmerDetails, useAcceptAssignment, useRejectAssignment } from '@/src/hooks/useAdvisorAssignments';
 import { useAssignedCropProblems, useRespondToCropProblem } from '@/src/hooks/useCropProblems';
@@ -368,8 +369,9 @@ function CropCardItem({
 export default function AdvisorFarmsScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { role: currentRole } = useRole();
   const { colors: tConfig, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
-  const isGardenAdvisor = (user?.role as string) === 'GARDEN_ADVISOR' || (user as any)?.advisorType === 'GARDEN';
+  const isGardenAdvisor = currentRole === 'GARDEN_ADVISOR';
   const [activeTab, setActiveTab] = useState<FarmSubTab>('PLOTS');
   const [expandedFarmerId, setExpandedFarmerId] = useState<string | null>(null);
   const [expandedCropCycleId, setExpandedCropCycleId] = useState<string | null>(null);

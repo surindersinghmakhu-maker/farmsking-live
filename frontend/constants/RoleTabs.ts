@@ -249,7 +249,7 @@ export function getTabsForRole(role?: string | null): RoleTabItem[] {
         return {
           key: 'settings',
           tabName: 'settings',
-          label: 'Settings',
+          label: roleKey === 'FARM_ADVISOR' || roleKey === 'ADVISOR' ? 'C-Panel' : 'Settings',
           icon: 'settings',
           iconOutline: 'settings-outline',
           path: `${tabBase}/settings`,

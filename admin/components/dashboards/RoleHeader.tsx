@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, useWindowDimensions, Animated, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, useWindowDimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { RoleThemes, UserRole } from '@/constants/Colors';
-import { FONT, RADIUS, THEME_4D } from '@/constants/theme';
+import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { useUnreadNotificationCount } from '@/src/hooks/useNotifications';
 import { useChatUnreadCount } from '@/src/hooks/useChat';
 import { Avatar } from '@/src/components/Avatar';
@@ -11,7 +12,7 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useAuth } from '@/src/store/auth-context';
-import { MobilePillarsMenuModal } from '@/components/MobilePillarsMenuModal';
+import { useLanguage } from '@/src/store/language-context';
 
 interface RoleHeaderProps {
   currentRole: UserRole;
@@ -65,500 +66,220 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const isDoctorRole = currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR' || currentRole === 'ADVISOR';
   const { data: chatUnreadData } = useChatUnreadCount(isDoctorRole);
   const chatUnreadCount = chatUnreadData?.count ?? 0;
+  const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
+  const { colors, toggleThemeMode, isDark } = useExecutiveTheme();
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
-  const { colors, themeMode, setThemeMode } = useExecutiveTheme();
-  const { logout } = useAuth();
-
-  const handleLogout = () => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const confirmed = window.confirm('Are you sure you want to log out of FarmsKing Admin?');
-      if (confirmed) {
-        logout();
-      }
-    } else {
-      Alert.alert(
-        'Log Out',
-        'Are you sure you want to log out of FarmsKing Admin?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Log Out', style: 'destructive', onPress: () => logout() },
-        ]
-      );
-    }
-  };
-  const isLight = themeMode === 'LIGHT';
-  const isDarkTheme = themeMode === 'DARK';
   const router = useRouter();
-  const greeting = getTimeBasedGreeting();
+  
+  const getGreeting = (): string => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t('goodMorning', 'Good Morning');
+    if (hour < 17) return t('goodAfternoon', 'Good Afternoon');
+    if (hour < 21) return t('goodEvening', 'Good Evening');
+    return t('goodNight', 'Good Night');
+  };
+  const greeting = getGreeting();
   const { data: unreadData } = useUnreadNotificationCount();
   const unreadCount = unreadData?.count ?? 0;
   const { data: settings } = useAppSettings();
+  const { logout } = useAuth();
 
   const roleMeta = ROLE_DISPLAY[currentRole] || { label: currentRole, icon: '👤' };
-  const [showPillarsModal, setShowPillarsModal] = useState(false);
 
-  // Animated sliding pill for mobile theme switch
-  const themeAnim = useRef(new Animated.Value(themeMode === 'LIGHT' ? 0 : 1)).current;
-
-  useEffect(() => {
-    Animated.spring(themeAnim, {
-      toValue: themeMode === 'LIGHT' ? 0 : 1,
-      friction: 9,
-      tension: 65,
-      useNativeDriver: false,
-    }).start();
-  }, [themeMode]);
-
-  const handleToggleTheme = (mode: 'LIGHT' | 'DARK') => {
-    setThemeMode(mode);
+  const getRoleLabel = (r: string): string => {
+    switch (r) {
+      case 'FARMER': return t('tabFarmers', 'Farmer');
+      case 'GARDENER': return t('tabGardens', 'Gardener');
+      case 'FARM_ADVISOR': return t('cropDoctor', 'Crop Doctor');
+      case 'ADMIN': return t('tabAdminHome', 'Admin');
+      case 'SUPER_ADMIN': return t('tabSuperAdminHome', 'Super Admin');
+      case 'LABOUR': return t('tabLabour', 'Labour');
+      case 'CUSTOMER': return t('tabCustomerHome', 'Customer');
+      default: return roleMeta.label || r;
+    }
   };
 
+  const isRedundantSubtitle =
+    !subtitle ||
+    subtitle.trim().toLowerCase() === `${roleMeta.label.toLowerCase()} profile` ||
+    subtitle.trim().toLowerCase() === roleMeta.label.toLowerCase();
+
   return (
-    <View
-      style={[
-        styles.headerContainer,
-        isLight && {
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          borderBottomColor: 'rgba(22, 163, 74, 0.18)',
-          shadowColor: '#16a34a',
-        },
-        isDarkTheme && {
-          backgroundColor: 'rgba(11, 19, 41, 0.92)',
-          borderBottomColor: 'rgba(56, 189, 248, 0.22)',
-          shadowColor: '#38bdf8',
-        },
-      ]}
-    >
-      {/* Top Banner Row: Only show brand on Mobile where sidebar is hidden */}
-      {!isDesktop && (
-        <View style={styles.topRow}>
-          <TouchableOpacity
-            style={styles.brandRow}
-            activeOpacity={0.8}
-            onPress={() => router.push('/')}
-          >
-            <Image
-              source={require('@/assets/images/favicon.png')}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 9,
-                ...(Platform.OS === 'web' ? ({
-                  filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.45))',
-                } as any) : {}),
-              }}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-
-          <View style={styles.actionsRight}>
-            {/* 🎨 Mobile 2-Way Theme Switcher (Light · Dark) */}
-            <View
-              style={[
-                styles.mobileThemePillWrap,
-                isLight && styles.mobileThemePillWrapLight,
-                isDarkTheme && styles.mobileThemePillWrapDark,
-              ]}
-            >
-              <Animated.View
-                style={[
-                  styles.slidingMobileThemePill,
-                  isLight ? styles.slidingMobileThemePillLight : styles.slidingMobileThemePillDark,
-                  {
-                    left: themeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['2%', '52%'],
-                    }),
-                  },
-                ]}
-              />
-              <TouchableOpacity
-                style={styles.mobileThemeSegmentBtn}
-                onPress={() => handleToggleTheme('LIGHT')}
-                activeOpacity={0.75}
-                accessibilityLabel="Switch to Light Theme"
-              >
-                <Ionicons
-                  name={themeMode === 'LIGHT' ? 'sunny' : 'sunny-outline'}
-                  size={13}
-                  color={themeMode === 'LIGHT' ? '#16a34a' : isLight ? '#64748b' : '#94a3b8'}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.mobileThemeSegmentBtn}
-                onPress={() => handleToggleTheme('DARK')}
-                activeOpacity={0.75}
-                accessibilityLabel="Switch to Dark Theme"
-              >
-                <Ionicons
-                  name={themeMode === 'DARK' ? 'leaf' : 'leaf-outline'}
-                  size={13}
-                  color={themeMode === 'DARK' ? '#22c55e' : isLight ? '#64748b' : '#94a3b8'}
-                />
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.iconButton,
-                isLight && {
-                  backgroundColor: '#f1f5f9',
-                  borderColor: 'rgba(22, 163, 74, 0.2)',
-                },
-                isDarkTheme && {
-                  backgroundColor: 'rgba(2, 6, 23, 0.75)',
-                  borderColor: 'rgba(56, 189, 248, 0.25)',
-                },
-              ]}
-              activeOpacity={0.75}
-              onPress={() => router.push('/notifications' as never)}
-            >
-              <Ionicons name="notifications-outline" size={18} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#059669'} />
-              {unreadCount > 0 ? (
-                <View style={styles.notifDot}>
-                  {unreadCount <= 9 ? <Text style={styles.notifDotText}>{unreadCount}</Text> : null}
-                </View>
-              ) : null}
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
+    <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.headerContainer, isDesktop && styles.headerContainerDesktop, { borderColor: colors.cardBorder, borderWidth: isDesktop ? 1 : 0 }]}>
       {/* User Header Block */}
-      <View style={styles.userHeaderBlock}>
+      <View style={[styles.userHeaderBlock, isDesktop && styles.userHeaderBlockDesktop]}>
         <View style={styles.mainUserRow}>
           {/* Left Block: Greeting + Name + Assigned Role Tag + Subtitle */}
           <View style={styles.userInfoLeftBlock}>
-            <Text style={[styles.greetingText, isLight && { color: '#64748b' }]}>{greeting}</Text>
-            <Text style={[styles.nameText, isLight && { color: '#0f172a' }]} numberOfLines={1}>{profileName}</Text>
-
-            {/* 🏷️ Role Tag Badge & Live API Status Indicator directly under user's name */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-              <View
-                style={[
-                  styles.roleTagPill,
-                  isLight && {
-                    backgroundColor: 'rgba(22, 163, 74, 0.10)',
-                    borderColor: 'rgba(234, 179, 8, 0.35)',
-                  },
-                  isDarkTheme && {
-                    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-                    borderColor: 'rgba(56, 189, 248, 0.35)',
-                  },
-                ]}
-              >
-                <Text style={[styles.roleTagText, isLight && { color: '#16a34a' }, isDarkTheme && { color: '#38bdf8' }]}>
-                  {roleMeta.icon} {roleMeta.label}
-                </Text>
-              </View>
-
-              <View
-                style={[
-                  styles.roleTagPill,
-                  {
-                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                    borderColor: 'rgba(16, 185, 129, 0.35)',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 4,
-                  },
-                ]}
-              >
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981' }} />
-                <Text style={[styles.roleTagText, { color: '#10b981', fontSize: 10 }]}>
-                  API Active
-                </Text>
+            <Text style={[styles.greetingText, { color: colors.isDark ? 'rgba(255,255,255,0.85)' : '#0f172a' }]}>{greeting}</Text>
+            <Text style={[styles.nameText, { color: colors.isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>{profileName}</Text>
+            
+            {/* Role Tag Badge */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 3, flexWrap: 'wrap' }}>
+              <View style={[
+                styles.roleTagPill,
+                {
+                  backgroundColor: colors.isDark ? 'rgba(255, 255, 255, 0.22)' : '#dcfce7',
+                  borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.35)' : '#86efac',
+                }
+              ]}>
+                <Text style={[styles.roleTagText, { color: colors.isDark ? '#ffffff' : '#14532d' }]}>{roleMeta.icon} {getRoleLabel(currentRole)}</Text>
               </View>
             </View>
 
-            {subtitle && currentRole !== 'FARMER' && !isDoctorRole ? <Text style={[styles.subtitleText, isLight && { color: '#059669' }]}>{subtitle}</Text> : null}
+            {!isRedundantSubtitle && currentRole !== 'FARMER' && !isDoctorRole ? (
+              <Text style={[styles.subtitleText, { color: colors.isDark ? 'rgba(255,255,255,0.95)' : '#0f172a' }]}>{subtitle}</Text>
+            ) : null}
           </View>
 
-          {/* Center Block: Profile Photo Avatar & Messenger Action (Hidden for Admin / Super Admin) */}
-          {currentRole !== 'ADMIN' && currentRole !== 'SUPER_ADMIN' && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={styles.avatarContainer}>
-                <TouchableOpacity
-                  style={styles.avatarRing}
-                  activeOpacity={0.8}
-                  onPress={onAvatarPress || (() => router.push('/profile'))}
-                >
-                  <Avatar uri={avatarUrl} size={54} />
-                  {currentRole === 'LABOUR' && (
-                    <View style={styles.cameraIconBadge}>
-                      <Ionicons name="camera" size={9} color="#ffffff" />
+          {/* Center Block: Profile Photo Avatar in the Center */}
+          <View style={styles.avatarCenterBlock}>
+            <View style={styles.avatarContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.avatarRing,
+                  {
+                    borderColor: colors.isDark ? 'rgba(255,255,255,0.2)' : '#cbd5e1',
+                    borderWidth: 1.5,
+                  }
+                ]}
+                activeOpacity={currentRole === 'ADMIN' ? 1 : 0.8}
+                disabled={currentRole === 'ADMIN'}
+                onPress={onAvatarPress || (() => router.push('/profile'))}
+              >
+                <Avatar uri={avatarUrl} size={isDesktop ? 58 : 52} />
+                {currentRole === 'LABOUR' && (
+                  <View style={styles.cameraIconBadge}>
+                    <Ionicons name="camera" size={9} color="#ffffff" />
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Verified Symbol Badge attached to Profile Photo */}
+              {currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR' ? (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                </View>
+              ) : null}
+            </View>
+          </View>
+
+          {/* Right Block: Messenger Action Button on Right Side */}
+          <View style={styles.headerRightActions}>
+            {isDoctorRole && (
+              <TouchableOpacity
+                style={[
+                  styles.headerMessengerBtn,
+                  premiumShadow('#10b981', 'sm'),
+                ]}
+                activeOpacity={0.85}
+                onPress={onMessengerPress ? onMessengerPress : () => router.push('/(partner)/(tabs)/chat' as never)}
+              >
+                <View style={styles.messengerIconBox}>
+                  <Ionicons name="chatbubbles" size={16} color="#ffffff" />
+                  {chatUnreadCount > 0 && (
+                    <View style={styles.messengerDot}>
+                      <Text style={styles.messengerDotText}>{chatUnreadCount > 9 ? '9+' : chatUnreadCount}</Text>
                     </View>
                   )}
-                </TouchableOpacity>
-
-                {/* Verified Symbol Badge attached to Profile Photo */}
-                {currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR' ? (
-                  <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark-circle" size={15} color={THEME_4D.neonEmerald} />
-                  </View>
-                ) : null}
-              </View>
-
-              {/* Dedicated Messenger Button next to Profile Photo for Doctors */}
-              {isDoctorRole && (
-                <TouchableOpacity
-                  style={styles.headerMessengerBtn}
-                  activeOpacity={0.85}
-                  onPress={onMessengerPress ? onMessengerPress : () => router.push('/(partner)/(tabs)/chat' as never)}
-                >
-                  <View style={styles.messengerIconBox}>
-                    <Ionicons name="chatbubbles" size={16} color="#ffffff" />
-                    {chatUnreadCount > 0 && (
-                      <View style={styles.messengerDot}>
-                        <Text style={styles.messengerDotText}>{chatUnreadCount > 9 ? '9+' : chatUnreadCount}</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.headerMessengerBtnText}>Messenger</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
-          {/* Right Block: Secondary Avatar or Plan Badge */}
-          {secondaryAvatarUrl !== undefined || secondaryName ? (
-            <View style={styles.secondaryAvatarBlock}>
-              <TouchableOpacity
-                style={styles.secondaryAvatarRing}
-                activeOpacity={0.85}
-                onPress={onSecondaryAvatarPress}
-              >
-                <Avatar uri={secondaryAvatarUrl} size={46} />
-                <View style={styles.farmerCropBadge}>
-                  <Text style={{ fontSize: 8 }}>🌾</Text>
                 </View>
+                <Text style={styles.headerMessengerBtnText}>Messenger</Text>
               </TouchableOpacity>
-              <Text style={styles.secondaryAvatarName} numberOfLines={1}>
-                {secondaryName || 'Farmer'}
-              </Text>
-            </View>
-          ) : planBadge ? (
-            <View style={styles.planRightBlock}>
-              {planBadge}
-            </View>
-          ) : null}
+            )}
+            {secondaryAvatarUrl !== undefined || secondaryName ? (
+              <View style={styles.secondaryAvatarBlock}>
+                <TouchableOpacity
+                  style={styles.secondaryAvatarRing}
+                  activeOpacity={0.85}
+                  onPress={onSecondaryAvatarPress}
+                >
+                  <Avatar uri={secondaryAvatarUrl} size={46} />
+                  <View style={styles.farmerCropBadge}>
+                    <Text style={{ fontSize: 8 }}>🌾</Text>
+                  </View>
+                </TouchableOpacity>
+                <Text style={[styles.secondaryAvatarName, { color: colors.isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>
+                  {secondaryName || 'Farmer'}
+                </Text>
+              </View>
+            ) : planBadge ? (
+              <View style={styles.planRightBlock}>
+                {planBadge}
+              </View>
+            ) : null}
+          </View>
         </View>
       </View>
-
-      {/* 📱 4D Mobile Domain Pillars Command Sheet */}
-      <MobilePillarsMenuModal
-        visible={showPillarsModal}
-        onClose={() => setShowPillarsModal(false)}
-      />
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  adminHeaderActionsBlock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginLeft: 'auto',
-  },
-  adminQuickBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
-  },
-  adminQuickBtnLight: {
-    backgroundColor: '#f0f9ff',
-    borderColor: '#bae6fd',
-  },
-  adminQuickBtnDark: {
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-    borderColor: 'rgba(56, 189, 248, 0.35)',
-  },
-  adminQuickBtnText: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    color: '#38bdf8',
-  },
-  adminLogoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.35)',
-  },
-  adminLogoutBtnLight: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fecaca',
-  },
-  adminLogoutBtnDark: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    borderColor: 'rgba(239, 68, 68, 0.4)',
-  },
-  adminLogoutBtnText: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    color: '#ef4444',
-  },
-  pillarsMenuTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(0, 255, 135, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.35)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: RADIUS.pill,
-  },
-  pillarsMenuTriggerText: {
-    fontSize: 11,
-    fontFamily: FONT.extraBold,
-    color: '#00ff87',
-    letterSpacing: 0.3,
-  },
   headerContainer: {
-    paddingTop: Platform.OS === 'web' ? 14 : 10,
+    paddingTop: Platform.OS === 'web' ? 6 : 4,
     paddingHorizontal: 16,
-    paddingBottom: 14,
-    borderBottomLeftRadius: RADIUS.xl,
-    borderBottomRightRadius: RADIUS.xl,
-    backgroundColor: 'rgba(4, 18, 10, 0.88)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 255, 135, 0.22)',
-    shadowColor: THEME_4D.neonEmerald,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 4,
-    overflow: 'visible',
+    paddingBottom: 8,
+    borderBottomLeftRadius: RADIUS.lg,
+    borderBottomRightRadius: RADIUS.lg,
+    overflow: 'hidden',
     position: 'relative',
-    zIndex: 10,
-    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)' } as any) : {}),
+  },
+  headerContainerDesktop: {
+    paddingTop: 14,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+    borderRadius: RADIUS.lg,
+    marginHorizontal: 16,
+    marginTop: 12,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 0,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   brandNameText: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONT.extraBold,
-    color: THEME_4D.textPrimary,
-    letterSpacing: 0.2,
-  },
-  telemetryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(0, 255, 135, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.3)',
-  },
-  telemetryDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: THEME_4D.neonEmerald,
-    shadowColor: THEME_4D.neonEmerald,
-    shadowOpacity: 0.9,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  telemetryText: {
-    fontSize: 9.5,
-    fontFamily: FONT.bold,
-    color: THEME_4D.neonEmerald,
-    letterSpacing: 0.8,
+    color: '#ffffff',
+    letterSpacing: -0.2,
   },
   actionsRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  mobileThemePillWrap: {
-    position: 'relative',
-    overflow: 'hidden',
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    gap: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: RADIUS.pill,
-    padding: 2,
-    width: 56,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  mobileThemePillWrapLight: {
-    backgroundColor: '#f1f5f9',
-    borderColor: 'rgba(22, 163, 74, 0.25)',
-  },
-  mobileThemePillWrapDark: {
-    backgroundColor: 'rgba(2, 6, 23, 0.75)',
-    borderColor: 'rgba(56, 189, 248, 0.3)',
-  },
-  slidingMobileThemePill: {
-    position: 'absolute',
-    top: 2,
-    bottom: 2,
-    width: 24,
-    borderRadius: 12,
-    zIndex: 0,
-  },
-  slidingMobileThemePillLight: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#16a34a',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  slidingMobileThemePillDark: {
-    backgroundColor: 'rgba(34, 197, 94, 0.25)',
-    borderWidth: 1.2,
-    borderColor: '#fbbf24',
-    shadowColor: '#22c55e',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.35,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  mobileThemeSegmentBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    zIndex: 1,
+  logoutText: {
+    color: '#fca5a5',
+    fontSize: 11,
+    fontFamily: FONT.bold,
   },
   iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(8, 34, 20, 0.75)',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.28)',
+    borderColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -568,12 +289,12 @@ const styles = StyleSheet.create({
     height: 15,
     borderRadius: 8,
     paddingHorizontal: 2,
-    backgroundColor: THEME_4D.criticalRed,
+    backgroundColor: '#fb7185',
     borderWidth: 1.5,
-    borderColor: '#020905',
+    borderColor: 'rgba(255,255,255,0.9)',
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: 2,
+    right: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -584,83 +305,84 @@ const styles = StyleSheet.create({
     lineHeight: 11,
   },
   userHeaderBlock: {
-    marginTop: 6,
-    marginBottom: 4,
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  userHeaderBlockDesktop: {
+    marginTop: 0,
+    marginBottom: 0,
   },
   mainUserRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 4,
   },
   userInfoLeftBlock: {
     flex: 1,
     justifyContent: 'center',
   },
   greetingText: {
-    color: THEME_4D.textMuted,
-    fontSize: 11.5,
-    fontFamily: FONT.medium,
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    fontFamily: FONT.bold,
   },
   nameText: {
-    color: THEME_4D.textPrimary,
-    fontSize: 21,
+    color: '#ffffff',
+    fontSize: 17,
     fontFamily: FONT.extraBold,
     letterSpacing: -0.3,
-    lineHeight: 26,
-    marginVertical: 2,
+    lineHeight: 22,
+    marginVertical: 1,
   },
   roleTagPill: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.35)',
+    borderColor: 'rgba(255, 255, 255, 0.35)',
     borderRadius: RADIUS.pill,
-    paddingHorizontal: 10,
+    paddingHorizontal: 9,
     paddingVertical: 3,
-    marginVertical: 4,
+    marginVertical: 2,
   },
   roleTagText: {
-    color: THEME_4D.neonEmerald,
+    color: '#ffffff',
     fontSize: 11,
     fontFamily: FONT.extraBold,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   subtitleText: {
-    color: '#a7f3d0',
+    color: 'rgba(255,255,255,0.95)',
     fontSize: 12,
-    fontFamily: FONT.bold,
+    fontFamily: FONT.extraBold,
     marginTop: 2,
+  },
+  avatarCenterBlock: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
   },
   avatarContainer: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 4,
   },
   avatarRing: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
     padding: 2.5,
-    backgroundColor: 'rgba(6, 26, 15, 0.95)',
-    borderWidth: 2,
-    borderColor: THEME_4D.neonEmerald,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: THEME_4D.neonEmerald,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
   },
   verifiedBadge: {
     position: 'absolute',
     bottom: -1,
     right: -1,
-    backgroundColor: '#020905',
-    borderRadius: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
     padding: 1,
     elevation: 3,
   },
@@ -673,14 +395,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -1,
     right: -1,
-    backgroundColor: THEME_4D.neonEmerald,
+    backgroundColor: '#16a34a',
     width: 16,
     height: 16,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#020905',
+    borderColor: '#ffffff',
   },
   secondaryAvatarBlock: {
     flex: 1,
@@ -693,9 +415,7 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 26,
     padding: 2,
-    backgroundColor: 'rgba(6, 26, 15, 0.95)',
-    borderWidth: 1.5,
-    borderColor: THEME_4D.cyberGold,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -703,22 +423,45 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: '#020905',
+    backgroundColor: '#ffffff',
     width: 14,
     height: 14,
     borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: THEME_4D.neonEmerald,
+    borderColor: '#16a34a',
   },
   secondaryAvatarName: {
     fontSize: 9.5,
     fontFamily: FONT.extraBold,
-    color: THEME_4D.textSecondary,
+    color: '#ffffff',
     marginTop: 2,
     maxWidth: 80,
     textAlign: 'center',
+  },
+  headerRightActions: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  mobileThemeToggle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  mobileThemeToggleDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  mobileThemeToggleLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
   },
   headerMessengerBtn: {
     flexDirection: 'row',

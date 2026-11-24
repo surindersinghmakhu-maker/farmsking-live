@@ -33,6 +33,17 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 import { PartnerSignupModal } from '@/src/components/PartnerSignupModal';
 import { LegalPoliciesModal, PolicyType } from '@/src/components/LegalPoliciesModal';
 import type { PartnerApplicationDto, PartnerUserSummary } from '@/src/api/auth.api';
+import { lookupPincode } from '@/src/api/pincode.api';
+
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman and Nicobar', 'Chandigarh', 'Dadra and Nagar Haveli', 'Delhi',
+  'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+];
 
 if (Platform.OS !== 'web') {
   WebBrowser.maybeCompleteAuthSession();
@@ -279,6 +290,14 @@ export default function LoginScreen() {
   const [legalPolicyType, setLegalPolicyType] = useState<PolicyType>('TERMS_OF_SERVICE');
   const [modalError, setModalError] = useState<string | null>(null);
   const [isCompletingReg, setIsCompletingReg] = useState(false);
+  const [newUserPincode, setNewUserPincode] = useState('');
+  const [newUserState, setNewUserState] = useState('');
+  const [newUserDistrict, setNewUserDistrict] = useState('');
+  const [newUserVillage, setNewUserVillage] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationNotice, setLocationNotice] = useState<string | null>(null);
+  const [isPincodeVerifying, setIsPincodeVerifying] = useState(false);
+  const [showStatePicker, setShowStatePicker] = useState(false);
 
   // Partner Self-Signup / Status / Rejection-Edit Modal State
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
@@ -584,6 +603,116 @@ export default function LoginScreen() {
     }
   };
 
+  const handlePincodeChange = async (pin: string) => {
+    const clean = pin.replace(/\D/g, '').slice(0, 6);
+    setNewUserPincode(clean);
+    if (modalError) setModalError(null);
+
+    if (clean.length === 6) {
+      setIsPincodeVerifying(true);
+      try {
+        const res = await lookupPincode(clean);
+        setNewUserState(res.state);
+        setNewUserDistrict(res.district);
+        setNewUserVillage(res.postOffice);
+        setLocationNotice(`📍 ${res.district}, ${res.state}`);
+      } catch (err: any) {
+        setLocationNotice(null);
+      } finally {
+        setIsPincodeVerifying(false);
+      }
+    } else {
+      setLocationNotice(null);
+    }
+  };
+
+  const handleAutoDetectLocation = async () => {
+    setIsLocating(true);
+    setModalError(null);
+
+    // 1. Try fast IP geolocation
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.region) {
+          const st = data.region;
+          const city = data.city || '';
+          const postal = data.postal || '';
+          setNewUserState(st);
+          if (city) setNewUserDistrict(city);
+          if (postal && /^\d{6}$/.test(postal)) {
+            setNewUserPincode(postal);
+            try {
+              const pinRes = await lookupPincode(postal);
+              setNewUserState(pinRes.state);
+              setNewUserDistrict(pinRes.district);
+              setNewUserVillage(pinRes.postOffice);
+              setLocationNotice(`📍 ${pinRes.district}, ${pinRes.state}`);
+            } catch {
+              setLocationNotice(`📍 ${city ? city + ', ' : ''}${st}`);
+            }
+          } else {
+            setLocationNotice(`📍 ${city ? city + ', ' : ''}${st}`);
+          }
+          setIsLocating(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('[Auto-detect IP notice]:', e);
+    }
+
+    // 2. Try browser / device GPS
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const geoRes = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&countrycodes=in`,
+              { headers: { 'Accept-Language': 'en' } }
+            );
+            if (geoRes.ok) {
+              const geoData = await geoRes.json();
+              const addr = geoData.address || {};
+              const stateName = addr.state || '';
+              const districtName = addr.state_district || addr.county || addr.city || '';
+              const postCode = (addr.postcode || '').replace(/\D/g, '').slice(0, 6);
+              if (stateName) setNewUserState(stateName);
+              if (districtName) setNewUserDistrict(districtName);
+              if (postCode && postCode.length === 6) {
+                setNewUserPincode(postCode);
+                setLocationNotice(`📍 ${districtName || stateName}, ${stateName}`);
+              } else if (stateName) {
+                setLocationNotice(`📍 ${districtName ? districtName + ', ' : ''}${stateName}`);
+              }
+            }
+          } catch (err) {
+            console.warn('[GPS reverse error]:', err);
+          } finally {
+            setIsLocating(false);
+          }
+        },
+        (err) => {
+          console.warn('[GPS notice]:', err);
+          setIsLocating(false);
+        },
+        { timeout: 7000 }
+      );
+      return;
+    }
+
+    setIsLocating(false);
+  };
+
+  useEffect(() => {
+    if (isNewUserModal && !newUserPincode && !newUserState) {
+      handleAutoDetectLocation();
+    }
+  }, [isNewUserModal]);
+
   // Step 3: Complete Role Selection for New Users
   const handleCompleteRegistration = async () => {
     setModalError(null);
@@ -595,6 +724,15 @@ export default function LoginScreen() {
     const trimmedName = newUserName.trim();
     if (!trimmedName) {
       setModalError('Please enter your full name to proceed.');
+      return;
+    }
+    const trimmedPin = newUserPincode.trim();
+    if (!trimmedPin && !newUserState.trim()) {
+      setModalError('Please enter your 6-digit Postal PIN Code or select your State.');
+      return;
+    }
+    if (trimmedPin && trimmedPin.length !== 6) {
+      setModalError('Postal PIN Code must be exactly 6 digits.');
       return;
     }
     if (!termsAccepted) {
@@ -610,6 +748,10 @@ export default function LoginScreen() {
         role: selectedRole,
         portal: portalMode,
         termsAccepted: true,
+        pincode: trimmedPin || undefined,
+        state: newUserState.trim() || undefined,
+        district: newUserDistrict.trim() || undefined,
+        village: newUserVillage.trim() || undefined,
       });
       setIsNewUserModal(false);
       handleSuccessNavigation(false, loggedInUser);
@@ -1494,9 +1636,77 @@ export default function LoginScreen() {
                   if (modalError) setModalError(null);
                 }}
                 autoCapitalize="words"
-                returnKeyType="done"
-                onSubmitEditing={handleCompleteRegistration}
+                returnKeyType="next"
               />
+            </View>
+
+            {/* Mandatory Postal PIN Code & State with Auto-Detect */}
+            <View style={{ marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                <Text style={styles.fieldLabel}>
+                  Postal PIN Code & State <Text style={{ color: '#ef4444' }}>*</Text>
+                </Text>
+                <TouchableOpacity
+                  style={styles.autoLocateBtn}
+                  onPress={handleAutoDetectLocation}
+                  disabled={isLocating}
+                  activeOpacity={0.8}
+                >
+                  {isLocating ? (
+                    <ActivityIndicator size="small" color="#10b981" />
+                  ) : (
+                    <>
+                      <Ionicons name="navigate" size={13} color="#10b981" />
+                      <Text style={styles.autoLocateBtnText}>Auto-Detect Location</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.pincodeInputRow}>
+                <View style={{ flex: 1, position: 'relative' }}>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="6-Digit PIN Code (e.g. 144601)"
+                    placeholderTextColor="#64748b"
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    value={newUserPincode}
+                    onChangeText={handlePincodeChange}
+                  />
+                  {isPincodeVerifying ? (
+                    <View style={styles.pincodeSpinner}>
+                      <ActivityIndicator size="small" color="#10b981" />
+                    </View>
+                  ) : null}
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.statePickerBtn, { borderColor: newUserState ? '#10b981' : 'rgba(255, 255, 255, 0.12)' }]}
+                  onPress={() => setShowStatePicker(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.statePickerBtnText, { color: newUserState ? '#ffffff' : '#94a3b8' }]} numberOfLines={1}>
+                    {newUserState || 'Select State'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color="#94a3b8" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Verified Location Badge */}
+              {locationNotice ? (
+                <View style={styles.locationBadgeRow}>
+                  <Ionicons name="checkmark-circle" size={14} color="#10b981" />
+                  <Text style={styles.locationBadgeText}>{locationNotice}</Text>
+                  <TouchableOpacity onPress={() => setShowStatePicker(true)}>
+                    <Text style={styles.locationChangeLink}>(Change State)</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Text style={styles.locationHelpText}>
+                  Required for your local weather forecast, APMC mandi rates, and crop doctor advisory.
+                </Text>
+              )}
             </View>
 
             {/* Compact Data-Driven Role Selection Cards */}
@@ -1663,6 +1873,46 @@ export default function LoginScreen() {
                 )}
               </LinearGradient>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* State Picker Modal */}
+      <Modal
+        visible={showStatePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowStatePicker(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalCard, { maxHeight: '80%', padding: 0, overflow: 'hidden' }]}>
+            <View style={styles.stateModalHeader}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: '#ffffff' }}>Select State / UT</Text>
+              <TouchableOpacity onPress={() => setShowStatePicker(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close" size={20} color="#94a3b8" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ padding: 12, maxHeight: 420 }}>
+              {INDIAN_STATES.map((st) => {
+                const isSelected = newUserState === st;
+                return (
+                  <TouchableOpacity
+                    key={st}
+                    style={[styles.stateItemRow, isSelected && styles.stateItemRowActive]}
+                    onPress={() => {
+                      setNewUserState(st);
+                      setShowStatePicker(false);
+                      setLocationNotice(`📍 ${st}`);
+                      if (modalError) setModalError(null);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.stateItemText, isSelected && styles.stateItemTextActive]}>{st}</Text>
+                    {isSelected && <Ionicons name="checkmark-circle" size={16} color="#10b981" />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -2498,5 +2748,102 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
+  },
+  autoLocateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  autoLocateBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#10b981',
+  },
+  pincodeInputRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  pincodeSpinner: {
+    position: 'absolute',
+    right: 12,
+    top: 14,
+  },
+  statePickerBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  statePickerBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+  },
+  locationBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  locationBadgeText: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#10b981',
+  },
+  locationChangeLink: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#38bdf8',
+    textDecorationLine: 'underline',
+  },
+  locationHelpText: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    marginTop: 4,
+    lineHeight: 15,
+  },
+  stateModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  stateItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  stateItemRowActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+  },
+  stateItemText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#e2e8f0',
+  },
+  stateItemTextActive: {
+    color: '#10b981',
+    fontFamily: FONT.bold,
   },
 });

@@ -2536,6 +2536,14 @@ export class AuthService {
     role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
     portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
     termsAccepted?: boolean;
+    pincode?: string;
+    state?: string;
+    district?: string;
+    village?: string;
+    postOffice?: string;
+    gpsLat?: number;
+    gpsLng?: number;
+    gpsLocationName?: string;
   }) {
     if (dto.portal === 'PARTNER') {
       throw new ForbiddenException(
@@ -2585,6 +2593,31 @@ export class AuthService {
     const kingId = await generateUniqueKingId(this.prisma);
     const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
 
+    let state = dto.state?.trim() || undefined;
+    let district = dto.district?.trim() || undefined;
+    let postOffice = dto.postOffice?.trim() || undefined;
+    let village = dto.village?.trim() || undefined;
+    const pincode = dto.pincode?.trim() || undefined;
+
+    // Automatic India Post resolution if 6-digit PIN code is provided and state/district is missing
+    if (pincode && /^\d{6}$/.test(pincode) && (!state || !district)) {
+      try {
+        const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        if (response.ok) {
+          const body: any = await response.json();
+          const record = Array.isArray(body) ? body[0] : null;
+          if (record && record.Status === 'Success' && record.PostOffice?.length) {
+            const firstOffice = record.PostOffice[0];
+            if (!state) state = firstOffice.State;
+            if (!district) district = firstOffice.District;
+            if (!postOffice) postOffice = firstOffice.Name;
+          }
+        }
+      } catch (err) {
+        console.warn('[completeOtpRegistration] Postal lookup notice:', err);
+      }
+    }
+
     const newUser = await this.prisma.user.create({
       data: {
         kingId,
@@ -2595,6 +2628,14 @@ export class AuthService {
         passwordHash,
         isPhoneVerified: true,
         termsAcceptedAt: dto.termsAccepted ? new Date() : undefined,
+        pincode,
+        state,
+        district,
+        village,
+        postOffice,
+        gpsLat: dto.gpsLat,
+        gpsLng: dto.gpsLng,
+        gpsLocationName: dto.gpsLocationName?.trim() || (district && state ? `${district}, ${state}` : undefined),
       },
     });
 

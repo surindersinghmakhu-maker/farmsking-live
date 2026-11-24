@@ -100,7 +100,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   farmers: { key: 'tabFarms', title: 'Farms', icon: 'leaf-outline', iconFilled: 'leaf' },
   schedule: { key: 'tabSchedule', title: 'Schedule', icon: 'calendar-outline', iconFilled: 'calendar' },
   chat: { key: 'tabChat', title: 'Chat', icon: 'chatbubble-outline', iconFilled: 'chatbubble' },
-  settings: { key: 'tabFeatures' as any, title: 'Settings', icon: 'settings-outline', iconFilled: 'settings' },
+  settings: { key: 'tabFeatures' as any, title: 'C-Panel', icon: 'options-outline', iconFilled: 'options' },
   referrals: { key: 'tabReferrals', title: 'Referrals', icon: 'people-outline', iconFilled: 'people' },
   wallet: { key: 'tabMyBusiness', title: 'Wallet', icon: 'wallet-outline', iconFilled: 'wallet' },
   'admin-orders': { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
@@ -282,6 +282,7 @@ export default function TabLayout() {
     if (name === 'index') return getHomeTitle(role);
     if (name === 'more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
+    if (name === 'settings') return 'C-Panel';
     if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
     const meta = (TAB_META as any)[name];
     return meta ? t(meta.key, meta.title) : name;

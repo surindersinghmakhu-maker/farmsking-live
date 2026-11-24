@@ -12,36 +12,86 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useDoctorSettings, useUpdateDoctorSettings } from '@/src/hooks/useDoctorSettings';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import type { DoctorSettingsResponse } from '@/src/api/doctorSettings.api';
+import { INITIAL_CROPS_LIST, CROP_CATEGORIES } from '@/constants/cropCategoriesData';
 
-const POPULAR_CROPS = [
-  'Wheat',
-  'Paddy',
-  'Cotton',
-  'Mustard',
-  'Potato',
-  'Tomato',
-  'Sugarcane',
-  'Maize',
-  'Chilli',
-  'Onion',
-  'Garlic',
-  'Vegetables',
-  'Marigold (Flowers)',
-  'Citrus / Kinnow',
-];
+// All Indian crops available across FarmsKing
+const ALL_SYSTEM_CROPS_DEFAULT = INITIAL_CROPS_LIST.map((c) => c.name);
 
 export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ advisorId }) => {
+  const router = useRouter();
   const { isLight, cardBg, cardBorder, textColor, subTextColor } = useExecutiveTheme();
   const { data: settings, isLoading } = useDoctorSettings(advisorId);
   const updateMutation = useUpdateDoctorSettings(advisorId);
 
+  const [activeCPanelTab, setActiveCPanelTab] = useState<'PROFILE' | 'PLANS'>('PROFILE');
   const [form, setForm] = useState<Partial<DoctorSettingsResponse>>({});
   const [savedNotice, setSavedNotice] = useState(false);
   const [customCropInput, setCustomCropInput] = useState('');
+  const [selectedCropCategory, setSelectedCropCategory] = useState<string>('all');
+  const [cropSearchQuery, setCropSearchQuery] = useState('');
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+
+  // Master system crops with category mapping & doctor custom additions
+  const masterSystemCrops = React.useMemo(() => {
+    const list: { id: string; name: string; categoryId: string; categoryName: string }[] = [];
+    const seen = new Set<string>();
+
+    INITIAL_CROPS_LIST.forEach((c) => {
+      const clean = c.name.trim();
+      const lower = clean.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        const cat = CROP_CATEGORIES.find((cat) => cat.id === c.categoryId);
+        list.push({ id: c.id, name: clean, categoryId: c.categoryId, categoryName: cat?.name || 'General' });
+      }
+    });
+
+    (form.specializedCrops || []).forEach((c) => {
+      const clean = c.trim();
+      const lower = clean.toLowerCase();
+      if (clean && !seen.has(lower)) {
+        seen.add(lower);
+        list.push({ id: `custom-${clean}`, name: clean, categoryId: 'other', categoryName: 'Custom / Other' });
+      }
+    });
+
+    return list;
+  }, [form.specializedCrops]);
+
+  // Filtered system crops by search query, category, and selected-only toggle
+  const filteredSystemCrops = React.useMemo(() => {
+    return masterSystemCrops.filter((crop) => {
+      if (selectedCropCategory !== 'all' && crop.categoryId !== selectedCropCategory) {
+        return false;
+      }
+      if (showSelectedOnly) {
+        const isSel = (form.specializedCrops || []).includes(crop.name);
+        if (!isSel) return false;
+      }
+      if (cropSearchQuery.trim()) {
+        const q = cropSearchQuery.trim().toLowerCase();
+        return crop.name.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [masterSystemCrops, selectedCropCategory, showSelectedOnly, cropSearchQuery, form.specializedCrops]);
+
+  const handleSelectAllFiltered = () => {
+    const current = new Set(form.specializedCrops || []);
+    filteredSystemCrops.forEach((c) => current.add(c.name));
+    setForm((prev) => ({ ...prev, specializedCrops: Array.from(current) }));
+  };
+
+  const handleClearFiltered = () => {
+    const namesToClear = new Set(filteredSystemCrops.map((c) => c.name));
+    const remaining = (form.specializedCrops || []).filter((name) => !namesToClear.has(name));
+    setForm((prev) => ({ ...prev, specializedCrops: remaining }));
+  };
 
   useEffect(() => {
     if (settings) {
@@ -109,10 +159,10 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
       <View style={styles.topBar}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.mainHeading, { color: textColor }]}>
-            Doctor Practice & Governance Console
+            C-Panel (Doctor Governance Console)
           </Text>
           <Text style={[styles.mainSub, { color: subTextColor }]}>
-            Set your consultation fees, privacy toggles, audio/video channels, and working hours.
+            Manage your doctor profile, statutory credentials, consultation plans, and crop fees.
           </Text>
         </View>
 
@@ -142,7 +192,248 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
         </View>
       )}
 
-      {/* SECTION 1: Contact Privacy & Communication Channels */}
+            {/* C-PANEL DUAL TABS: Doctor Profile & Plans */}
+      <View
+        style={[
+          styles.cpanelTabContainer,
+          {
+            backgroundColor: isLight ? '#f1f5f9' : '#090e17',
+            borderColor: isLight ? '#cbd5e1' : 'rgba(255,255,255,0.12)',
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={[
+            styles.cpanelTabBtn,
+            activeCPanelTab === 'PROFILE' && [
+              styles.cpanelTabBtnActive,
+              { backgroundColor: isLight ? '#ffffff' : '#1e293b' },
+            ],
+          ]}
+          onPress={() => setActiveCPanelTab('PROFILE')}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="person-circle"
+            size={19}
+            color={activeCPanelTab === 'PROFILE' ? '#10b981' : (isLight ? '#64748b' : '#94a3b8')}
+          />
+          <Text
+            style={[
+              styles.cpanelTabBtnText,
+              { color: activeCPanelTab === 'PROFILE' ? (isLight ? '#0f172a' : '#ffffff') : (isLight ? '#64748b' : '#94a3b8') },
+              activeCPanelTab === 'PROFILE' && { fontFamily: FONT.bold },
+            ]}
+          >
+            Doctor Profile
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.cpanelTabBtn,
+            activeCPanelTab === 'PLANS' && [
+              styles.cpanelTabBtnActive,
+              { backgroundColor: isLight ? '#ffffff' : '#1e293b' },
+            ],
+          ]}
+          onPress={() => setActiveCPanelTab('PLANS')}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="pricetags"
+            size={18}
+            color={activeCPanelTab === 'PLANS' ? '#10b981' : (isLight ? '#64748b' : '#94a3b8')}
+          />
+          <Text
+            style={[
+              styles.cpanelTabBtnText,
+              { color: activeCPanelTab === 'PLANS' ? (isLight ? '#0f172a' : '#ffffff') : (isLight ? '#64748b' : '#94a3b8') },
+              activeCPanelTab === 'PLANS' && { fontFamily: FONT.bold },
+            ]}
+          >
+            Plans
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeCPanelTab === 'PROFILE' ? (
+        <>
+          {/* SECTION 4: Agronomy Credential & Prescriptions Signature */}
+      <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.iconBadgePurple}>
+            <Ionicons name="ribbon" size={18} color="#8b5cf6" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>
+              Agronomy Credentials & Prescription Stamp
+            </Text>
+            <Text style={[styles.sectionSub, { color: subTextColor }]}>
+              Appears on digital prescriptions (E-Parchi) with FarmsKing statutory verified QR seal.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.timingRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.inputLabel, { color: subTextColor }]}>ICAR / Agri Registration Number</Text>
+            <TextInput
+              style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+              value={form.icarRegistrationNumber || ''}
+              placeholder="e.g. ICAR-DOC-2026-8812"
+              placeholderTextColor={subTextColor}
+              onChangeText={(v) => setForm((prev) => ({ ...prev, icarRegistrationNumber: v }))}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.inputLabel, { color: subTextColor }]}>Max Active Farmer Capacity</Text>
+            <TextInput
+              style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+              keyboardType="numeric"
+              value={String(form.maxFarmerCapacity || 100)}
+              onChangeText={(v) => setForm((prev) => ({ ...prev, maxFarmerCapacity: Number(v) || 50 }))}
+            />
+          </View>
+        </View>
+
+        <View style={{ marginTop: 8, gap: 4 }}>
+          <Text style={[styles.inputLabel, { color: subTextColor }]}>Doctor Title & Academic Degree</Text>
+          <TextInput
+            style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+            value={form.qualificationTitle || ''}
+            placeholder="e.g. M.Sc Agronomy · ICAR Certified Plant Pathologist"
+            placeholderTextColor={subTextColor}
+            onChangeText={(v) => setForm((prev) => ({ ...prev, qualificationTitle: v }))}
+          />
+        </View>
+      
+        {/* Certificate & Photo Studio Navigation Card */}
+        <TouchableOpacity
+          style={[
+            styles.certNavCard,
+            {
+              backgroundColor: isLight ? '#f8fafc' : 'rgba(16, 185, 129, 0.06)',
+              borderColor: isLight ? '#e2e8f0' : 'rgba(16, 185, 129, 0.25)',
+            },
+          ]}
+          onPress={() => router.push('/advisor-profile')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.certNavLeft}>
+            <View style={styles.certRibbonBox}>
+              <Ionicons name="ribbon" size={22} color="#10b981" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.certNavTitle, { color: textColor }]}>
+                Official Crop Doctor Certificate & Photograph
+              </Text>
+              <Text style={[styles.certNavSub, { color: subTextColor }]}>
+                Download official A4 Certificate of Excellence and update your public doctor photograph.
+              </Text>
+            </View>
+          </View>
+          <View style={styles.certNavArrow}>
+            <Text style={styles.certNavBtnText}>Open Studio</Text>
+            <Ionicons name="chevron-forward" size={15} color="#10b981" />
+          </View>
+        </TouchableOpacity>
+</View>
+
+          {/* SECTION 3: Availability & Practice Timings */}
+      <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.iconBadgeAmber}>
+            <Ionicons name="time" size={18} color="#f59e0b" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>
+              Availability Status & Working Hours
+            </Text>
+            <Text style={[styles.sectionSub, { color: subTextColor }]}>
+              Let farmers know when you are active for instant consultations.
+            </Text>
+          </View>
+        </View>
+
+        {/* Status Selector */}
+        <View style={styles.statusRow}>
+          {(['AVAILABLE', 'BUSY', 'OFFLINE'] as const).map((st) => {
+            const isCur = form.availabilityStatus === st;
+            const color = st === 'AVAILABLE' ? '#10b981' : st === 'BUSY' ? '#f59e0b' : '#ef4444';
+            const label = st === 'AVAILABLE' ? '🟢 Available' : st === 'BUSY' ? '🟡 In Field / Busy' : '🔴 Offline';
+            return (
+              <TouchableOpacity
+                key={st}
+                style={[
+                  styles.statusBtn,
+                  {
+                    backgroundColor: isCur ? `${color}25` : isLight ? '#f8fafc' : 'rgba(255,255,255,0.03)',
+                    borderColor: isCur ? color : isLight ? '#e2e8f0' : '#1e293b',
+                  },
+                ]}
+                onPress={() => setForm((prev) => ({ ...prev, availabilityStatus: st }))}
+              >
+                <Text style={[styles.statusBtnText, { color: isCur ? color : subTextColor }]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Timings */}
+        <View style={styles.timingRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.inputLabel, { color: subTextColor }]}>Consultation Start Time</Text>
+            <TextInput
+              style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+              value={form.workingHoursStart || '09:00 AM'}
+              onChangeText={(v) => setForm((prev) => ({ ...prev, workingHoursStart: v }))}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.inputLabel, { color: subTextColor }]}>Consultation End Time</Text>
+            <TextInput
+              style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+              value={form.workingHoursEnd || '07:00 PM'}
+              onChangeText={(v) => setForm((prev) => ({ ...prev, workingHoursEnd: v }))}
+            />
+          </View>
+        </View>
+
+        {/* Emergency Calls */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={[styles.toggleTitle, { color: textColor }]}>Accept Emergency Night / Holiday Alerts</Text>
+            <Text style={[styles.toggleDesc, { color: subTextColor }]}>
+              Allow urgent alerts for sudden locust attacks, storm damage, or rapid pest outbreaks outside regular hours.
+            </Text>
+          </View>
+          <Switch
+            value={Boolean(form.emergencyConsultation)}
+            onValueChange={() => handleToggle('emergencyConsultation')}
+            trackColor={{ false: '#64748b', true: '#10b981' }}
+            thumbColor="#ffffff"
+          />
+        </View>
+
+        {/* Welcome Greeting Note */}
+        <View style={{ marginTop: 10, gap: 4 }}>
+          <Text style={[styles.inputLabel, { color: subTextColor }]}>Automated Greeting Note for New Farmers</Text>
+          <TextInput
+            style={[styles.multilineInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+            multiline
+            numberOfLines={2}
+            value={form.welcomeGreeting || ''}
+            onChangeText={(v) => setForm((prev) => ({ ...prev, welcomeGreeting: v }))}
+            placeholder="Write a welcome greeting for farmers attached to your clinic..."
+            placeholderTextColor={subTextColor}
+          />
+        </View>
+      </View>
+
+          {/* SECTION 1: Contact Privacy & Communication Channels */}
       <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
         <View style={styles.sectionHeaderRow}>
           <View style={styles.iconBadgeGreen}>
@@ -261,8 +552,10 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
           </View>
         </View>
       </View>
-
-      {/* SECTION 2: Consultation Plans & Pricing Model */}
+        </>
+      ) : (
+        <>
+          {/* SECTION 2: Consultation Plans & Pricing Model */}
       <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
         <View style={styles.sectionHeaderRow}>
           <View style={styles.iconBadgeBlue}>
@@ -428,46 +721,149 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
           </View>
 
           {/* Specialized Crop Tags */}
-          <View style={{ marginTop: 6, gap: 6 }}>
-            <Text style={[styles.inputLabel, { color: subTextColor }]}>
-              Selected Crop Specializations ({form.specializedCrops?.length ?? 0} Selected):
-            </Text>
-            <View style={styles.cropChipsRow}>
-              {POPULAR_CROPS.map((crop) => {
-                const isSelected = form.allCropsSelected || (form.specializedCrops || []).includes(crop);
-                return (
+          <View style={{ marginTop: 6, gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+              <Text style={[styles.inputLabel, { color: subTextColor, marginBottom: 0 }]}>
+                Selected Crop Specializations ({form.allCropsSelected ? 'All Crops (Universal)' : `${form.specializedCrops?.length ?? 0} of ${masterSystemCrops.length} Selected`}):
+              </Text>
+              {!form.allCropsSelected && (
+                <View style={{ flexDirection: 'row', gap: 6 }}>
                   <TouchableOpacity
-                    key={crop}
-                    style={[
-                      styles.cropChip,
-                      {
-                        backgroundColor: isSelected
-                          ? 'rgba(16, 185, 129, 0.18)'
-                          : isLight
-                            ? '#f1f5f9'
-                            : 'rgba(255, 255, 255, 0.05)',
-                        borderColor: isSelected ? '#10b981' : isLight ? '#cbd5e1' : '#334155',
-                      },
-                    ]}
-                    onPress={() => !form.allCropsSelected && handleCropToggle(crop)}
+                    style={[styles.cropActionBtn, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}
+                    onPress={handleSelectAllFiltered}
                   >
-                    <Ionicons
-                      name={isSelected ? 'checkmark-circle' : 'add-circle-outline'}
-                      size={13}
-                      color={isSelected ? '#10b981' : subTextColor}
+                    <Ionicons name="checkmark-done" size={12} color="#10b981" />
+                    <Text style={[styles.cropActionBtnText, { color: '#10b981' }]}>Select Filtered</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.cropActionBtn, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}
+                    onPress={handleClearFiltered}
+                  >
+                    <Ionicons name="close" size={12} color="#ef4444" />
+                    <Text style={[styles.cropActionBtnText, { color: '#ef4444' }]}>Clear Filtered</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {!form.allCropsSelected && (
+              <>
+                {/* Search Bar & Filter Options */}
+                <View style={styles.cropSearchRow}>
+                  <View style={[styles.cropSearchInputWrapper, { backgroundColor: isLight ? '#ffffff' : '#0f172a', borderColor: isLight ? '#cbd5e1' : '#334155' }]}>
+                    <Ionicons name="search" size={14} color={subTextColor} />
+                    <TextInput
+                      style={[styles.cropSearchInput, { color: textColor }]}
+                      placeholder="Search system crops (e.g. Wheat, Basmati, Potato, Marigold)..."
+                      placeholderTextColor={subTextColor}
+                      value={cropSearchQuery}
+                      onChangeText={setCropSearchQuery}
                     />
-                    <Text
-                      style={[
-                        styles.cropChipText,
-                        { color: isSelected ? '#10b981' : textColor },
-                      ]}
-                    >
-                      {crop}
+                    {cropSearchQuery ? (
+                      <TouchableOpacity onPress={() => setCropSearchQuery('')}>
+                        <Ionicons name="close-circle" size={16} color={subTextColor} />
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.selectedOnlyToggleBtn,
+                      showSelectedOnly && styles.selectedOnlyToggleBtnActive,
+                      { borderColor: showSelectedOnly ? '#10b981' : isLight ? '#cbd5e1' : '#334155', backgroundColor: showSelectedOnly ? (isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.15)') : 'transparent' }
+                    ]}
+                    onPress={() => setShowSelectedOnly(!showSelectedOnly)}
+                  >
+                    <Ionicons name={showSelectedOnly ? "checkbox" : "square-outline"} size={14} color={showSelectedOnly ? "#10b981" : subTextColor} />
+                    <Text style={[styles.selectedOnlyText, { color: showSelectedOnly ? '#10b981' : textColor }]}>
+                      Selected ({form.specializedCrops?.length ?? 0})
                     </Text>
                   </TouchableOpacity>
-                );
-              })}
-            </View>
+                </View>
+
+                {/* Category Horizontal Filter Strip */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryFilterScroll}>
+                  <TouchableOpacity
+                    style={[
+                      styles.categoryFilterChip,
+                      selectedCropCategory === 'all' && styles.categoryFilterChipActive,
+                      { backgroundColor: selectedCropCategory === 'all' ? '#10b981' : isLight ? '#f1f5f9' : '#1e293b' }
+                    ]}
+                    onPress={() => setSelectedCropCategory('all')}
+                  >
+                    <Text style={[styles.categoryFilterChipText, selectedCropCategory === 'all' && { color: '#ffffff' }]}>
+                      All Categories ({masterSystemCrops.length})
+                    </Text>
+                  </TouchableOpacity>
+                  {CROP_CATEGORIES.map((cat) => {
+                    const count = masterSystemCrops.filter((c) => c.categoryId === cat.id).length;
+                    if (count === 0) return null;
+                    const isActive = selectedCropCategory === cat.id;
+                    return (
+                      <TouchableOpacity
+                        key={cat.id}
+                        style={[
+                          styles.categoryFilterChip,
+                          isActive && styles.categoryFilterChipActive,
+                          { backgroundColor: isActive ? '#10b981' : isLight ? '#f1f5f9' : '#1e293b' }
+                        ]}
+                        onPress={() => setSelectedCropCategory(cat.id)}
+                      >
+                        <Text style={[styles.categoryFilterChipText, isActive && { color: '#ffffff' }]}>
+                          {cat.name} ({count})
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+
+                {/* Active Filter Summary Bar */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 2 }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                    Showing {filteredSystemCrops.length} of {masterSystemCrops.length} Crops:
+                  </Text>
+                </View>
+
+                {/* Crops Grid */}
+                <View style={[styles.cropChipsRow, { maxHeight: 300 }]}>
+                  <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={true} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingBottom: 6 }}>
+                    {filteredSystemCrops.map((crop) => {
+                      const isSelected = (form.specializedCrops || []).includes(crop.name);
+                      return (
+                        <TouchableOpacity
+                          key={crop.name}
+                          style={[
+                            styles.cropChip,
+                            {
+                              backgroundColor: isSelected
+                                ? 'rgba(16, 185, 129, 0.18)'
+                                : isLight
+                                  ? '#f1f5f9'
+                                  : 'rgba(255, 255, 255, 0.05)',
+                              borderColor: isSelected ? '#10b981' : isLight ? '#cbd5e1' : '#334155',
+                            },
+                          ]}
+                          onPress={() => handleCropToggle(crop.name)}
+                        >
+                          <Ionicons
+                            name={isSelected ? 'checkmark-circle' : 'add-circle-outline'}
+                            size={13}
+                            color={isSelected ? '#10b981' : subTextColor}
+                          />
+                          <Text
+                            style={[
+                              styles.cropChipText,
+                              { color: isSelected ? '#10b981' : textColor },
+                            ]}
+                          >
+                            {crop.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              </>
+            )}
 
             {/* Custom Crop Add Field */}
             {!form.allCropsSelected && (
@@ -487,149 +883,9 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
           </View>
         </View>
       </View>
+        </>
+      )}
 
-      {/* SECTION 3: Availability & Practice Timings */}
-      <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
-        <View style={styles.sectionHeaderRow}>
-          <View style={styles.iconBadgeAmber}>
-            <Ionicons name="time" size={18} color="#f59e0b" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Availability Status & Working Hours
-            </Text>
-            <Text style={[styles.sectionSub, { color: subTextColor }]}>
-              Let farmers know when you are active for instant consultations.
-            </Text>
-          </View>
-        </View>
-
-        {/* Status Selector */}
-        <View style={styles.statusRow}>
-          {(['AVAILABLE', 'BUSY', 'OFFLINE'] as const).map((st) => {
-            const isCur = form.availabilityStatus === st;
-            const color = st === 'AVAILABLE' ? '#10b981' : st === 'BUSY' ? '#f59e0b' : '#ef4444';
-            const label = st === 'AVAILABLE' ? '🟢 Available' : st === 'BUSY' ? '🟡 In Field / Busy' : '🔴 Offline';
-            return (
-              <TouchableOpacity
-                key={st}
-                style={[
-                  styles.statusBtn,
-                  {
-                    backgroundColor: isCur ? `${color}25` : isLight ? '#f8fafc' : 'rgba(255,255,255,0.03)',
-                    borderColor: isCur ? color : isLight ? '#e2e8f0' : '#1e293b',
-                  },
-                ]}
-                onPress={() => setForm((prev) => ({ ...prev, availabilityStatus: st }))}
-              >
-                <Text style={[styles.statusBtnText, { color: isCur ? color : subTextColor }]}>
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Timings */}
-        <View style={styles.timingRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.inputLabel, { color: subTextColor }]}>Consultation Start Time</Text>
-            <TextInput
-              style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-              value={form.workingHoursStart || '09:00 AM'}
-              onChangeText={(v) => setForm((prev) => ({ ...prev, workingHoursStart: v }))}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.inputLabel, { color: subTextColor }]}>Consultation End Time</Text>
-            <TextInput
-              style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-              value={form.workingHoursEnd || '07:00 PM'}
-              onChangeText={(v) => setForm((prev) => ({ ...prev, workingHoursEnd: v }))}
-            />
-          </View>
-        </View>
-
-        {/* Emergency Calls */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-          <View style={{ flex: 1, paddingRight: 10 }}>
-            <Text style={[styles.toggleTitle, { color: textColor }]}>Accept Emergency Night / Holiday Alerts</Text>
-            <Text style={[styles.toggleDesc, { color: subTextColor }]}>
-              Allow urgent alerts for sudden locust attacks, storm damage, or rapid pest outbreaks outside regular hours.
-            </Text>
-          </View>
-          <Switch
-            value={Boolean(form.emergencyConsultation)}
-            onValueChange={() => handleToggle('emergencyConsultation')}
-            trackColor={{ false: '#64748b', true: '#10b981' }}
-            thumbColor="#ffffff"
-          />
-        </View>
-
-        {/* Welcome Greeting Note */}
-        <View style={{ marginTop: 10, gap: 4 }}>
-          <Text style={[styles.inputLabel, { color: subTextColor }]}>Automated Greeting Note for New Farmers</Text>
-          <TextInput
-            style={[styles.multilineInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-            multiline
-            numberOfLines={2}
-            value={form.welcomeGreeting || ''}
-            onChangeText={(v) => setForm((prev) => ({ ...prev, welcomeGreeting: v }))}
-            placeholder="Write a welcome greeting for farmers attached to your clinic..."
-            placeholderTextColor={subTextColor}
-          />
-        </View>
-      </View>
-
-      {/* SECTION 4: Agronomy Credential & Prescriptions Signature */}
-      <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
-        <View style={styles.sectionHeaderRow}>
-          <View style={styles.iconBadgePurple}>
-            <Ionicons name="ribbon" size={18} color="#8b5cf6" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Agronomy Credentials & Prescription Stamp
-            </Text>
-            <Text style={[styles.sectionSub, { color: subTextColor }]}>
-              Appears on digital prescriptions (E-Parchi) with FarmsKing statutory verified QR seal.
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.timingRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.inputLabel, { color: subTextColor }]}>ICAR / Agri Registration Number</Text>
-            <TextInput
-              style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-              value={form.icarRegistrationNumber || ''}
-              placeholder="e.g. ICAR-DOC-2026-8812"
-              placeholderTextColor={subTextColor}
-              onChangeText={(v) => setForm((prev) => ({ ...prev, icarRegistrationNumber: v }))}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.inputLabel, { color: subTextColor }]}>Max Active Farmer Capacity</Text>
-            <TextInput
-              style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-              keyboardType="numeric"
-              value={String(form.maxFarmerCapacity || 100)}
-              onChangeText={(v) => setForm((prev) => ({ ...prev, maxFarmerCapacity: Number(v) || 50 }))}
-            />
-          </View>
-        </View>
-
-        <View style={{ marginTop: 8, gap: 4 }}>
-          <Text style={[styles.inputLabel, { color: subTextColor }]}>Doctor Title & Academic Degree</Text>
-          <TextInput
-            style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-            value={form.qualificationTitle || ''}
-            placeholder="e.g. M.Sc Agronomy · ICAR Certified Plant Pathologist"
-            placeholderTextColor={subTextColor}
-            onChangeText={(v) => setForm((prev) => ({ ...prev, qualificationTitle: v }))}
-          />
-        </View>
-      </View>
 
       {/* Bottom Save Action */}
       <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 30 }}>
@@ -654,6 +910,78 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
 };
 
 const styles = StyleSheet.create({
+  cpanelTabContainer: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    gap: 6,
+    marginBottom: 4,
+  },
+  cpanelTabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+  },
+  cpanelTabBtnActive: {
+    ...premiumShadow('#000000', 'sm'),
+  },
+  cpanelTabBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.semiBold,
+  },
+  certNavCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    marginTop: 10,
+    gap: 12,
+  },
+  certNavLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  certRibbonBox: {
+    width: 42,
+    height: 42,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  certNavTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
+  certNavSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    marginTop: 2,
+  },
+  certNavArrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  certNavBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#10b981',
+  },
+
   container: {
     flex: 1,
   },
@@ -861,6 +1189,78 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     fontSize: 12.5,
     fontFamily: FONT.bold,
+  },
+  cropActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  cropActionBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+  },
+  cropSearchRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  cropSearchInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  cropSearchInput: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    padding: 0,
+  },
+  selectedOnlyToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  selectedOnlyToggleBtnActive: {
+    borderColor: '#10b981',
+  },
+  selectedOnlyText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+  },
+  categoryFilterScroll: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingVertical: 2,
+  },
+  categoryFilterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4.5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  categoryFilterChipActive: {
+    borderColor: '#10b981',
+  },
+  categoryFilterChipText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#64748b',
   },
   cropChipsRow: {
     flexDirection: 'row',

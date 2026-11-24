@@ -6,8 +6,10 @@ import { Stack, useRouter } from 'expo-router';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { RoleThemes } from '@/constants/Colors';
+import { INITIAL_CROPS_LIST } from '@/constants/cropCategoriesData';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
+import { useRole } from '@/src/store/role-context';
 import { useUpdateAdvisorProfile } from '@/src/hooks/useAdvisorProfile';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { uploadPhoto } from '@/src/api/uploads.api';
@@ -27,26 +29,13 @@ const CROP_CATEGORIES = [
   { key: 'OTHER', label: '🌿 Other Crops' },
 ];
 
-const PAN_INDIA_CROPS = [
-  'Wheat',
-  'Paddy & Basmati',
-  'Cotton',
-  'Sugarcane',
-  'Potato',
-  'Mustard & Rapeseed',
-  'Maize & Corn',
-  'Soybean',
-  'Pulses & Chickpea',
-  'Vegetables & Chillies',
-  'Fruits & Orchards',
-  'Marigold (Genda)',
-  'Rose & Floriculture',
-  'Kinnow & Citrus',
-];
+const PAN_INDIA_CROPS = Array.from(new Set(INITIAL_CROPS_LIST.map((c) => c.name)));
 
 export default function AdvisorProfileScreen() {
   const router = useRouter();
   const { user, updateUser, refreshUser } = useAuth();
+  const { role } = useRole();
+  const isGarden = role === 'GARDEN_ADVISOR';
   const updateProfile = useUpdateAdvisorProfile();
   const { data: appSettings } = useAppSettings();
   const certRef = React.useRef<View>(null);
@@ -194,7 +183,7 @@ export default function AdvisorProfileScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.75}>
           <Ionicons name="arrow-back" size={18} color="#0f172a" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Advisor Profile</Text>
+        <Text style={styles.headerTitle}>{isGarden ? 'Garden Advisor Profile' : 'Crop Doctor Profile'}</Text>
         <View style={{ width: 34 }} />
       </View>
 
@@ -209,8 +198,12 @@ export default function AdvisorProfileScreen() {
             <Ionicons name="ribbon" size={40} color="#15803d" style={{ alignSelf: 'center', marginBottom: 8 }} />
             <Text style={styles.certTitle}>CERTIFICATE OF EXCELLENCE</Text>
             <Text style={styles.certSub}>This certifies that</Text>
-            <Text style={styles.certName}>{user?.name || 'Garden Advisor'}</Text>
-            <Text style={styles.certBody}>has successfully passed the Horticulture Expert Assessment and is officially recognized as a Certified Garden Advisor on FarmsKing.</Text>
+            <Text style={styles.certName}>{user?.name || (isGarden ? 'Garden Advisor' : 'Crop Doctor')}</Text>
+            <Text style={styles.certBody}>
+              {isGarden
+                ? 'has successfully passed the Horticulture Expert Assessment and is officially recognized as a Certified Garden Advisor on FarmsKing.'
+                : 'has successfully passed the Agronomy & Plant Pathology Expert Assessment and is officially recognized as a Certified Crop Doctor on FarmsKing.'}
+            </Text>
             <View style={styles.certFooter}>
               <View>
                 <Text style={styles.certFooterVal}>{new Date().toLocaleDateString()}</Text>

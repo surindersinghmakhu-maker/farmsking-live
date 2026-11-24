@@ -846,13 +846,42 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                         </Text>
                       </View>
                     ) : (
-                      <View style={styles.quotaFullPill}>
-                        <Text style={styles.quotaFullPillText}>
-                          Quota Full ({activeDoctorInfo.maxIncluded}/{activeDoctorInfo.maxIncluded})
+                      <View style={[styles.quotaFullPill, { backgroundColor: isDark ? 'rgba(234, 179, 8, 0.15)' : '#fef3c7', borderWidth: 1, borderColor: isDark ? 'rgba(234, 179, 8, 0.3)' : '#fde68a' }]}>
+                        <Ionicons name="alert-circle" size={11} color="#b45309" />
+                        <Text style={[styles.quotaFullPillText, { color: '#b45309', fontFamily: FONT.bold }]}>
+                          Quota Limit Reached ({activeDoctorInfo.maxIncluded}/{activeDoctorInfo.maxIncluded})
                         </Text>
                       </View>
                     )}
                   </View>
+
+                  {/* Quota Full Upgrade Recommendation Strip */}
+                  {activeDoctorInfo.freeSlotsRemaining <= 0 && (
+                    <View style={styles.quotaUpgradeBanner}>
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <Ionicons name="trending-up" size={14} color="#7c3aed" />
+                          <Text style={styles.quotaUpgradeTitle}>Upgrade Dr. {activeDoctorInfo.doctor.name}'s Plan</Text>
+                        </View>
+                        <Text style={styles.quotaUpgradeDesc}>
+                          All {activeDoctorInfo.maxIncluded} included crop slots are in use. Upgrade to a higher duration plan (3, 6, or 12 months) to add more crops. Unused days on your active plan will be credited automatically.
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.quotaUpgradeBtn}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          tap();
+                          setConsultationMode('MONTHLY_VIP');
+                          setSelectedAdvisorId(activeDoctorInfo.doctor.id);
+                          if (monthlyDuration === 1) setMonthlyDuration(3);
+                        }}
+                      >
+                        <Ionicons name="sparkles" size={12} color="#ffffff" />
+                        <Text style={styles.quotaUpgradeBtnText}>Upgrade Plan</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
 
                   {activeDoctorInfo.supervised.length > 0 && (
                     <View style={{ marginTop: 6, gap: 4 }}>
@@ -1154,6 +1183,10 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                                   <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a', marginTop: 2 }}>
                                     ✨ {activeDoctorInfo.freeSlotsRemaining} free slots remaining in your plan. No payment required.
                                   </Text>
+                                ) : isCurrentlyMyActiveDoctor && !canAdoptFree ? (
+                                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#d97706', marginTop: 2 }}>
+                                    ⚠️ Quota full ({activeDoctorInfo?.maxIncluded}/{activeDoctorInfo?.maxIncluded}). Upgrade Dr. {advisor.name}'s plan to add more crops.
+                                  </Text>
                                 ) : !isCurrentlyMyActiveDoctor ? (
                                   <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#0284c7', marginTop: 2 }}>
                                     ✓ Send this crop to Dr. {advisor.name} as a new assignment.
@@ -1204,6 +1237,34 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                       </View>
                     ) : (
                       <>
+                        {selectedAdv?.id === activeDoctorInfo?.doctor.id && activeDoctorInfo && activeDoctorInfo.freeSlotsRemaining <= 0 && (
+                          <View style={styles.cropWiseQuotaWarningBox}>
+                            <View style={{ flex: 1, gap: 3 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Ionicons name="alert-circle" size={16} color="#d97706" />
+                                <Text style={styles.cropWiseQuotaWarningTitle}>
+                                  Dr. {activeDoctorInfo.doctor.name}'s Quota is Full ({activeDoctorInfo.maxIncluded}/{activeDoctorInfo.maxIncluded})
+                                </Text>
+                              </View>
+                              <Text style={styles.cropWiseQuotaWarningText}>
+                                You have reached the maximum crop limit under Dr. {activeDoctorInfo.doctor.name}. To add this crop, please upgrade to a higher retainer plan tier (3, 6, or 12 months), or choose another specialist below.
+                              </Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.cropWiseUpgradeBtn}
+                              activeOpacity={0.85}
+                              onPress={() => {
+                                tap();
+                                setConsultationMode('MONTHLY_VIP');
+                                setSelectedAdvisorId(activeDoctorInfo.doctor.id);
+                                if (monthlyDuration === 1) setMonthlyDuration(3);
+                              }}
+                            >
+                              <Ionicons name="trending-up" size={14} color="#ffffff" />
+                              <Text style={styles.cropWiseUpgradeBtnText}>Upgrade Plan</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
                         <View style={{ gap: 8 }}>
                           {/* Package 1: Single Prescription */}
                           <TouchableOpacity
@@ -1472,6 +1533,19 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                     </View>
 
                     {/* Duration Selector: 1, 3, 6, 12 Months */}
+                    {activeDoctorInfo && activeDoctorInfo.freeSlotsRemaining <= 0 && selectedAdv?.id === activeDoctorInfo.doctor.id && (
+                      <View style={[styles.creditAdjustmentBox, { backgroundColor: isDark ? 'rgba(124, 58, 237, 0.15)' : '#f5f3ff', borderColor: isDark ? 'rgba(124, 58, 237, 0.35)' : '#c4b5fd', marginBottom: 4 }]}>
+                        <Ionicons name="trending-up" size={16} color="#7c3aed" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#c4b5fd' : '#6d28d9' }}>
+                            Upgrading to Higher Plan Tier:
+                          </Text>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? '#e2e8f0' : '#475569', marginTop: 1 }}>
+                            Select 3, 6, or 12 months to upgrade your retainer with Dr. {selectedAdv?.name}. Prorated credit from your active plan (-₹{pricingData.unusedCredit}) is deducted automatically.
+                          </Text>
+                        </View>
+                      </View>
+                    )}
                     <View style={{ gap: 6 }}>
                       <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#cbd5e1' : '#334155' }}>
                         Select Retainer Duration:
@@ -2435,6 +2509,81 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     fontFamily: FONT.semiBold,
     color: '#64748b',
+  },
+  quotaUpgradeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(124, 58, 237, 0.08)',
+    borderColor: 'rgba(124, 58, 237, 0.3)',
+    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginTop: 6,
+    gap: 8,
+  },
+  quotaUpgradeTitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#6d28d9',
+  },
+  quotaUpgradeDesc: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#475569',
+    lineHeight: 14,
+  },
+  quotaUpgradeBtn: {
+    backgroundColor: '#7c3aed',
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: RADIUS.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  quotaUpgradeBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontFamily: FONT.bold,
+  },
+  cropWiseQuotaWarningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+    borderWidth: 1.5,
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 6,
+    gap: 10,
+  },
+  cropWiseQuotaWarningTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#b45309',
+  },
+  cropWiseQuotaWarningText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#78350f',
+    lineHeight: 15,
+  },
+  cropWiseUpgradeBtn: {
+    backgroundColor: '#7c3aed',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  cropWiseUpgradeBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: FONT.bold,
   },
   supervisedCropsList: {
     marginTop: 4,

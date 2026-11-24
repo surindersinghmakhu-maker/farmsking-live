@@ -446,6 +446,14 @@ export declare class AuthService {
         role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
         portal?: 'CLIENT' | 'PARTNER' | 'ADMIN';
         termsAccepted?: boolean;
+        pincode?: string;
+        state?: string;
+        district?: string;
+        village?: string;
+        postOffice?: string;
+        gpsLat?: number;
+        gpsLng?: number;
+        gpsLocationName?: string;
     }): Promise<{
         accessToken: string;
         user: {

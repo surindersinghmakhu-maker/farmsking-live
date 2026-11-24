@@ -185,12 +185,12 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
       setCopiedVpa(false);
       if (initialCropId) {
         setSelectedCropId(initialCropId);
-      } else if (myCrops.length > 0) {
+      } else if ((myCrops || []).length > 0) {
         // Pick first unassigned crop by default
-        const unassigned = myCrops.find(
+        const unassigned = (myCrops || []).find(
           (c) => !c.assignedAdvisorId && !c.assignedAdvisor && c.advisorReviewStatus !== 'ACCEPTED',
         );
-        setSelectedCropId(unassigned?.id ?? myCrops[0]?.id ?? null);
+        setSelectedCropId(unassigned?.id ?? (myCrops || [])[0]?.id ?? null);
       }
     }
   }, [visible, initialCropId, myCrops]);
@@ -198,13 +198,14 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
   // Selected Crop Object
   const selectedCrop = useMemo(() => {
     if (!selectedCropId) return null;
-    return myCrops.find((c) => c.id === selectedCropId) ?? null;
+    return (myCrops || []).find((c) => c.id === selectedCropId) ?? null;
   }, [selectedCropId, myCrops]);
 
   // Filter Doctors Matching Selected Crop
   const matchingCropDoctors = useMemo(() => {
-    if (!selectedCrop) return availableAdvisors;
-    return availableAdvisors.filter((advisor) => {
+    const list = Array.isArray(availableAdvisors) ? availableAdvisors : [];
+    if (!selectedCrop) return list;
+    return list.filter((advisor) => {
       const specializedCrops = Array.isArray(advisor.specializedCrops) ? advisor.specializedCrops : [];
       const specializedCats = Array.isArray(advisor.specializedCategories) ? advisor.specializedCategories : [];
 
@@ -238,13 +239,14 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
 
   // Currently Selected Advisor Object
   const selectedAdv = useMemo(() => {
+    const list = Array.isArray(availableAdvisors) ? availableAdvisors : [];
     if (!selectedAdvisorId) {
       if (consultationMode === 'CROP_WISE') {
-        return matchingCropDoctors[0] ?? availableAdvisors[0] ?? null;
+        return matchingCropDoctors[0] ?? list[0] ?? null;
       }
-      return availableAdvisors[0] ?? null;
+      return list[0] ?? null;
     }
-    return availableAdvisors.find((a) => a.id === selectedAdvisorId) ?? null;
+    return list.find((a) => a.id === selectedAdvisorId) ?? null;
   }, [selectedAdvisorId, matchingCropDoctors, availableAdvisors, consultationMode]);
 
   const isSeniorDoctor = (selectedAdv?.role as any) === 'DOCTOR' || !!(selectedAdv as any)?.isSeniorDoctor;
@@ -263,7 +265,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
       activeDoctorInfo.freeSlotsRemaining > 0 &&
       selectedAdv?.id === activeDoctorInfo.doctor.id &&
       selectedCropId &&
-      !(myCrops.find((c) => c.id === selectedCropId)?.advisorReviewStatus === 'ACCEPTED'),
+      !((myCrops || []).find((c) => c.id === selectedCropId)?.advisorReviewStatus === 'ACCEPTED'),
     );
 
     if (isIncludedInActivePlan) {

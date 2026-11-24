@@ -40,12 +40,13 @@ export const CropSelectionModal: React.FC<CropSelectionModalProps> = ({
   onClose,
   onConfirm,
   doctorName = 'Agri-Doctor',
-  crops,
+  crops = [],
   isInstantCall = false,
   isLoading = false,
 }) => {
   const { isDark, colors } = useExecutiveTheme();
-  const [selectedCropId, setSelectedCropId] = useState<string>(crops[0]?.id || 'GENERAL');
+  const cropList = Array.isArray(crops) ? crops : [];
+  const [selectedCropId, setSelectedCropId] = useState<string>(cropList[0]?.id || 'GENERAL');
   const [notes, setNotes] = useState<string>('');
 
   const tap = () => {
@@ -54,7 +55,7 @@ export const CropSelectionModal: React.FC<CropSelectionModalProps> = ({
     }
   };
 
-  const selectedCrop = crops.find((c) => c.id === selectedCropId);
+  const selectedCrop = cropList.find((c) => c.id === selectedCropId);
   const selectedCropName = selectedCrop ? selectedCrop.cropName : 'General Farm Advisory';
 
   const handleConfirm = () => {

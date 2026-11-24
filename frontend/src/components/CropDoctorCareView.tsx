@@ -332,8 +332,8 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
     }
   };
 
-  const soilTypeLabel = useMemo(() => SOIL_TYPE_OPTIONS.find((o) => o.value === soilTypeVal)?.label, [soilTypeVal]);
-  const waterTypeLabel = useMemo(() => WATER_TYPE_OPTIONS.find((o) => o.value === waterTypeVal)?.label, [waterTypeVal]);
+  const soilTypeLabel = useMemo(() => (Array.isArray(SOIL_TYPE_OPTIONS) ? SOIL_TYPE_OPTIONS : []).find((o) => o.value === soilTypeVal)?.label, [soilTypeVal]);
+  const waterTypeLabel = useMemo(() => (Array.isArray(WATER_TYPE_OPTIONS) ? WATER_TYPE_OPTIONS : []).find((o) => o.value === waterTypeVal)?.label, [waterTypeVal]);
   const isFarmProfileComplete = !!farmPhotoUri && !!sprayTankSize;
 
   const targetPlotForProblem = useMemo(() => {
@@ -464,10 +464,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
       {!isLoadingSubscription && hireStatus === 'NONE' && !advisorIncluded && (
         <ScrollView style={styles.activeScroll} contentContainerStyle={[styles.activeContent, { paddingBottom: 160, paddingHorizontal: 0, paddingTop: 0 }]} showsVerticalScrollIndicator={false}>
           {headerComponent}
-          <View style={styles.body}>
-            <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(0, 255, 135, 0.15)' : '#dcfce7' }]}>
-              <Ionicons name="shield-checkmark" size={40} color={isDark ? '#00ff87' : '#15803d'} />
-            </View>
+          <View style={[styles.body, { paddingTop: 20, paddingBottom: 16 }]}>
             <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>Crop Doctor Hub</Text>
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, width: '100%', maxWidth: 500 }}>

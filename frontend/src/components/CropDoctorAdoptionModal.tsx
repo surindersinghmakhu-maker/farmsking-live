@@ -55,12 +55,13 @@ export function CropDoctorAdoptionModal({
   };
 
   const selectedDoctor = useMemo(() => {
-    if (!advisors || advisors.length === 0) return null;
+    const list = Array.isArray(advisors) ? advisors : [];
+    if (list.length === 0) return null;
     if (selectedDoctorId) {
-      const found = advisors.find((a) => a.id === selectedDoctorId);
+      const found = list.find((a) => a.id === selectedDoctorId);
       if (found) return found;
     }
-    return advisors[0];
+    return list[0];
   }, [advisors, selectedDoctorId]);
 
   // Set default plan model when doctor changes

@@ -20,7 +20,10 @@ export interface FarmerPlanPaymentRequest {
 }
 
 export interface InitiateFarmerPlanPaymentResponse extends FarmerPlanPaymentRequest {
+  paymentLink?: string | null;
+  phonepeRedirectUrl?: string | null;
   cashfreeSessionId?: string | null;
+  cashfreePaymentLink?: string | null;
   cashfreeSubscriptionLink?: string | null;
   cashfreeSubscriptionId?: string | null;
   razorpayOrderId?: string | null;
@@ -30,6 +33,8 @@ export interface InitiateFarmerPlanPaymentResponse extends FarmerPlanPaymentRequ
   activeGateway?: string;
   isAutoDebit?: boolean;
   upiLink?: string;
+  payeeVpa?: string;
+  payeeName?: string;
 }
 
 export async function initiateFarmerPlanPayment(

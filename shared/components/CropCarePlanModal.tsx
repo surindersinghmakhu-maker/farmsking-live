@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Linking,
   Modal,
   Platform,
@@ -24,7 +25,7 @@ import { useAvailableAdvisors, useChooseAdvisor, useMyAdvisor } from '@/src/hook
 import { useSubscriptionStatus } from '@/src/hooks/useSubscriptionStatus';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useRedeemFarmerPlanCoupon } from '@/src/hooks/useFarmerPlan';
-import { useInitiateFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
+import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import { previewFarmerPlanCoupon, FarmerPlanCouponPreview } from '@/src/api/farmerPlans.api';
 
 const tap = () => {
@@ -52,6 +53,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
   // Mutations
   const chooseAdvisorMutation = useChooseAdvisor();
   const initiatePayment = useInitiateFarmerPlanPayment();
+  const submitPayment = useSubmitFarmerPlanPayment();
   const redeemCoupon = useRedeemFarmerPlanCoupon();
 
   // Mode Selection: 'CROP_WISE' (Pay Per Crop) vs 'MONTHLY_VIP' (Monthly Doctor Retainer)
@@ -85,11 +87,29 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
     isFree?: boolean;
   } | null>(null);
 
+  // In-Modal UPI Direct & QR Code Checkout State (for PC & Mobile)
+  const [upiCheckoutData, setUpiCheckoutData] = useState<{
+    id: string;
+    amount: number;
+    upiLink: string;
+    payeeVpa: string;
+    payeeName: string;
+    doctorName: string;
+    planName: string;
+    cropName?: string;
+  } | null>(null);
+  const [utrInput, setUtrInput] = useState('');
+  const [isSubmittingUtr, setIsSubmittingUtr] = useState(false);
+  const [copiedVpa, setCopiedVpa] = useState(false);
+
   // Set initial crop selection on show
   React.useEffect(() => {
     if (visible) {
       setStatusMessage(null);
       setActivatedNotice(null);
+      setUpiCheckoutData(null);
+      setUtrInput('');
+      setCopiedVpa(false);
       if (initialCropId) {
         setSelectedCropId(initialCropId);
       } else if (myCrops.length > 0) {
@@ -256,7 +276,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
     }
   };
 
-  // Handler: Paid Consultation (PhonePe / Cashfree / Online Payment Gateway)
+  // Handler: Paid Consultation (PhonePe / Cashfree / Online Payment Gateway / UPI Direct)
   const handleProceedToPayment = async () => {
     if (pricingData.netPayable === 0) {
       handleFreeActivation();
@@ -287,6 +307,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
         (res.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null) ||
         (res as any)?.razorpayShortUrl;
 
+      // 1. Direct Online Payment Gateway (PhonePe Checkout / Cashfree Portal)
       if (targetGatewayUrl) {
         if (Platform.OS === 'web') {
           window.location.href = targetGatewayUrl;
@@ -296,12 +317,24 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
         return;
       }
 
+      // 2. Direct UPI / QR Code Flow (NEVER open empty new tab with upi:// on PC Web)
       if (res.upiLink) {
-        if (Platform.OS === 'web') {
-          setStatusMessage('⚠️ Payment gateway connecting. Please try again in a moment.');
-        } else {
-          await Linking.openURL(res.upiLink).catch(() => {});
-        }
+        const vpa = (res as any)?.payeeVpa || (appSettings as any)?.upiId || 'surindersinghmakhu-8@okicici';
+        const payee = (appSettings as any)?.upiPayeeName || 'FarmsKing India';
+        const packageName = consultationMode === 'CROP_WISE'
+          ? `${selectedCropPackage === 'PRESCRIPTION' ? 'Single Consultation' : 'Full Season Crop Care'} (${selectedCrop?.name || 'Crop'})`
+          : `${monthlyDuration} Month(s) Farm VIP Retainer`;
+
+        setUpiCheckoutData({
+          id: res.id,
+          amount: pricingData.netPayable,
+          upiLink: res.upiLink,
+          payeeVpa: vpa,
+          payeeName: payee,
+          doctorName: selectedAdv.name,
+          planName: packageName,
+          cropName: selectedCrop?.name,
+        });
       } else {
         setStatusMessage('⚠️ Payment gateway initialized. Please complete payment to activate.');
       }
@@ -309,6 +342,53 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
       setStatusMessage(`❌ ${err?.response?.data?.message || 'Could not initiate payment gateway.'}`);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  // Handler: Copy UPI ID
+  const handleCopyVpa = () => {
+    tap();
+    if (!upiCheckoutData) return;
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(upiCheckoutData.payeeVpa);
+    }
+    setCopiedVpa(true);
+    setTimeout(() => setCopiedVpa(false), 2500);
+  };
+
+  // Handler: Submit UTR for Instant Activation
+  const handleSubmitUtr = async () => {
+    if (!upiCheckoutData) return;
+    if (!utrInput.trim()) {
+      setStatusMessage('⚠️ Please enter the 12-digit UPI UTR / Transaction Reference Number.');
+      return;
+    }
+    tap();
+    setIsSubmittingUtr(true);
+    setStatusMessage(null);
+    try {
+      await submitPayment.mutateAsync({
+        id: upiCheckoutData.id,
+        utr: utrInput.trim(),
+      });
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['farmerPlan'] });
+      queryClient.invalidateQueries({ queryKey: ['farmer-plan-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['my-crops'] });
+
+      setActivatedNotice({
+        doctorName: upiCheckoutData.doctorName,
+        cropName: upiCheckoutData.cropName,
+        packageName: upiCheckoutData.planName,
+        validUntil: 'Active · Doctor Assigned Successfully',
+      });
+      setUpiCheckoutData(null);
+      setUtrInput('');
+    } catch (err: any) {
+      setStatusMessage(`❌ ${err?.response?.data?.message || 'Could not submit payment verification. Please check the UTR number.'}`);
+    } finally {
+      setIsSubmittingUtr(false);
     }
   };
 
@@ -427,6 +507,125 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                 <Ionicons name="chatbubble-ellipses" size={16} color="#ffffff" />
                 <Text style={styles.primarySubmitBtnText}>Start Doctor Consultation</Text>
               </TouchableOpacity>
+            </ScrollView>
+          ) : upiCheckoutData ? (
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 18, gap: 14 }}>
+              {/* Back to Selection */}
+              <TouchableOpacity
+                style={styles.backBtnRow}
+                onPress={() => {
+                  tap();
+                  setUpiCheckoutData(null);
+                  setStatusMessage(null);
+                }}
+              >
+                <Ionicons name="arrow-back" size={16} color="#0284c7" />
+                <Text style={styles.backBtnText}>Change Doctor or Package</Text>
+              </TouchableOpacity>
+
+              {/* Verified Trust Strip */}
+              <View style={styles.trustStripBox}>
+                <Ionicons name="shield-checkmark" size={16} color="#16a34a" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.trustStripTitle}>Official UPI Direct Payment Gateway</Text>
+                  <Text style={styles.trustStripSub}>FARMSKING TECHNOLOGIES PRIVATE LIMITED · 0% Additional Fee</Text>
+                </View>
+              </View>
+
+              {/* Amount Card */}
+              <View style={[styles.checkoutSummaryCard, { backgroundColor: isDark ? '#1e293b' : '#f8fafc', borderColor: isDark ? '#334155' : '#e2e8f0' }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <Text style={styles.checkoutSummaryLabel}>Total Amount Payable:</Text>
+                  <Text style={styles.checkoutSummaryAmount}>₹{upiCheckoutData.amount.toLocaleString('en-IN')}</Text>
+                </View>
+                <Text style={styles.checkoutSummarySub}>
+                  Assigned: Dr. {upiCheckoutData.doctorName} · {upiCheckoutData.planName}
+                </Text>
+              </View>
+
+              {/* Step 1: QR Code Card */}
+              <View style={styles.qrCodeContainer}>
+                <Text style={styles.qrHeaderTitle}>Step 1: Scan QR Code with Any UPI App</Text>
+                <Text style={styles.qrHeaderSub}>Google Pay · PhonePe · Paytm · BHIM · Amazon Pay · Mobile Banking</Text>
+                <View style={styles.qrImageWrapper}>
+                  <Image
+                    source={{
+                      uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=1&ecc=H&data=${encodeURIComponent(upiCheckoutData.upiLink)}`,
+                    }}
+                    style={styles.qrImage}
+                    resizeMode="contain"
+                  />
+                </View>
+
+                {/* VPA Copy Pill */}
+                <View style={styles.vpaPillRow}>
+                  <Text style={styles.vpaLabel}>UPI ID:</Text>
+                  <Text style={styles.vpaValue}>{upiCheckoutData.payeeVpa}</Text>
+                  <TouchableOpacity style={styles.copyVpaBtn} onPress={handleCopyVpa}>
+                    <Ionicons name={copiedVpa ? 'checkmark' : 'copy-outline'} size={13} color="#ffffff" />
+                    <Text style={styles.copyVpaBtnText}>{copiedVpa ? 'Copied!' : 'Copy'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Mobile Direct App Intent (Only on native mobile) */}
+              {Platform.OS !== 'web' && (
+                <TouchableOpacity
+                  style={styles.openUpiAppBtn}
+                  onPress={() => {
+                    tap();
+                    Linking.openURL(upiCheckoutData.upiLink).catch(() => {
+                      Alert.alert('Notice', 'No UPI app found on this device. Please scan the QR code above.');
+                    });
+                  }}
+                >
+                  <Ionicons name="flash" size={16} color="#ffffff" />
+                  <Text style={styles.openUpiAppBtnText}>Open UPI App on Phone</Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Step 2: UTR Reference Submission */}
+              <View style={[styles.utrStepBox, { backgroundColor: isDark ? '#1e293b' : '#f8fafc', borderColor: isDark ? '#334155' : '#cbd5e1' }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={styles.stepNumberBadge}>
+                    <Text style={styles.stepNumberText}>2</Text>
+                  </View>
+                  <Text style={[styles.utrStepTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>
+                    Enter 12-Digit UPI Transaction / UTR Number
+                  </Text>
+                </View>
+                <Text style={styles.utrStepDesc}>
+                  After paying in your UPI app, find the 12-digit UTR on your receipt and enter it below to activate:
+                </Text>
+                <TextInput
+                  style={[styles.utrInput, { backgroundColor: isDark ? '#0f172a' : '#ffffff', color: isDark ? '#ffffff' : '#0f172a', borderColor: isDark ? '#475569' : '#cbd5e1' }]}
+                  placeholder="e.g. 431289567812"
+                  placeholderTextColor="#94a3b8"
+                  value={utrInput}
+                  onChangeText={setUtrInput}
+                  keyboardType="number-pad"
+                  maxLength={22}
+                />
+                {statusMessage && (
+                  <Text style={[styles.statusMsgText, { color: statusMessage.startsWith('❌') ? '#dc2626' : '#16a34a' }]}>
+                    {statusMessage}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={[styles.primarySubmitBtn, { backgroundColor: '#16a34a' }]}
+                  disabled={isSubmittingUtr}
+                  onPress={handleSubmitUtr}
+                >
+                  {isSubmittingUtr ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done" size={18} color="#ffffff" />
+                      <Text style={styles.primarySubmitBtnText}>Verify & Activate Plan</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           ) : (
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 18, gap: 16 }}>
@@ -1551,5 +1750,176 @@ const styles = StyleSheet.create({
   summaryVal: {
     fontSize: 12.5,
     fontFamily: FONT.bold,
+  },
+
+  // UPI QR Code & Direct Checkout Styles
+  backBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 4,
+  },
+  backBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  trustStripBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0fdf4',
+    padding: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  trustStripTitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#166534',
+  },
+  trustStripSub: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#15803d',
+  },
+  checkoutSummaryCard: {
+    padding: 14,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    gap: 4,
+  },
+  checkoutSummaryLabel: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  checkoutSummaryAmount: {
+    fontSize: 22,
+    fontFamily: FONT.extraBold,
+    color: '#16a34a',
+  },
+  checkoutSummarySub: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  qrCodeContainer: {
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    gap: 8,
+  },
+  qrHeaderTitle: {
+    fontSize: 14,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  qrHeaderSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+  qrImageWrapper: {
+    padding: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  qrImage: {
+    width: 200,
+    height: 200,
+  },
+  vpaPillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  vpaLabel: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  vpaValue: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  copyVpaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+  },
+  copyVpaBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  openUpiAppBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#0284c7',
+    paddingVertical: 12,
+    borderRadius: RADIUS.md,
+  },
+  openUpiAppBtnText: {
+    color: '#ffffff',
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+  },
+  utrStepBox: {
+    padding: 14,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    gap: 10,
+  },
+  stepNumberBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumberText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+  },
+  utrStepTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    flex: 1,
+  },
+  utrStepDesc: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    lineHeight: 16,
+  },
+  utrInput: {
+    height: 44,
+    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.5,
   },
 });

@@ -206,6 +206,24 @@ export default function UniversalMembershipPass({
         billingPeriodDays,
       });
 
+      const targetGatewayUrl =
+        (res as any)?.paymentLink ||
+        (res as any)?.phonepeRedirectUrl ||
+        (res as any)?.cashfreePaymentLink ||
+        (res.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null) ||
+        (res as any)?.razorpayShortUrl;
+
+      if (targetGatewayUrl) {
+        if (Platform.OS === 'web') {
+          window.location.href = targetGatewayUrl;
+        } else {
+          import('react-native').then(({ Linking }) => {
+            Linking.openURL(targetGatewayUrl);
+          });
+        }
+        return;
+      }
+
       if (res.cashfreeSessionId) {
         if (Platform.OS === 'web') {
           window.location.href = `https://payments.cashfree.com/order/#${res.cashfreeSessionId}`;
@@ -214,9 +232,12 @@ export default function UniversalMembershipPass({
             Linking.openURL(`https://payments.cashfree.com/order/#${res.cashfreeSessionId}`);
           });
         }
-      } else {
-        Alert.alert('Payment Error', 'Could not get Cashfree payment session.');
+        return;
       }
+
+      const msg = 'Payment initialized. Complete payment to activate your VIP pass.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Notice', msg);
     } catch (err: any) {
       const errMsg = err?.response?.data?.message || 'Could not initiate payment.';
       if (Platform.OS === 'web') alert(errMsg);

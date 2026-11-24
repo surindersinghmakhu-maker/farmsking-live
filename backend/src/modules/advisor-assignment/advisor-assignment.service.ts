@@ -375,8 +375,14 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       const hasCategories = Array.isArray(advisor.specializedCategories) && advisor.specializedCategories.length > 0;
       const hasCrops = Array.isArray(advisor.specializedCrops) && advisor.specializedCrops.length > 0;
 
-      // If doctor hasn't set any filters, they are general agronomy advisors (eligible for all)
+      // If doctor hasn't set any filters, or explicitly selected ALL crops, they are eligible for all crops
       if (!hasCategories && !hasCrops) return true;
+      if (hasCrops && advisor.specializedCrops.some((sc) => {
+        const up = sc.toUpperCase().trim();
+        return up === 'ALL' || up === 'ALL_CROPS' || up === 'ALL CROPS' || up.includes('ALL CROP');
+      })) {
+        return true;
+      }
 
       // Check category match
       let categoryMatch = false;
@@ -835,6 +841,25 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       },
       data: { status: AdvisorAssignmentStatus.REVOKED, endDate: new Date(), notes: 'Replaced by new doctor acceptance' },
     });
+    // Auto-link CropCycle when assignment contains Crop ID
+    if (assignment.notes && assignment.notes.includes('[Crop ID: ')) {
+      const cropIdMatch = assignment.notes.match(/\[Crop ID:\s*([^\]]+)\]/);
+      if (cropIdMatch && cropIdMatch[1]) {
+        const rawCropId = cropIdMatch[1].trim();
+        await this.prisma.cropCycle.updateMany({
+          where: {
+            OR: [{ id: rawCropId }, { cropId: rawCropId }],
+            deletedAt: null,
+          },
+          data: {
+            assignedAdvisorId: user.id,
+            advisorReviewStatus: 'ACCEPTED' as any,
+            advisorAcceptedAt: new Date(),
+          },
+        });
+      }
+    }
+
     await this.payoutAdvisorShareOnAccept(assignment.farmerId, user.id);
     await this.notificationsService.create(
       assignment.farmerId,

@@ -51,4 +51,9 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], InitiateFarmerPlanPaymentDto.prototype, "advisorKingId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], InitiateFarmerPlanPaymentDto.prototype, "cropCycleId", void 0);
 //# sourceMappingURL=initiate-farmer-plan-payment.dto.js.map

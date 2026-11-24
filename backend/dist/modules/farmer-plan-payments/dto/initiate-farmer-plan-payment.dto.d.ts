@@ -8,4 +8,5 @@ export declare class InitiateFarmerPlanPaymentDto {
     selectedAdvisorId?: string;
     doctorKingId?: string;
     advisorKingId?: string;
+    cropCycleId?: string;
 }

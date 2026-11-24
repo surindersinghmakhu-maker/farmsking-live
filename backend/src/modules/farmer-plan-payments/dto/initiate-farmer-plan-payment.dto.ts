@@ -29,4 +29,8 @@ export class InitiateFarmerPlanPaymentDto {
 
   @IsOptional()
   advisorKingId?: string;
+
+  @IsOptional()
+  @IsString()
+  cropCycleId?: string;
 }

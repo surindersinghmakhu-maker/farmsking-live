@@ -336,6 +336,12 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             const hasCrops = Array.isArray(advisor.specializedCrops) && advisor.specializedCrops.length > 0;
             if (!hasCategories && !hasCrops)
                 return true;
+            if (hasCrops && advisor.specializedCrops.some((sc) => {
+                const up = sc.toUpperCase().trim();
+                return up === 'ALL' || up === 'ALL_CROPS' || up === 'ALL CROPS' || up.includes('ALL CROP');
+            })) {
+                return true;
+            }
             let categoryMatch = false;
             if (hasCategories && cropCycle.category) {
                 categoryMatch = advisor.specializedCategories.includes(cropCycle.category);
@@ -675,6 +681,23 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             },
             data: { status: client_1.AdvisorAssignmentStatus.REVOKED, endDate: new Date(), notes: 'Replaced by new doctor acceptance' },
         });
+        if (assignment.notes && assignment.notes.includes('[Crop ID: ')) {
+            const cropIdMatch = assignment.notes.match(/\[Crop ID:\s*([^\]]+)\]/);
+            if (cropIdMatch && cropIdMatch[1]) {
+                const rawCropId = cropIdMatch[1].trim();
+                await this.prisma.cropCycle.updateMany({
+                    where: {
+                        OR: [{ id: rawCropId }, { cropId: rawCropId }],
+                        deletedAt: null,
+                    },
+                    data: {
+                        assignedAdvisorId: user.id,
+                        advisorReviewStatus: 'ACCEPTED',
+                        advisorAcceptedAt: new Date(),
+                    },
+                });
+            }
+        }
         await this.payoutAdvisorShareOnAccept(assignment.farmerId, user.id);
         await this.notificationsService.create(assignment.farmerId, client_1.NotificationType.SYSTEM, 'Advisor accepted your request', 'Your advisor has accepted your hire request — you can now chat and get crop guidance.');
         this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(assignment.farmerId).catch(() => { });

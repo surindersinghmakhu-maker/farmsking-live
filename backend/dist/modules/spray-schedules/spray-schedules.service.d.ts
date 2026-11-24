@@ -12,11 +12,11 @@ export declare class SprayScheduleService {
     private assertAdvisorAssignedToCropCycle;
     private rememberProductNames;
     create(user: AuthUser, dto: CreateSprayScheduleDto): Promise<{
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
+        deletedAt: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
@@ -29,11 +29,11 @@ export declare class SprayScheduleService {
         completedSprayId: string | null;
     }>;
     listForCrop(user: AuthUser, cropCycleId: string): Promise<{
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
+        deletedAt: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
@@ -46,11 +46,11 @@ export declare class SprayScheduleService {
         completedSprayId: string | null;
     }[]>;
     update(user: AuthUser, id: string, dto: UpdateSprayScheduleDto): Promise<{
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
+        deletedAt: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
@@ -63,11 +63,11 @@ export declare class SprayScheduleService {
         completedSprayId: string | null;
     }>;
     remove(user: AuthUser, id: string): Promise<{
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
+        deletedAt: Date | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        deletedAt: Date | null;
-        status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         cropCycleId: string;
         recommendedProduct: string | null;
@@ -80,10 +80,10 @@ export declare class SprayScheduleService {
         completedSprayId: string | null;
     }>;
     searchCatalog(query: string): Promise<{
+        deletedAt: Date | null;
         id: string;
         name: string;
         createdAt: Date;
-        deletedAt: Date | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
     }[]>;
 }

@@ -48,6 +48,41 @@ export default function AdvisorProfileScreen() {
   const [saved, setSaved] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled ?? true);
 
+  // Doctor Consultation Fees & Supported Crops Settings
+  const initialCrops = Array.isArray((user as any)?.specializedCrops) ? (user as any).specializedCrops : [];
+  const initialIsAll = initialCrops.some((c: string) => {
+    const up = String(c).toUpperCase();
+    return up === 'ALL' || up === 'ALL_CROPS' || up === 'ALL CROPS';
+  }) || initialCrops.length === 0;
+
+  const [isAllCrops, setIsAllCrops] = useState<boolean>(initialIsAll);
+  const [specializedCrops, setSpecializedCrops] = useState<string[]>(
+    initialCrops.filter((c: string) => {
+      const up = String(c).toUpperCase();
+      return up !== 'ALL' && up !== 'ALL_CROPS' && up !== 'ALL CROPS';
+    }),
+  );
+  const [feePerConsultation, setFeePerConsultation] = useState<string>(
+    (user as any)?.feePerConsultation !== undefined && (user as any)?.feePerConsultation !== null
+      ? String((user as any).feePerConsultation)
+      : '99',
+  );
+  const [feePerCropSeason, setFeePerCropSeason] = useState<string>(
+    (user as any)?.feePerCropSeason !== undefined && (user as any)?.feePerCropSeason !== null
+      ? String((user as any).feePerCropSeason)
+      : '499',
+  );
+  const [feeVipMonthly, setFeeVipMonthly] = useState<string>(
+    (user as any)?.feeVipMonthly !== undefined && (user as any)?.feeVipMonthly !== null
+      ? String((user as any).feeVipMonthly)
+      : '1999',
+  );
+  const [monthlyIncludedCrops, setMonthlyIncludedCrops] = useState<string>(
+    (user as any)?.monthlyIncludedCrops !== undefined && (user as any)?.monthlyIncludedCrops !== null
+      ? String((user as any).monthlyIncludedCrops)
+      : '3',
+  );
+
   const fetchPincodeAddress = async (code: string) => {
     setPincodeError(null);
     setIsPincodeLoading(true);
@@ -104,6 +139,7 @@ export default function AdvisorProfileScreen() {
     setError(null);
     setSaved(false);
     try {
+      const finalSpecializedCrops = isAllCrops ? ['ALL'] : specializedCrops;
       await updateProfile.mutateAsync({
         photoUrl: photoUrl ?? undefined,
         specialization: specialization.trim() || undefined,
@@ -116,7 +152,20 @@ export default function AdvisorProfileScreen() {
         district: district.trim() || undefined,
         state: state.trim() || undefined,
         notificationsEnabled,
+        feePerConsultation: feePerConsultation !== '' ? Number(feePerConsultation) : undefined,
+        feePerCropSeason: feePerCropSeason !== '' ? Number(feePerCropSeason) : undefined,
+        feeVipMonthly: feeVipMonthly !== '' ? Number(feeVipMonthly) : undefined,
+        monthlyIncludedCrops: monthlyIncludedCrops !== '' ? Number(monthlyIncludedCrops) : undefined,
+        specializedCrops: finalSpecializedCrops,
       });
+      await updateUser({
+        ...(user || {}),
+        feePerConsultation: feePerConsultation !== '' ? Number(feePerConsultation) : undefined,
+        feePerCropSeason: feePerCropSeason !== '' ? Number(feePerCropSeason) : undefined,
+        feeVipMonthly: feeVipMonthly !== '' ? Number(feeVipMonthly) : undefined,
+        monthlyIncludedCrops: monthlyIncludedCrops !== '' ? Number(monthlyIncludedCrops) : undefined,
+        specializedCrops: finalSpecializedCrops,
+      } as any);
       setSaved(true);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Could not save your profile.');
@@ -207,14 +256,179 @@ export default function AdvisorProfileScreen() {
       ) : null}
 
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Specialization</Text>
+        <Text style={styles.sectionLabel}>Specialization Summary</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g. Rose & Floriculture, Wheat & Cereals"
+          placeholder="e.g. Plant Pathology, Soil Nutrition, Wheat & Paddy Specialist"
           placeholderTextColor="#94a3b8"
           value={specialization}
           onChangeText={setSpecialization}
         />
+      </View>
+
+      {/* ─── CROP SPECIALIZATION & ALL CROPS TOGGLE ──────────────── */}
+      <View style={[styles.section, styles.configCard]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <Text style={[styles.sectionLabel, { color: '#0f172a' }]}>🌾 Crop Coverage</Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+              Service all crops at affordable fees or pick specific crops
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isAllCrops ? '#15803d' : '#64748b' }}>
+              {isAllCrops ? 'All Crops Active' : 'Specific Crops'}
+            </Text>
+            <Switch
+              value={isAllCrops}
+              onValueChange={setIsAllCrops}
+              trackColor={{ false: '#cbd5e1', true: '#16a34a' }}
+              thumbColor="#ffffff"
+            />
+          </View>
+        </View>
+
+        {isAllCrops ? (
+          <View style={{ backgroundColor: '#f0fdf4', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#166534', flex: 1 }}>
+              ✓ You are registered as an All Crops Specialist. All farmers can find and book your advisory for any crop.
+            </Text>
+          </View>
+        ) : (
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#475569' }}>
+              Select crops you specialize in:
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {['Wheat', 'Paddy / Rice', 'Cotton', 'Sugarcane', 'Potato', 'Mustard', 'Maize', 'Vegetables', 'Citrus & Fruits', 'Pulses & Oilseeds', 'Fodder'].map((cropName) => {
+                const isSelected = specializedCrops.includes(cropName);
+                return (
+                  <TouchableOpacity
+                    key={cropName}
+                    style={[
+                      styles.cropChip,
+                      isSelected && styles.cropChipActive,
+                    ]}
+                    onPress={() => {
+                      if (isSelected) {
+                        setSpecializedCrops((prev) => prev.filter((c) => c !== cropName));
+                      } else {
+                        setSpecializedCrops((prev) => [...prev, cropName]);
+                      }
+                    }}
+                  >
+                    <Ionicons
+                      name={isSelected ? 'checkmark-circle' : 'add-circle-outline'}
+                      size={13}
+                      color={isSelected ? '#ffffff' : '#64748b'}
+                    />
+                    <Text style={[styles.cropChipText, isSelected && styles.cropChipTextActive]}>
+                      {cropName}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+      </View>
+
+      {/* ─── DOCTOR CONSULTATION FEES & PRICING PLANS ───────────── */}
+      <View style={[styles.section, styles.configCard]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="cash-outline" size={17} color="#0284c7" />
+          <Text style={[styles.sectionLabel, { color: '#0f172a' }]}>💰 Consultation Fees & Packages</Text>
+        </View>
+        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+          Set your advisory charges. You can update or offer free introductory consultations anytime.
+        </Text>
+
+        {/* 1. Single Consultation Fee */}
+        <View style={{ gap: 4, marginTop: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>
+              1. Single Prescription SOS Consultation (₹)
+            </Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: feePerConsultation === '0' ? '#16a34a' : '#f0fdf4',
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: RADIUS.pill,
+                borderWidth: 1,
+                borderColor: '#86efac',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+              }}
+              onPress={() => setFeePerConsultation('0')}
+            >
+              <Ionicons name="gift-outline" size={12} color={feePerConsultation === '0' ? '#ffffff' : '#15803d'} />
+              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: feePerConsultation === '0' ? '#ffffff' : '#15803d' }}>
+                {feePerConsultation === '0' ? '✓ Free Active' : 'Offer Free (₹0)'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 99 (or 0 for Free Consultation)"
+            placeholderTextColor="#94a3b8"
+            keyboardType="numeric"
+            value={feePerConsultation}
+            onChangeText={setFeePerConsultation}
+          />
+          {feePerConsultation === '0' ? (
+            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#16a34a' }}>
+              🎁 Free Consultation active — farmers can try your advisory with zero charge to build trust.
+            </Text>
+          ) : null}
+        </View>
+
+        {/* 2. Full Season Care Fee */}
+        <View style={{ gap: 4, marginTop: 4 }}>
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>
+            2. Full Crop Season Care Fee (₹) [120-Day Cycle]
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 499"
+            placeholderTextColor="#94a3b8"
+            keyboardType="numeric"
+            value={feePerCropSeason}
+            onChangeText={setFeePerCropSeason}
+          />
+        </View>
+
+        {/* 3. Monthly VIP Retainer Fee */}
+        <View style={{ gap: 4, marginTop: 4 }}>
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>
+            3. Monthly VIP Farm Retainer Fee (₹) [30-Day Retainer]
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 1999"
+            placeholderTextColor="#94a3b8"
+            keyboardType="numeric"
+            value={feeVipMonthly}
+            onChangeText={setFeeVipMonthly}
+          />
+        </View>
+
+        {/* 4. Included Crops under Monthly Retainer */}
+        <View style={{ gap: 4, marginTop: 4 }}>
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>
+            4. Crops Included under Monthly Retainer (Count)
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 3"
+            placeholderTextColor="#94a3b8"
+            keyboardType="numeric"
+            value={monthlyIncludedCrops}
+            onChangeText={setMonthlyIncludedCrops}
+          />
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -348,6 +562,39 @@ const styles = StyleSheet.create({
   notificationIconBg: { width: 32, height: 32, borderRadius: RADIUS.md, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' },
   notificationLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
   notificationSubLabel: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
+  configCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 10,
+    ...premiumShadow('#0f172a', 'sm'),
+  },
+  cropChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  cropChipActive: {
+    backgroundColor: '#15803d',
+    borderColor: '#166534',
+  },
+  cropChipText: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#334155',
+  },
+  cropChipTextActive: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
+  },
   photoPicker: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1.5, borderColor: '#e2e8f0', padding: SPACING.md },
   photoPreview: { width: 56, height: 56, borderRadius: RADIUS.pill },
   photoPlaceholder: { width: 56, height: 56, borderRadius: RADIUS.pill, backgroundColor: RoleThemes.FARM_ADVISOR.primaryLight, alignItems: 'center', justifyContent: 'center' },

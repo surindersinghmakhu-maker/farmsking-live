@@ -39,6 +39,19 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
+function isExplicitlyFree(val: any): boolean {
+  if (val === undefined || val === null || val === '') return false;
+  const num = Number(val);
+  return !isNaN(num) && num === 0;
+}
+
+function parsePlanFee(val: any, defaultFee: number): number {
+  if (isExplicitlyFree(val)) return 0;
+  if (val === undefined || val === null || val === '') return defaultFee;
+  const num = Number(val);
+  return isNaN(num) ? defaultFee : Math.max(0, num);
+}
+
 interface CropCarePlanModalProps {
   visible: boolean;
   onClose: () => void;
@@ -287,23 +300,14 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
     let billingPeriodDays = 30;
 
     if (consultationMode === 'CROP_WISE') {
-      const feeConsultation =
-        selectedAdv?.feePerConsultation !== undefined && selectedAdv?.feePerConsultation !== null
-          ? Number(selectedAdv.feePerConsultation)
-          : 99;
-      const feeSeason =
-        selectedAdv?.feePerCropSeason !== undefined && selectedAdv?.feePerCropSeason !== null
-          ? Number(selectedAdv.feePerCropSeason)
-          : 499;
+      const feeConsultation = parsePlanFee(selectedAdv?.feePerConsultation, 99);
+      const feeSeason = parsePlanFee(selectedAdv?.feePerCropSeason, 499);
 
       baseDoctorFee = selectedCropPackage === 'PRESCRIPTION' ? feeConsultation : feeSeason;
       billingPeriodDays = selectedCropPackage === 'PRESCRIPTION' ? 30 : 120;
     } else {
       // Monthly VIP Retainer Mode
-      const baseMonthly =
-        selectedAdv?.feeVipMonthly !== undefined && selectedAdv?.feeVipMonthly !== null
-          ? Number(selectedAdv.feeVipMonthly)
-          : 1999;
+      const baseMonthly = parsePlanFee(selectedAdv?.feeVipMonthly, 1999);
 
       const discountFactor =
         monthlyDuration === 1 ? 1 : monthlyDuration === 3 ? 0.95 : monthlyDuration === 6 ? 0.9 : 0.8;
@@ -319,7 +323,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
       const end = new Date(subscription.endDate);
       if (end.getTime() > now.getTime()) {
         const daysRemaining = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        const baseMonthly = Number(selectedAdv?.feeVipMonthly ?? 1999);
+        const baseMonthly = parsePlanFee(selectedAdv?.feeVipMonthly, 1999);
         const dailyRate = baseMonthly / 30;
         unusedCredit = Math.round(Math.min(baseDoctorFee, daysRemaining * dailyRate));
       }
@@ -351,8 +355,8 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
     // 3. Taxable Subtotal = Doctor Fee + Platform Fee
     const taxableAmount = doctorFee + platformFee;
 
-    // 4. Statutory 19% GST (Govt. Compliance Tax)
-    const gstAmount = Math.round((taxableAmount * 19) / 100);
+    // 4. Statutory 18% GST (Govt. Compliance Tax)
+    const gstAmount = Math.round((taxableAmount * 18) / 100);
 
     // 5. Total Payable Amount
     const totalPayable = taxableAmount + gstAmount;
@@ -1101,7 +1105,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                               activeDoctorInfo.freeSlotsRemaining > 0 &&
                               !isCropAssignedToThisDoctor,
                           );
-                          const isFreeConsult = Number(advisor.feePerConsultation) === 0;
+                          const isFreeConsult = isExplicitlyFree(advisor.feePerConsultation);
 
                           return (
                             <TouchableOpacity
@@ -1170,9 +1174,13 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                                     <Text style={[styles.doctorMetaSmall, { color: '#16a34a', fontWeight: '700' }]}>
                                       · ₹0 (Included in Active Plan)
                                     </Text>
+                                  ) : isFreeConsult ? (
+                                    <Text style={[styles.doctorMetaSmall, { color: '#16a34a', fontWeight: '700' }]}>
+                                      · ₹0 (Free Consultation)
+                                    </Text>
                                   ) : (
                                     <Text style={[styles.doctorMetaSmall, { color: '#0284c7', fontWeight: '700' }]}>
-                                      · ₹{Number(advisor.feePerCropSeason || 499)}/season
+                                      · ₹{parsePlanFee(advisor.feePerCropSeason, 499)}/season
                                     </Text>
                                   )}
                                 </View>
@@ -1305,9 +1313,9 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                               Emergency photo diagnosis, disease detection & spray prescription
                             </Text>
                             <Text style={[styles.packagePrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>
-                              {Number(selectedAdv?.feePerConsultation) === 0
+                              {isExplicitlyFree(selectedAdv?.feePerConsultation)
                                 ? '₹0 (FREE)'
-                                : `₹${Number(selectedAdv?.feePerConsultation || 99)}`}{' '}
+                                : `₹${parsePlanFee(selectedAdv?.feePerConsultation, 99)}`}{' '}
                               <Text style={styles.packagePriceUnit}>/ Single Consultation</Text>
                             </Text>
                           </TouchableOpacity>
@@ -1349,13 +1357,15 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                               Complete 120-day seed-to-harvest spray calendar, nutrition schedule & continuous doctor monitoring
                             </Text>
                             <Text style={[styles.packagePrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>
-                              ₹{Number(selectedAdv?.feePerCropSeason || 499)}{' '}
+                              {isExplicitlyFree(selectedAdv?.feePerCropSeason)
+                                ? '₹0 (FREE)'
+                                : `₹${parsePlanFee(selectedAdv?.feePerCropSeason, 499)}`}{' '}
                               <Text style={styles.packagePriceUnit}>/ Full 120-Day Cycle</Text>
                             </Text>
                           </TouchableOpacity>
                         </View>
 
-                        {/* Transparent Financial Bill Breakdown with 19% Statutory GST */}
+                        {/* Transparent Financial Bill Breakdown with 18% Statutory GST */}
                         <View
                           style={[
                             styles.priceBreakdownCard,
@@ -1391,7 +1401,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                             </Text>
                           </View>
                           <View style={styles.breakdownRow}>
-                            <Text style={styles.breakdownLabel}>Statutory 19% GST (Govt. Compliance Tax):</Text>
+                            <Text style={styles.breakdownLabel}>Statutory 18% GST (Govt. Compliance Tax):</Text>
                             <Text style={[styles.breakdownValue, { color: '#0284c7' }]}>
                               +₹{pricingData.gstAmount}
                             </Text>
@@ -1560,9 +1570,10 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                           { months: 12 as const, label: '12 Months', tag: '20% OFF' },
                         ].map((d) => {
                           const isDurActive = monthlyDuration === d.months;
-                          const base = Number(selectedAdv?.feeVipMonthly || 1999);
+                          const isFreeMonthly = isExplicitlyFree(selectedAdv?.feeVipMonthly);
+                          const base = parsePlanFee(selectedAdv?.feeVipMonthly, 1999);
                           const factor = d.months === 1 ? 1 : d.months === 3 ? 0.95 : d.months === 6 ? 0.9 : 0.8;
-                          const price = Math.round(base * d.months * factor);
+                          const price = isFreeMonthly ? 0 : Math.round(base * d.months * factor);
 
                           return (
                             <TouchableOpacity
@@ -1588,7 +1599,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                                 </View>
                               </View>
                               <Text style={[styles.durationChipPrice, isDurActive && { color: '#ffffff' }]}>
-                                ₹{price}
+                                {price === 0 ? '₹0 (FREE)' : `₹${price}`}
                               </Text>
                             </TouchableOpacity>
                           );
@@ -1620,7 +1631,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                       </View>
                     ) : null}
 
-                    {/* Transparent Financial Bill Breakdown for Monthly VIP with 19% Statutory GST */}
+                    {/* Transparent Financial Bill Breakdown for Monthly VIP with 18% Statutory GST */}
                     <View
                       style={[
                         styles.priceBreakdownCard,
@@ -1656,7 +1667,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                         </Text>
                       </View>
                       <View style={styles.breakdownRow}>
-                        <Text style={styles.breakdownLabel}>Statutory 19% GST (Govt. Compliance Tax):</Text>
+                        <Text style={styles.breakdownLabel}>Statutory 18% GST (Govt. Compliance Tax):</Text>
                         <Text style={[styles.breakdownValue, { color: '#7c3aed' }]}>
                           +₹{pricingData.gstAmount}
                         </Text>

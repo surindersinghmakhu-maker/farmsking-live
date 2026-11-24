@@ -29,6 +29,19 @@ interface CropDoctorAdoptionModalProps {
   onUpgradePlan?: (doctorId?: string) => void;
 }
 
+function isExplicitlyFree(val: any): boolean {
+  if (val === undefined || val === null || val === '') return false;
+  const num = Number(val);
+  return !isNaN(num) && num === 0;
+}
+
+function parsePlanFee(val: any, defaultFee: number): number {
+  if (isExplicitlyFree(val)) return 0;
+  if (val === undefined || val === null || val === '') return defaultFee;
+  const num = Number(val);
+  return isNaN(num) ? defaultFee : Math.max(0, num);
+}
+
 type SelectedPlanType = 'INCLUDED_FREE' | 'PER_CROP' | 'MONTHLY_SUBSCRIPTION' | 'PAY_PER_CONSULTATION' | 'ADDITIONAL_CROP';
 
 export function CropDoctorAdoptionModal({
@@ -95,13 +108,13 @@ export function CropDoctorAdoptionModal({
     if (selectedPlanModel === 'INCLUDED_FREE') {
       baseAdvisorFee = 0;
     } else if (selectedPlanModel === 'ADDITIONAL_CROP') {
-      baseAdvisorFee = Number(selectedDoctor.quota?.additionalCropFee || 300);
+      baseAdvisorFee = parsePlanFee(selectedDoctor.quota?.additionalCropFee, 300);
     } else if (selectedPlanModel === 'PER_CROP') {
-      baseAdvisorFee = Number(selectedDoctor.feePerCropSeason || 500);
+      baseAdvisorFee = parsePlanFee(selectedDoctor.feePerCropSeason, 499);
     } else if (selectedPlanModel === 'MONTHLY_SUBSCRIPTION') {
-      baseAdvisorFee = Number(selectedDoctor.feeVipMonthly || 1000);
+      baseAdvisorFee = parsePlanFee(selectedDoctor.feeVipMonthly, 1999);
     } else if (selectedPlanModel === 'PAY_PER_CONSULTATION') {
-      baseAdvisorFee = Number(selectedDoctor.feePerConsultation || 149);
+      baseAdvisorFee = parsePlanFee(selectedDoctor.feePerConsultation, 99);
     }
 
     if (baseAdvisorFee === 0) {
@@ -130,9 +143,9 @@ export function CropDoctorAdoptionModal({
     const PLATFORM_INFRA_FEE_PERCENT = 10.0;
     const platformFee = Math.max(1, Math.round((advisorFee * PLATFORM_INFRA_FEE_PERCENT) / 100));
 
-    // 4. Statutory GST (19% Govt. Tax on Doctor Fee + Cloud Infrastructure Fee)
+    // 4. Statutory GST (18% Govt. Tax on Doctor Fee + Cloud Infrastructure Fee)
     // Official government compliance establishing legal corporate standing.
-    const GST_RATE_PERCENT = 19.0;
+    const GST_RATE_PERCENT = 18.0;
     const taxableBase = advisorFee + platformFee;
     const gstTax = Math.max(1, Math.round((taxableBase * GST_RATE_PERCENT) / 100));
 
@@ -412,7 +425,9 @@ export function CropDoctorAdoptionModal({
                             </Text>
                           </View>
                           <View style={styles.planPriceBox}>
-                            <Text style={styles.planPriceVal}>₹{selectedDoctor.quota?.additionalCropFee || 300}</Text>
+                            <Text style={styles.planPriceVal}>
+                              {isExplicitlyFree(selectedDoctor.quota?.additionalCropFee) ? '₹0 (FREE)' : `₹${parsePlanFee(selectedDoctor.quota?.additionalCropFee, 300)}`}
+                            </Text>
                             <Text style={styles.planPriceSub}>/ month</Text>
                           </View>
                         </TouchableOpacity>
@@ -435,7 +450,9 @@ export function CropDoctorAdoptionModal({
                           </View>
                           <Text style={styles.planGridTitle}>Per Crop Season</Text>
                           <Text style={styles.planGridDesc}>Full 120-day cycle supervision from sowing to harvest.</Text>
-                          <Text style={styles.planGridPrice}>₹{selectedDoctor.feePerCropSeason || 500}</Text>
+                          <Text style={styles.planGridPrice}>
+                            {isExplicitlyFree(selectedDoctor.feePerCropSeason) ? '₹0 (FREE)' : `₹${parsePlanFee(selectedDoctor.feePerCropSeason, 499)}`}
+                          </Text>
                           <Text style={styles.planGridSub}>per crop cycle</Text>
                         </TouchableOpacity>
 
@@ -454,7 +471,9 @@ export function CropDoctorAdoptionModal({
                           <Text style={styles.planGridDesc}>
                             Retainer covers up to {selectedDoctor.monthlyIncludedCrops || 3} crops with VOIP consultations.
                           </Text>
-                          <Text style={styles.planGridPrice}>₹{selectedDoctor.feeVipMonthly || 1000}</Text>
+                          <Text style={styles.planGridPrice}>
+                            {isExplicitlyFree(selectedDoctor.feeVipMonthly) ? '₹0 (FREE)' : `₹${parsePlanFee(selectedDoctor.feeVipMonthly, 1999)}`}
+                          </Text>
                           <Text style={styles.planGridSub}>per month</Text>
                         </TouchableOpacity>
                       </View>
@@ -482,7 +501,9 @@ export function CropDoctorAdoptionModal({
                         </Text>
                       </View>
                       <View style={styles.planPriceBox}>
-                        <Text style={styles.planPriceVal}>₹{selectedDoctor.feePerConsultation || 149}</Text>
+                        <Text style={styles.planPriceVal}>
+                          {isExplicitlyFree(selectedDoctor.feePerConsultation) ? '₹0 (FREE)' : `₹${parsePlanFee(selectedDoctor.feePerConsultation, 99)}`}
+                        </Text>
                         <Text style={styles.planPriceSub}>one-time</Text>
                       </View>
                     </TouchableOpacity>

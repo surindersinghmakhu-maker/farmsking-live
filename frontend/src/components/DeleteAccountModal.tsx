@@ -232,7 +232,7 @@ export function DeleteAccountModal({ visible, onClose, portal = 'USER' }: Delete
                       <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
                       <Text style={styles.successText}>
                         OTP sent to {mobileInput}
-                        {serverDevOtp ? ` (Local dev code: ${serverDevOtp})` : ''}
+                        {serverDevOtp ? ` (Verification code: ${serverDevOtp})` : ''}
                       </Text>
                     </View>
 

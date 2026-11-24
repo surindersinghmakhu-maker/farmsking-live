@@ -2563,23 +2563,23 @@ export class AuthService {
       throw new UnauthorizedException('Please verify your mobile number with OTP before creating an account.');
     }
 
-    const existing = await this.findActiveUserByMobile(cleanMobile);
+    // Check for ANY existing user record with this mobile (active or soft-deleted)
+    const existingAny = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { mobile: cleanMobile },
+          { mobile: `+91${cleanMobile}` },
+          { mobile: { endsWith: cleanMobile } },
+        ],
+      },
+    });
 
-    if (existing?.isPermanentlyBlocked) {
+    if (existingAny?.isPermanentlyBlocked) {
       this.verifiedOtpMobiles.delete(cleanMobile);
       throw new UnauthorizedException(
         'This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.',
       );
     }
-
-    if (existing) {
-      this.verifiedOtpMobiles.delete(cleanMobile);
-      throw new ConflictException(
-        'This mobile number is already registered with FarmsKing. Please sign in using Mobile OTP.',
-      );
-    }
-
-    this.verifiedOtpMobiles.delete(cleanMobile);
 
     const chosenRole: Role =
       dto.role === 'FARMER' ? Role.FARMER :
@@ -2590,14 +2590,51 @@ export class AuthService {
     const assignedRoles: Role[] =
       chosenRole === Role.CUSTOMER ? [Role.CUSTOMER] : [Role.CUSTOMER, chosenRole];
 
-    const kingId = await generateUniqueKingId(this.prisma);
-    const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
-
     let state = dto.state?.trim() || undefined;
     let district = dto.district?.trim() || undefined;
     let postOffice = dto.postOffice?.trim() || undefined;
     let village = dto.village?.trim() || undefined;
     const pincode = dto.pincode?.trim() || undefined;
+
+    if (existingAny) {
+      this.verifiedOtpMobiles.delete(cleanMobile);
+      if (existingAny.deletedAt !== null) {
+        // User was previously soft-deleted. Reactivate account seamlessly!
+        const updatedUser = await this.prisma.user.update({
+          where: { id: existingAny.id },
+          data: {
+            deletedAt: null,
+            name: dto.name?.trim() || existingAny.name,
+            role: chosenRole,
+            roles: assignedRoles,
+            isPhoneVerified: true,
+            pincode: pincode || existingAny.pincode,
+            state: state || existingAny.state,
+            district: district || existingAny.district,
+            village: village || existingAny.village,
+            postOffice: postOffice || existingAny.postOffice,
+            gpsLat: dto.gpsLat ?? existingAny.gpsLat,
+            gpsLng: dto.gpsLng ?? existingAny.gpsLng,
+            gpsLocationName: dto.gpsLocationName?.trim() || existingAny.gpsLocationName,
+          },
+        });
+        await this.markVerifiedLeadCompleted(cleanMobile, updatedUser, VerifiedLeadStatus.COMPLETED_SELF);
+        const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = updatedUser;
+        return {
+          isNewUser: false,
+          ...this.buildAuthResponse(safeUser as any),
+        };
+      }
+
+      throw new ConflictException(
+        'This mobile number is already registered with FarmsKing. Please sign in using Mobile OTP.',
+      );
+    }
+
+    this.verifiedOtpMobiles.delete(cleanMobile);
+
+    const kingId = await generateUniqueKingId(this.prisma);
+    const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
 
     // Automatic India Post resolution if 6-digit PIN code is provided and state/district is missing
     if (pincode && /^\d{6}$/.test(pincode) && (!state || !district)) {
@@ -2618,26 +2655,71 @@ export class AuthService {
       }
     }
 
-    const newUser = await this.prisma.user.create({
-      data: {
-        kingId,
-        mobile: cleanMobile,
-        name: dto.name?.trim() || `User ${cleanMobile.slice(-4)}`,
-        role: chosenRole,
-        roles: assignedRoles,
-        passwordHash,
-        isPhoneVerified: true,
-        termsAcceptedAt: dto.termsAccepted ? new Date() : undefined,
-        pincode,
-        state,
-        district,
-        village,
-        postOffice,
-        gpsLat: dto.gpsLat,
-        gpsLng: dto.gpsLng,
-        gpsLocationName: dto.gpsLocationName?.trim() || (district && state ? `${district}, ${state}` : undefined),
-      },
-    });
+    let newUser: any;
+    try {
+      newUser = await this.prisma.user.create({
+        data: {
+          kingId,
+          mobile: cleanMobile,
+          name: dto.name?.trim() || `User ${cleanMobile.slice(-4)}`,
+          role: chosenRole,
+          roles: assignedRoles,
+          passwordHash,
+          isPhoneVerified: true,
+          termsAcceptedAt: dto.termsAccepted ? new Date() : undefined,
+          pincode,
+          state,
+          district,
+          village,
+          postOffice,
+          gpsLat: dto.gpsLat,
+          gpsLng: dto.gpsLng,
+          gpsLocationName: dto.gpsLocationName?.trim() || (district && state ? `${district}, ${state}` : undefined),
+        },
+      });
+    } catch (createErr: any) {
+      if (createErr?.code === 'P2002') {
+        const existing = await this.prisma.user.findFirst({
+          where: {
+            OR: [
+              { mobile: cleanMobile },
+              { mobile: `+91${cleanMobile}` },
+              { mobile: { endsWith: cleanMobile } },
+            ],
+          },
+        });
+        if (existing) {
+          const reactivated = await this.prisma.user.update({
+            where: { id: existing.id },
+            data: {
+              deletedAt: null,
+              name: dto.name?.trim() || existing.name,
+              role: chosenRole,
+              roles: assignedRoles,
+              isPhoneVerified: true,
+              pincode: pincode || existing.pincode,
+              state: state || existing.state,
+              district: district || existing.district,
+              village: village || existing.village,
+              postOffice: postOffice || existing.postOffice,
+              gpsLat: dto.gpsLat ?? existing.gpsLat,
+              gpsLng: dto.gpsLng ?? existing.gpsLng,
+              gpsLocationName: dto.gpsLocationName?.trim() || existing.gpsLocationName,
+            },
+          });
+          await this.markVerifiedLeadCompleted(cleanMobile, reactivated, VerifiedLeadStatus.COMPLETED_SELF);
+          const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = reactivated;
+          return {
+            isNewUser: false,
+            ...this.buildAuthResponse(safeUser as any),
+          };
+        }
+        throw new ConflictException(
+          'This mobile number is already registered with FarmsKing. Please sign in using Mobile OTP.',
+        );
+      }
+      throw createErr;
+    }
 
     try {
       await this.walletService.ensureWelcomeBonus(newUser.id);

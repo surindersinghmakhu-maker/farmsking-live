@@ -2107,27 +2107,61 @@ let AuthService = AuthService_1 = class AuthService {
             this.verifiedOtpMobiles.delete(cleanMobile);
             throw new common_1.UnauthorizedException('Please verify your mobile number with OTP before creating an account.');
         }
-        const existing = await this.findActiveUserByMobile(cleanMobile);
-        if (existing?.isPermanentlyBlocked) {
+        const existingAny = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { mobile: cleanMobile },
+                    { mobile: `+91${cleanMobile}` },
+                    { mobile: { endsWith: cleanMobile } },
+                ],
+            },
+        });
+        if (existingAny?.isPermanentlyBlocked) {
             this.verifiedOtpMobiles.delete(cleanMobile);
             throw new common_1.UnauthorizedException('This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
         }
-        if (existing) {
-            this.verifiedOtpMobiles.delete(cleanMobile);
-            throw new common_1.ConflictException('This mobile number is already registered with FarmsKing. Please sign in using Mobile OTP.');
-        }
-        this.verifiedOtpMobiles.delete(cleanMobile);
         const chosenRole = dto.role === 'FARMER' ? client_1.Role.FARMER :
             dto.role === 'GARDENER' ? client_1.Role.GARDENER :
                 client_1.Role.CUSTOMER;
         const assignedRoles = chosenRole === client_1.Role.CUSTOMER ? [client_1.Role.CUSTOMER] : [client_1.Role.CUSTOMER, chosenRole];
-        const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
-        const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
         let state = dto.state?.trim() || undefined;
         let district = dto.district?.trim() || undefined;
         let postOffice = dto.postOffice?.trim() || undefined;
         let village = dto.village?.trim() || undefined;
         const pincode = dto.pincode?.trim() || undefined;
+        if (existingAny) {
+            this.verifiedOtpMobiles.delete(cleanMobile);
+            if (existingAny.deletedAt !== null) {
+                const updatedUser = await this.prisma.user.update({
+                    where: { id: existingAny.id },
+                    data: {
+                        deletedAt: null,
+                        name: dto.name?.trim() || existingAny.name,
+                        role: chosenRole,
+                        roles: assignedRoles,
+                        isPhoneVerified: true,
+                        pincode: pincode || existingAny.pincode,
+                        state: state || existingAny.state,
+                        district: district || existingAny.district,
+                        village: village || existingAny.village,
+                        postOffice: postOffice || existingAny.postOffice,
+                        gpsLat: dto.gpsLat ?? existingAny.gpsLat,
+                        gpsLng: dto.gpsLng ?? existingAny.gpsLng,
+                        gpsLocationName: dto.gpsLocationName?.trim() || existingAny.gpsLocationName,
+                    },
+                });
+                await this.markVerifiedLeadCompleted(cleanMobile, updatedUser, client_1.VerifiedLeadStatus.COMPLETED_SELF);
+                const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = updatedUser;
+                return {
+                    isNewUser: false,
+                    ...this.buildAuthResponse(safeUser),
+                };
+            }
+            throw new common_1.ConflictException('This mobile number is already registered with FarmsKing. Please sign in using Mobile OTP.');
+        }
+        this.verifiedOtpMobiles.delete(cleanMobile);
+        const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
+        const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
         if (pincode && /^\d{6}$/.test(pincode) && (!state || !district)) {
             try {
                 const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
@@ -2149,26 +2183,70 @@ let AuthService = AuthService_1 = class AuthService {
                 console.warn('[completeOtpRegistration] Postal lookup notice:', err);
             }
         }
-        const newUser = await this.prisma.user.create({
-            data: {
-                kingId,
-                mobile: cleanMobile,
-                name: dto.name?.trim() || `User ${cleanMobile.slice(-4)}`,
-                role: chosenRole,
-                roles: assignedRoles,
-                passwordHash,
-                isPhoneVerified: true,
-                termsAcceptedAt: dto.termsAccepted ? new Date() : undefined,
-                pincode,
-                state,
-                district,
-                village,
-                postOffice,
-                gpsLat: dto.gpsLat,
-                gpsLng: dto.gpsLng,
-                gpsLocationName: dto.gpsLocationName?.trim() || (district && state ? `${district}, ${state}` : undefined),
-            },
-        });
+        let newUser;
+        try {
+            newUser = await this.prisma.user.create({
+                data: {
+                    kingId,
+                    mobile: cleanMobile,
+                    name: dto.name?.trim() || `User ${cleanMobile.slice(-4)}`,
+                    role: chosenRole,
+                    roles: assignedRoles,
+                    passwordHash,
+                    isPhoneVerified: true,
+                    termsAcceptedAt: dto.termsAccepted ? new Date() : undefined,
+                    pincode,
+                    state,
+                    district,
+                    village,
+                    postOffice,
+                    gpsLat: dto.gpsLat,
+                    gpsLng: dto.gpsLng,
+                    gpsLocationName: dto.gpsLocationName?.trim() || (district && state ? `${district}, ${state}` : undefined),
+                },
+            });
+        }
+        catch (createErr) {
+            if (createErr?.code === 'P2002') {
+                const existing = await this.prisma.user.findFirst({
+                    where: {
+                        OR: [
+                            { mobile: cleanMobile },
+                            { mobile: `+91${cleanMobile}` },
+                            { mobile: { endsWith: cleanMobile } },
+                        ],
+                    },
+                });
+                if (existing) {
+                    const reactivated = await this.prisma.user.update({
+                        where: { id: existing.id },
+                        data: {
+                            deletedAt: null,
+                            name: dto.name?.trim() || existing.name,
+                            role: chosenRole,
+                            roles: assignedRoles,
+                            isPhoneVerified: true,
+                            pincode: pincode || existing.pincode,
+                            state: state || existing.state,
+                            district: district || existing.district,
+                            village: village || existing.village,
+                            postOffice: postOffice || existing.postOffice,
+                            gpsLat: dto.gpsLat ?? existing.gpsLat,
+                            gpsLng: dto.gpsLng ?? existing.gpsLng,
+                            gpsLocationName: dto.gpsLocationName?.trim() || existing.gpsLocationName,
+                        },
+                    });
+                    await this.markVerifiedLeadCompleted(cleanMobile, reactivated, client_1.VerifiedLeadStatus.COMPLETED_SELF);
+                    const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = reactivated;
+                    return {
+                        isNewUser: false,
+                        ...this.buildAuthResponse(safeUser),
+                    };
+                }
+                throw new common_1.ConflictException('This mobile number is already registered with FarmsKing. Please sign in using Mobile OTP.');
+            }
+            throw createErr;
+        }
         try {
             await this.walletService.ensureWelcomeBonus(newUser.id);
         }

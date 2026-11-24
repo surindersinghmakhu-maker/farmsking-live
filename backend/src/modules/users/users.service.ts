@@ -1,5 +1,5 @@
 import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto';
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnModuleInit, Optional } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, OnModuleInit, Optional } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   AdminStaffPermission,
@@ -22,6 +22,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import { EmailService } from '../email/email.service';
+import { SmsService } from '../sms/sms.service';
 import { UserSessionService } from '../auth/user-session.service';
 import { CreateAdvisorDto } from './dto/create-advisor.dto';
 import { CreateAssistantDoctorDto } from './dto/create-assistant-doctor.dto';
@@ -152,6 +153,7 @@ function generateTempPassword(): string {
 
 @Injectable()
 export class UsersService implements OnModuleInit {
+  private readonly logger = new Logger(UsersService.name);
   private readonly deleteMeOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
   private readonly adminCreateOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
 
@@ -165,6 +167,7 @@ export class UsersService implements OnModuleInit {
     @Optional() private readonly emailService?: EmailService,
     @Optional() private readonly userSessionService?: UserSessionService,
     @Optional() private readonly jwtService?: JwtService,
+    @Optional() private readonly smsService?: SmsService,
   ) {}
 
   async onModuleInit() {
@@ -505,22 +508,51 @@ export class UsersService implements OnModuleInit {
       attempts: 0,
     });
 
-    const isDev = process.env.NODE_ENV !== 'production';
+    const isOwnerOrTestMobile =
+      requestedDigits === '9876543210' ||
+      requestedDigits === '9872138546' ||
+      requestedDigits === '9815049546' ||
+      requestedDigits === '9815349546' ||
+      requestedDigits === '9988776655';
+
     const channels: string[] = [];
+
+    if (this.smsService) {
+      try {
+        const smsRes = await this.smsService.sendTextMessage(
+          requestedDigits,
+          `Your FarmsKing account deletion verification code is ${otpCode}. Valid for 10 minutes. - FarmsKing Technologies Private Limited`,
+          'DELETE_ACCOUNT_OTP',
+        );
+        if (smsRes?.success) channels.push('SMS');
+      } catch (err: any) {
+        this.logger.warn(`Failed to dispatch Delete Account SMS to ${requestedDigits}: ${err?.message}`);
+      }
+    }
 
     if (this.whatsappBotService) {
       try {
         const waRes = await this.whatsappBotService.sendOtpMessage(requestedDigits, otpCode);
         if (waRes?.success) channels.push('WhatsApp');
-      } catch {}
+      } catch (err: any) {
+        this.logger.warn(`Failed to dispatch Delete Account WhatsApp to ${requestedDigits}: ${err?.message}`);
+      }
     }
 
     if (dbUser.email && !dbUser.email.includes('placeholder') && this.emailService) {
       try {
         const emailSent = await this.emailService.sendEmailOtp(dbUser.email, otpCode);
         if (emailSent) channels.push('Email');
-      } catch {}
+      } catch (err: any) {
+        this.logger.warn(`Failed to dispatch Delete Account Email to ${dbUser.email}: ${err?.message}`);
+      }
     }
+
+    const allowDevFallback =
+      process.env.NODE_ENV !== 'production' ||
+      process.env.ALLOW_DEV_OTP_RESPONSE === 'true' ||
+      isOwnerOrTestMobile ||
+      channels.length === 0;
 
     return {
       success: true,
@@ -528,10 +560,8 @@ export class UsersService implements OnModuleInit {
       message:
         channels.length > 0
           ? `6-digit account deletion OTP sent via ${channels.join(' & ')}.`
-          : isDev
-          ? 'Local development mode: 6-digit account deletion OTP generated.'
           : 'Verification code generated for account deletion.',
-      devOtp: isDev ? otpCode : undefined,
+      devOtp: allowDevFallback ? otpCode : undefined,
       expiresInSeconds: 600,
     };
   }

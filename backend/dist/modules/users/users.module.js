@@ -12,6 +12,7 @@ const auth_module_1 = require("../auth/auth.module");
 const wallet_module_1 = require("../wallet/wallet.module");
 const whatsapp_module_1 = require("../whatsapp/whatsapp.module");
 const notifications_module_1 = require("../notifications/notifications.module");
+const sms_module_1 = require("../sms/sms.module");
 const users_controller_1 = require("./users.controller");
 const users_service_1 = require("./users.service");
 let UsersModule = class UsersModule {
@@ -19,7 +20,7 @@ let UsersModule = class UsersModule {
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
-        imports: [auth_module_1.AuthModule, wallet_module_1.WalletModule, whatsapp_module_1.WhatsappBotModule, notifications_module_1.NotificationsModule],
+        imports: [auth_module_1.AuthModule, wallet_module_1.WalletModule, whatsapp_module_1.WhatsappBotModule, notifications_module_1.NotificationsModule, sms_module_1.SmsModule],
         controllers: [users_controller_1.UsersController],
         providers: [users_service_1.UsersService],
     })

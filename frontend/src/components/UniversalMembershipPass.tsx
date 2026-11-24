@@ -978,7 +978,7 @@ export default function UniversalMembershipPass({
                         </Text>
                       ) : null}
                       <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0284c7' }}>
-                        Fee: ₹{Number(adv.feePerConsultation) || 99} SOS · ₹{Number(adv.feePerCropSeason) || 499} Season
+                        Fee: {adv.feePerConsultation !== undefined && adv.feePerConsultation !== null && adv.feePerConsultation !== '' && Number(adv.feePerConsultation) === 0 ? '₹0 (FREE)' : `₹${adv.feePerConsultation !== undefined && adv.feePerConsultation !== null && adv.feePerConsultation !== '' && !isNaN(Number(adv.feePerConsultation)) ? Number(adv.feePerConsultation) : 99}`} SOS · {adv.feePerCropSeason !== undefined && adv.feePerCropSeason !== null && adv.feePerCropSeason !== '' && Number(adv.feePerCropSeason) === 0 ? '₹0 (FREE)' : `₹${adv.feePerCropSeason !== undefined && adv.feePerCropSeason !== null && adv.feePerCropSeason !== '' && !isNaN(Number(adv.feePerCropSeason)) ? Number(adv.feePerCropSeason) : 499}`} Season
                       </Text>
                     </View>
                     <TouchableOpacity

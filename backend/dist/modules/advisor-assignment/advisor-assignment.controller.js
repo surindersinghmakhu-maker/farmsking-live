@@ -102,7 +102,7 @@ let AdvisorAssignmentController = class AdvisorAssignmentController {
 };
 exports.AdvisorAssignmentController = AdvisorAssignmentController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Get)('stats'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -110,7 +110,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "getFarmerStats", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Get)('farmers'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Query)()),
@@ -242,7 +242,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "adminRejectDoctorChange", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('farmers/:farmerId/renewal-reminder'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('farmerId')),
@@ -251,7 +251,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "sendRenewalReminder", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('plans'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
@@ -260,7 +260,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "createOrUpdateAdvisorPlan", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Get)('plans/my-plans'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),

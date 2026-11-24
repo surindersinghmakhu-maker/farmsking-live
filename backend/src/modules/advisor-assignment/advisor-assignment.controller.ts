@@ -18,13 +18,13 @@ import { AdminApprovePlanDto, AdminRejectPlanDto } from './dto/admin-review-plan
 export class AdvisorAssignmentController {
   constructor(private readonly advisorAssignmentService: AdvisorAssignmentService) {}
 
-  @Roles(Role.ADVISOR)
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('stats')
   getFarmerStats(@CurrentUser() user: AuthUser) {
     return this.advisorAssignmentService.getFarmerStats(user);
   }
 
-  @Roles(Role.ADVISOR)
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('farmers')
   findFarmers(@CurrentUser() user: AuthUser, @Query() query: ListFarmersQueryDto) {
     return this.advisorAssignmentService.findFarmersByStatus(user, query.status ?? 'ALL');
@@ -128,7 +128,7 @@ export class AdvisorAssignmentController {
     return this.advisorAssignmentService.adminRejectDoctorChange(user, id, body?.reason);
   }
 
-  @Roles(Role.ADVISOR)
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Post('farmers/:farmerId/renewal-reminder')
   sendRenewalReminder(@CurrentUser() user: AuthUser, @Param('farmerId') farmerId: string) {
     return this.advisorAssignmentService.sendRenewalReminder(user, farmerId);
@@ -136,13 +136,13 @@ export class AdvisorAssignmentController {
 
   // ─── Advisor Custom Plans & Admin Review Workflow ─────────────
 
-  @Roles(Role.ADVISOR)
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Post('plans')
   createOrUpdateAdvisorPlan(@CurrentUser() user: AuthUser, @Body() dto: CreateAdvisorPlanDto) {
     return this.advisorAssignmentService.createOrUpdateAdvisorPlan(user, dto);
   }
 
-  @Roles(Role.ADVISOR)
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('plans/my-plans')
   getMyAdvisorPlans(@CurrentUser() user: AuthUser) {
     return this.advisorAssignmentService.getMyAdvisorPlans(user);

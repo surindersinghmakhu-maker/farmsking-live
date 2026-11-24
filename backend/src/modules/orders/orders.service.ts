@@ -656,6 +656,32 @@ export class OrdersService {
       return { isTestPayment: true, paymentSessionId: null, orderId: order.orderNumber };
     }
 
+    if (activeGateway === 'PHONEPE') {
+      try {
+        const appBaseUrl = (process.env.APP_URL || 'https://farmsking.in').replace(/\/$/, '');
+        const phonePeRes = await this.phonePeService.createPayment(
+          order.orderNumber,
+          Number(order.totalAmount),
+          `${appBaseUrl}/orders?order_id=${order.orderNumber}&status=success`,
+        );
+        await this.prisma.customerOrder.update({
+          where: { id },
+          data: {
+            phonepeMerchantOrderId: phonePeRes.orderId,
+            phonepePaymentState: phonePeRes.state,
+            paymentStatus: OrderPaymentStatus.PENDING,
+          },
+        });
+        return {
+          paymentSessionId: null,
+          orderId: phonePeRes.orderId,
+          paymentLink: phonePeRes.redirectUrl,
+        };
+      } catch (phonePeErr) {
+        console.warn('PhonePe order payment failed, falling back to Cashfree:', phonePeErr);
+      }
+    }
+
     const splits = order.subOrders.map(subOrder => ({
       cashfreeVendorId: (subOrder.sellerStore as any)?.cashfreeVendorId,
       itemSubtotal: Number(subOrder.subtotal),

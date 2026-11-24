@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { FarmerSubscriptionPlan, NotificationType, PlanCouponCategory, PlanPaymentStatus, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdvisorAssignmentService } from '../advisor-assignment/advisor-assignment.service';
@@ -15,6 +15,7 @@ import { RejectFarmerPlanPaymentDto } from './dto/reject-farmer-plan-payment.dto
 import { WalletService } from '../wallet/wallet.service';
 import { CashfreeService } from '../cashfree/cashfree.service';
 import { RazorpayService } from '../razorpay/razorpay.service';
+import { PhonePeService } from '../phonepe/phonepe.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -24,6 +25,8 @@ const DETAIL_INCLUDE = {
 
 @Injectable()
 export class FarmerPlanPaymentsService {
+  private readonly logger = new Logger(FarmerPlanPaymentsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly advisorAssignmentService: AdvisorAssignmentService,
@@ -33,6 +36,7 @@ export class FarmerPlanPaymentsService {
     private readonly walletService: WalletService,
     private readonly cashfreeService: CashfreeService,
     private readonly razorpayService: RazorpayService,
+    private readonly phonePeService: PhonePeService,
   ) {}
 
   /** Farmer (or their advisor) taps "Upgrade" and picks BASIC/STANDARD/PREMIUM — generates a fixed-amount UPI link and opens a pending payment claim. */
@@ -121,7 +125,7 @@ export class FarmerPlanPaymentsService {
 
     const integrations = await this.appSettingsService.getIntegrations();
     const appSettings = await this.appSettingsService.get();
-    const activeGateway = integrations.gateway?.activeGateway || integrations.gateway?.routing?.farmerPlanGateway || 'CASHFREE';
+    const activeGateway = integrations.gateway?.activeGateway || integrations.gateway?.routing?.farmerPlanGateway || 'PHONEPE';
     const upiPayeeVpa = integrations.gateway.providers.upiDirect?.upiId || appSettings.upiId || 'surindersinghmakhu-5@oksbi';
     const upiPayeeName = integrations.gateway.providers.upiDirect?.payeeName || appSettings.upiPayeeName || 'FarmsKing Technologies';
 
@@ -135,7 +139,41 @@ export class FarmerPlanPaymentsService {
 
     let cashfreeSessionId: string | null = null;
     let cashfreePaymentLink: string | null = null;
-    if (activeGateway === 'CASHFREE') {
+    let phonepeRedirectUrl: string | null = null;
+    let razorpayShortUrl: string | null = null;
+    let paymentLink: string | null = null;
+
+    const appBaseUrl = (process.env.APP_URL || 'https://farmsking.in').replace(/\/$/, '');
+    const redirectCallbackUrl = `${appBaseUrl}/orders?plan_payment_id=${request.id}&status=success`;
+
+    if (activeGateway === 'PHONEPE') {
+      try {
+        const phonePeRes = await this.phonePeService.createPayment(
+          `PLAN-${request.id}`,
+          amount,
+          redirectCallbackUrl,
+        );
+        phonepeRedirectUrl = phonePeRes.redirectUrl;
+        paymentLink = phonePeRes.redirectUrl;
+      } catch (err: any) {
+        this.logger.error(`PhonePe createPayment error for PLAN-${request.id}: ${err?.message || err}`);
+        // Fallback to Cashfree
+        try {
+          const cashfreeRes = await this.cashfreeService.createStandardOrder({
+            orderId: `PLAN-${request.id}`,
+            amount,
+            customerId: farmer.id,
+            customerPhone: farmer.mobile,
+            customerName: farmer.name,
+          });
+          cashfreeSessionId = cashfreeRes.paymentSessionId;
+          cashfreePaymentLink = cashfreeRes.paymentLink;
+          paymentLink = cashfreeRes.paymentLink;
+        } catch (cfErr: any) {
+          this.logger.error(`Cashfree fallback error for PLAN-${request.id}: ${cfErr?.message || cfErr}`);
+        }
+      }
+    } else if (activeGateway === 'CASHFREE') {
       try {
         const cashfreeRes = await this.cashfreeService.createStandardOrder({
           orderId: `PLAN-${request.id}`,
@@ -146,17 +184,45 @@ export class FarmerPlanPaymentsService {
         });
         cashfreeSessionId = cashfreeRes.paymentSessionId;
         cashfreePaymentLink = cashfreeRes.paymentLink;
-      } catch (err) {
-        // Fallback gracefully so farmer can always pay via direct UPI
+        paymentLink = cashfreeRes.paymentLink;
+      } catch (err: any) {
+        this.logger.error(`Cashfree createStandardOrder error for PLAN-${request.id}: ${err?.message || err}`);
+        // Fallback to PhonePe
+        try {
+          const phonePeRes = await this.phonePeService.createPayment(
+            `PLAN-${request.id}`,
+            amount,
+            redirectCallbackUrl,
+          );
+          phonepeRedirectUrl = phonePeRes.redirectUrl;
+          paymentLink = phonePeRes.redirectUrl;
+        } catch (peErr: any) {
+          this.logger.error(`PhonePe fallback error for PLAN-${request.id}: ${peErr?.message || peErr}`);
+        }
+      }
+    } else if (activeGateway === 'RAZORPAY') {
+      try {
+        const rzpRes: any = await this.razorpayService.createStandardOrder({
+          orderId: `PLAN-${request.id}`,
+          amount,
+          notes: { farmerPlanPaymentRequestId: request.id },
+        });
+        razorpayShortUrl = rzpRes?.short_url || null;
+        paymentLink = rzpRes?.short_url || null;
+      } catch (err: any) {
+        this.logger.error(`Razorpay createStandardOrder error for PLAN-${request.id}: ${err?.message || err}`);
       }
     }
 
     return {
       ...request,
       activeGateway,
-      upiLink,
+      paymentLink: paymentLink || cashfreePaymentLink || phonepeRedirectUrl || razorpayShortUrl,
+      phonepeRedirectUrl,
       cashfreeSessionId,
       cashfreePaymentLink,
+      razorpayShortUrl,
+      upiLink,
     };
   }
 

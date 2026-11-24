@@ -382,21 +382,31 @@ export function FarmerPlanUpgradeModal({
         billingPeriodDays: Number(days),
       });
 
-      const targetGatewayUrl = res?.cashfreePaymentLink || (res?.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null);
+      const targetGatewayUrl =
+        res?.paymentLink ||
+        res?.phonepeRedirectUrl ||
+        res?.cashfreePaymentLink ||
+        (res?.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null) ||
+        res?.cashfreeSubscriptionLink ||
+        res?.razorpayShortUrl;
+
       if (targetGatewayUrl) {
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
           window.location.href = targetGatewayUrl;
         } else {
           await Linking.openURL(targetGatewayUrl);
         }
-      } else if (res?.cashfreeSubscriptionLink) {
-        await Linking.openURL(res.cashfreeSubscriptionLink);
-      } else if (res?.razorpayShortUrl) {
-        await Linking.openURL(res.razorpayShortUrl);
-      } else if (res?.upiLink) {
-        await Linking.openURL(res.upiLink);
+        return;
+      }
+
+      if (res?.upiLink) {
+        if (Platform.OS === 'web') {
+          setError('Payment gateway is currently connecting. Please try again in a moment.');
+        } else {
+          await Linking.openURL(res.upiLink);
+        }
       } else {
-        setError('Payment gateway link generated. Please check your screen.');
+        setError('Payment gateway link could not be generated. Please try again.');
       }
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Could not initiate payment gateway.');

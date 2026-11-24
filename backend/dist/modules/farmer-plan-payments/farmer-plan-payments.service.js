@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var FarmerPlanPaymentsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FarmerPlanPaymentsService = void 0;
 const common_1 = require("@nestjs/common");
@@ -22,12 +23,13 @@ const upi_util_1 = require("../../common/utils/upi.util");
 const wallet_service_1 = require("../wallet/wallet.service");
 const cashfree_service_1 = require("../cashfree/cashfree.service");
 const razorpay_service_1 = require("../razorpay/razorpay.service");
+const phonepe_service_1 = require("../phonepe/phonepe.service");
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DETAIL_INCLUDE = {
     farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
 };
-let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
-    constructor(prisma, advisorAssignmentService, notificationsService, appSettingsService, farmerPlansService, walletService, cashfreeService, razorpayService) {
+let FarmerPlanPaymentsService = FarmerPlanPaymentsService_1 = class FarmerPlanPaymentsService {
+    constructor(prisma, advisorAssignmentService, notificationsService, appSettingsService, farmerPlansService, walletService, cashfreeService, razorpayService, phonePeService) {
         this.prisma = prisma;
         this.advisorAssignmentService = advisorAssignmentService;
         this.notificationsService = notificationsService;
@@ -36,6 +38,8 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         this.walletService = walletService;
         this.cashfreeService = cashfreeService;
         this.razorpayService = razorpayService;
+        this.phonePeService = phonePeService;
+        this.logger = new common_1.Logger(FarmerPlanPaymentsService_1.name);
     }
     async initiate(user, dto, farmerId) {
         const targetFarmerId = farmerId ?? user.id;
@@ -105,7 +109,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         });
         const integrations = await this.appSettingsService.getIntegrations();
         const appSettings = await this.appSettingsService.get();
-        const activeGateway = integrations.gateway?.activeGateway || integrations.gateway?.routing?.farmerPlanGateway || 'CASHFREE';
+        const activeGateway = integrations.gateway?.activeGateway || integrations.gateway?.routing?.farmerPlanGateway || 'PHONEPE';
         const upiPayeeVpa = integrations.gateway.providers.upiDirect?.upiId || appSettings.upiId || 'surindersinghmakhu-5@oksbi';
         const upiPayeeName = integrations.gateway.providers.upiDirect?.payeeName || appSettings.upiPayeeName || 'FarmsKing Technologies';
         const upiLink = (0, upi_util_1.buildUpiPaymentLink)({
@@ -117,7 +121,37 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         });
         let cashfreeSessionId = null;
         let cashfreePaymentLink = null;
-        if (activeGateway === 'CASHFREE') {
+        let phonepeRedirectUrl = null;
+        let razorpayShortUrl = null;
+        let paymentLink = null;
+        const appBaseUrl = (process.env.APP_URL || 'https://farmsking.in').replace(/\/$/, '');
+        const redirectCallbackUrl = `${appBaseUrl}/orders?plan_payment_id=${request.id}&status=success`;
+        if (activeGateway === 'PHONEPE') {
+            try {
+                const phonePeRes = await this.phonePeService.createPayment(`PLAN-${request.id}`, amount, redirectCallbackUrl);
+                phonepeRedirectUrl = phonePeRes.redirectUrl;
+                paymentLink = phonePeRes.redirectUrl;
+            }
+            catch (err) {
+                this.logger.error(`PhonePe createPayment error for PLAN-${request.id}: ${err?.message || err}`);
+                try {
+                    const cashfreeRes = await this.cashfreeService.createStandardOrder({
+                        orderId: `PLAN-${request.id}`,
+                        amount,
+                        customerId: farmer.id,
+                        customerPhone: farmer.mobile,
+                        customerName: farmer.name,
+                    });
+                    cashfreeSessionId = cashfreeRes.paymentSessionId;
+                    cashfreePaymentLink = cashfreeRes.paymentLink;
+                    paymentLink = cashfreeRes.paymentLink;
+                }
+                catch (cfErr) {
+                    this.logger.error(`Cashfree fallback error for PLAN-${request.id}: ${cfErr?.message || cfErr}`);
+                }
+            }
+        }
+        else if (activeGateway === 'CASHFREE') {
             try {
                 const cashfreeRes = await this.cashfreeService.createStandardOrder({
                     orderId: `PLAN-${request.id}`,
@@ -128,16 +162,43 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
                 });
                 cashfreeSessionId = cashfreeRes.paymentSessionId;
                 cashfreePaymentLink = cashfreeRes.paymentLink;
+                paymentLink = cashfreeRes.paymentLink;
             }
             catch (err) {
+                this.logger.error(`Cashfree createStandardOrder error for PLAN-${request.id}: ${err?.message || err}`);
+                try {
+                    const phonePeRes = await this.phonePeService.createPayment(`PLAN-${request.id}`, amount, redirectCallbackUrl);
+                    phonepeRedirectUrl = phonePeRes.redirectUrl;
+                    paymentLink = phonePeRes.redirectUrl;
+                }
+                catch (peErr) {
+                    this.logger.error(`PhonePe fallback error for PLAN-${request.id}: ${peErr?.message || peErr}`);
+                }
+            }
+        }
+        else if (activeGateway === 'RAZORPAY') {
+            try {
+                const rzpRes = await this.razorpayService.createStandardOrder({
+                    orderId: `PLAN-${request.id}`,
+                    amount,
+                    notes: { farmerPlanPaymentRequestId: request.id },
+                });
+                razorpayShortUrl = rzpRes?.short_url || null;
+                paymentLink = rzpRes?.short_url || null;
+            }
+            catch (err) {
+                this.logger.error(`Razorpay createStandardOrder error for PLAN-${request.id}: ${err?.message || err}`);
             }
         }
         return {
             ...request,
             activeGateway,
-            upiLink,
+            paymentLink: paymentLink || cashfreePaymentLink || phonepeRedirectUrl || razorpayShortUrl,
+            phonepeRedirectUrl,
             cashfreeSessionId,
             cashfreePaymentLink,
+            razorpayShortUrl,
+            upiLink,
         };
     }
     listMine(user) {
@@ -284,7 +345,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
     }
 };
 exports.FarmerPlanPaymentsService = FarmerPlanPaymentsService;
-exports.FarmerPlanPaymentsService = FarmerPlanPaymentsService = __decorate([
+exports.FarmerPlanPaymentsService = FarmerPlanPaymentsService = FarmerPlanPaymentsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         advisor_assignment_service_1.AdvisorAssignmentService,
@@ -293,6 +354,7 @@ exports.FarmerPlanPaymentsService = FarmerPlanPaymentsService = __decorate([
         farmer_plans_service_1.FarmerPlansService,
         wallet_service_1.WalletService,
         cashfree_service_1.CashfreeService,
-        razorpay_service_1.RazorpayService])
+        razorpay_service_1.RazorpayService,
+        phonepe_service_1.PhonePeService])
 ], FarmerPlanPaymentsService);
 //# sourceMappingURL=farmer-plan-payments.service.js.map

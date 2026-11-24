@@ -93,15 +93,28 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
         advisorKingId: !isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
       });
 
-      const targetGatewayUrl = (res as any)?.cashfreePaymentLink || (res.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null);
+      const targetGatewayUrl =
+        (res as any)?.paymentLink ||
+        (res as any)?.phonepeRedirectUrl ||
+        (res as any)?.cashfreePaymentLink ||
+        (res.cashfreeSessionId ? `https://payments.cashfree.com/order/#${res.cashfreeSessionId}` : null) ||
+        (res as any)?.razorpayShortUrl;
+
       if (targetGatewayUrl) {
         if (Platform.OS === 'web') {
           window.location.href = targetGatewayUrl;
         } else {
           await Linking.openURL(targetGatewayUrl);
         }
-      } else if (res.upiLink) {
-        await Linking.openURL(res.upiLink).catch(() => {});
+        return;
+      }
+
+      if (res.upiLink) {
+        if (Platform.OS === 'web') {
+          setStatusMessage('⚠️ Payment gateway connecting. Please try again in a moment.');
+        } else {
+          await Linking.openURL(res.upiLink).catch(() => {});
+        }
       } else {
         setStatusMessage('⚠️ Payment gateway initialized. Please complete payment to activate.');
       }

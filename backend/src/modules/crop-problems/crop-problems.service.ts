@@ -179,9 +179,9 @@ export class CropProblemsService {
     await this.notificationsService.create(
       problem.reportedById,
       NotificationType.CROP_PROBLEM_UPDATE,
-      'Advisor responded to your problem report',
-      `Your advisor responded to "${problem.title}": ${dto.advisorResponse ?? 'See details in the app.'}`,
-      { cropProblemId: id },
+      '✅ Requirement Completed!',
+      `Dr. ${user.name} has completed your requirement for "${problem.title}". Remedy: ${dto.advisorResponse ?? 'Check app for details'}. Please review and confirm your experience.`,
+      { cropProblemId: id, action: 'CONFIRM_REVIEW' },
     );
 
     const chatText = dateLabel

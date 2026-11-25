@@ -144,3 +144,28 @@ export function useUpdateCropSchedule() {
     },
   });
 }
+
+export function useCompleteCropRequirement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, notes, schedule }: { id: string; notes?: string; schedule?: string }) =>
+      cropsApi.completeCropRequirement(id, notes, schedule),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crops', 'advisor', 'accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
+    },
+  });
+}
+
+export function useRateCropAdvisor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, rating, feedback }: { id: string; rating: number; feedback?: string }) =>
+      cropsApi.rateCropAdvisor(id, rating, feedback),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['advisor', 'available'] });
+      queryClient.invalidateQueries({ queryKey: ['my-advisor'] });
+    },
+  });
+}

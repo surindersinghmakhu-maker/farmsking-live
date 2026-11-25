@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
-import { AdvisorAssignmentStatus, AdvisorType, CropStatus, FarmerSubscriptionPlan, NotificationType, Role, SubscriptionPlanStatus } from '@prisma/client';
+import { AdvisorAssignmentStatus, AdvisorType, CropAdvisorReviewStatus, CropStatus, FarmerSubscriptionPlan, NotificationType, Role, SubscriptionPlanStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -440,10 +440,18 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
           quotaStatus = freeSlotsRemaining > 0 ? 'INCLUDED_FREE' : 'ADDITIONAL_CROP_FEE';
         }
 
+        const isAlreadyAssigned = Boolean(
+          cropCycle.assignedAdvisorId === advisor.id &&
+          cropCycle.advisorReviewStatus !== CropAdvisorReviewStatus.NONE
+        );
+
         return {
           ...advisor,
           activeFarmerCount: _count.advisorAssignmentsAsAdvisor,
           ...rStats,
+          isAlreadyAssignedToThisCrop: isAlreadyAssigned,
+          assignedCropReviewStatus: isAlreadyAssigned ? cropCycle.advisorReviewStatus : null,
+          activeHiringModelForCrop: isAlreadyAssigned ? cropCycle.hiringModel : null,
           quota: {
             hasActiveMonthlySubscription: !!activeSub,
             activeSubscriptionId: activeSub?.id ?? null,
@@ -866,8 +874,9 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     await this.notificationsService.create(
       assignment.farmerId,
       NotificationType.SYSTEM,
-      'Advisor accepted your request',
-      'Your advisor has accepted your hire request — you can now chat and get crop guidance.',
+      '👨‍⚕️ Doctor Working on Request',
+      `Dr. ${user.name} has accepted your hire request and is actively working on your farm advisory.`,
+      { advisorId: user.id, status: 'WORKING' },
     );
     // Instant WhatsApp Group Sync (auto-add farmer)
     this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(assignment.farmerId).catch(() => {});

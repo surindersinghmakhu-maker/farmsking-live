@@ -369,6 +369,10 @@ let CropsService = class CropsService {
         if (!targetAdvisorId) {
             throw new common_1.BadRequestException('Please select a certified Crop Doctor to adopt and supervise this crop.');
         }
+        if (cropCycle.assignedAdvisorId === targetAdvisorId &&
+            cropCycle.advisorReviewStatus === client_1.CropAdvisorReviewStatus.ACCEPTED) {
+            throw new common_1.BadRequestException('This crop is already under professional supervision of this Crop Doctor. You cannot adopt the same doctor again for this crop.');
+        }
         const advisor = await this.prisma.user.findFirst({
             where: { id: targetAdvisorId, deletedAt: null },
             select: {
@@ -385,6 +389,33 @@ let CropsService = class CropsService {
             if (!advisor.specializedCategories.includes(cropCycle.category)) {
                 throw new common_1.BadRequestException(`Doctor ${advisor.name} specializes in other crop categories and does not accept ${cropCycle.category} crops.`);
             }
+        }
+        const activeMedia = await this.prisma.mediaStore.findMany({
+            where: {
+                cropId: id,
+                isArchived: false,
+                OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+            },
+            select: { mediaType: true },
+        });
+        const photoCount = activeMedia.filter((m) => m.mediaType === 'IMAGE').length;
+        const hasVideo = activeMedia.some((m) => m.mediaType === 'VIDEO');
+        const hasAudio = activeMedia.some((m) => m.mediaType === 'AUDIO');
+        const remark = await this.prisma.cropRemark.findUnique({
+            where: { cropId: id },
+            select: { remarksText: true },
+        });
+        const farmerComment = dto?.notes?.trim();
+        const hasVoiceOrNotes = hasAudio || Boolean(remark?.remarksText?.trim()) || Boolean(farmerComment) || Boolean(cropCycle.notes?.trim());
+        if (photoCount < 3 || !hasVideo || !hasVoiceOrNotes) {
+            const missingList = [];
+            if (photoCount < 3)
+                missingList.push(`At least 3 field photos (current: ${photoCount}/3)`);
+            if (!hasVideo)
+                missingList.push('At least 1 crop field video (current: 0/1)');
+            if (!hasVoiceOrNotes)
+                missingList.push('A voice note or crop description/farmer comment');
+            throw new common_1.BadRequestException(`Crop Gallery incomplete! To adopt a certified Crop Doctor, your crop must have the complete current cycle media records:\n• ${missingList.join('\n• ')}\nPlease upload missing media in Crop Gallery first before adopting.`);
         }
         const advisorPlanRec = await this.prisma.advisorTierPlan.findUnique({
             where: { advisorId: targetAdvisorId },
@@ -417,12 +448,16 @@ let CropsService = class CropsService {
                 assignedAdvisorId: targetAdvisorId,
                 hiringModel: dto?.hiringModel ?? client_1.HiringModelType.PER_CROP,
                 subscriptionId: activeSub ? activeSub.id : undefined,
+                notes: farmerComment || cropCycle.notes,
                 advisorReviewStatus: client_1.CropAdvisorReviewStatus.PENDING,
                 submittedToAdvisorAt: new Date(),
                 advisorAcceptedAt: null,
             },
         });
-        await this.notificationsService.create(targetAdvisorId, client_1.NotificationType.SYSTEM, 'New crop adoption request', `${user.name} sent "${updated.cropName}" for your professional supervision. Accept to add it to your roster.`, { cropCycleId: updated.id, farmerId: user.id });
+        const notifMessage = farmerComment
+            ? `${user.name} submitted "${updated.cropName}" for your professional supervision.\nFarmer Note: "${farmerComment}"`
+            : `${user.name} sent "${updated.cropName}" for your professional supervision. Accept to add it to your roster.`;
+        await this.notificationsService.create(targetAdvisorId, client_1.NotificationType.SYSTEM, 'New crop adoption request', notifMessage, { cropCycleId: updated.id, farmerId: user.id, farmerNotes: farmerComment });
         return updated;
     }
     async cancelSubmission(user, id) {
@@ -484,7 +519,7 @@ let CropsService = class CropsService {
                 advisorAcceptedAt: new Date(),
             },
         });
-        await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, 'Crop adopted by Doctor', `Doctor ${user.name} accepted "${cropCycle.cropName}". Your personalized advisory schedule will be published shortly.`, { cropCycleId: updated.id, advisorId: user.id });
+        await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, '👨‍⚕️ Doctor Working on Request', `Dr. ${user.name} has accepted your request for "${cropCycle.cropName}". The doctor is actively analyzing your crop details and working on your treatment plan.`, { cropCycleId: updated.id, advisorId: user.id, status: 'WORKING' });
         return updated;
     }
     async updateAssignedSchedule(user, id, assignedSchedule) {
@@ -506,8 +541,82 @@ let CropsService = class CropsService {
         }
         const updated = await this.prisma.cropCycle.update({ where: { id }, data: { assignedSchedule } });
         await this.syncAssignedScheduleToSprayItems(cropCycle.id, cropCycle.sowingDate, assignedSchedule, user.id);
-        await this.notificationsService.create(cropCycle.plot.farm.ownerId, client_1.NotificationType.SPRAY_REMINDER, 'Advisory schedule updated', `Your advisor published an updated crop schedule for ${cropCycle.cropName}.`, { cropCycleId: cropCycle.id });
+        await this.notificationsService.create(cropCycle.plot.farm.ownerId, client_1.NotificationType.SPRAY_REMINDER, '✅ Requirement Completed!', `Dr. ${user.name} has completed your agronomy requirement for "${cropCycle.cropName}" and published your day-wise treatment plan. Please review and confirm your experience.`, { cropCycleId: cropCycle.id, advisorId: user.id, action: 'CONFIRM_REVIEW' });
         return updated;
+    }
+    async completeRequirement(user, id, notes, schedule) {
+        const cropCycle = await this.prisma.cropCycle.findFirst({
+            where: { id, deletedAt: null },
+            include: { plot: { include: { farm: true } }, assignedAdvisor: true },
+        });
+        if (!cropCycle) {
+            throw new common_1.NotFoundException('Crop cycle not found.');
+        }
+        if (user.role === client_1.Role.ADVISOR && cropCycle.assignedAdvisorId && cropCycle.assignedAdvisorId !== user.id) {
+            throw new common_1.ForbiddenException('You are not assigned to this crop.');
+        }
+        const farmerId = cropCycle.plot.farm.ownerId;
+        const completionTag = `\n[REQUIREMENT_COMPLETED: ${new Date().toISOString()} by Dr. ${user.name}${notes ? ` - ${notes}` : ''}]`;
+        const updatedNotes = cropCycle.notes ? `${cropCycle.notes}${completionTag}` : completionTag.trim();
+        let updatedSchedule = cropCycle.assignedSchedule;
+        if (schedule && schedule.trim()) {
+            updatedSchedule = schedule.trim();
+            await this.syncAssignedScheduleToSprayItems(cropCycle.id, cropCycle.sowingDate, updatedSchedule, user.id);
+        }
+        const updated = await this.prisma.cropCycle.update({
+            where: { id },
+            data: {
+                notes: updatedNotes,
+                assignedSchedule: updatedSchedule,
+            },
+        });
+        await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, '✅ Requirement Completed!', `Dr. ${user.name} has completed your agronomy requirement for "${cropCycle.cropName}". Your diagnosis and advisory are ready. Please review and confirm your experience.`, { cropCycleId: id, advisorId: user.id, action: 'CONFIRM_REVIEW' });
+        return updated;
+    }
+    async rateAdvisor(user, id, rating, feedback) {
+        if (rating < 1 || rating > 5) {
+            throw new common_1.BadRequestException('Rating must be between 1 and 5 stars.');
+        }
+        const cropCycle = await this.prisma.cropCycle.findFirst({
+            where: { id, deletedAt: null },
+            include: { plot: { include: { farm: true } }, assignedAdvisor: true },
+        });
+        if (!cropCycle) {
+            throw new common_1.NotFoundException('Crop cycle not found.');
+        }
+        const farmerId = cropCycle.plot.farm.ownerId;
+        if (farmerId !== user.id && user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN) {
+            throw new common_1.ForbiddenException('Only the crop owner can rate this consultation.');
+        }
+        const advisorId = cropCycle.assignedAdvisorId;
+        if (!advisorId) {
+            throw new common_1.BadRequestException('No advisor assigned to this crop.');
+        }
+        const ratingTag = `\n[FARMER_CONFIRMED_REVIEW: ${rating} Stars on ${new Date().toISOString()}${feedback ? ` - "${feedback}"` : ''}]`;
+        const updatedNotes = cropCycle.notes ? `${cropCycle.notes}${ratingTag}` : ratingTag.trim();
+        await this.prisma.cropCycle.update({
+            where: { id },
+            data: { notes: updatedNotes },
+        });
+        await this.prisma.cropProblem.create({
+            data: {
+                cropCycleId: cropCycle.id,
+                reportedById: user.id,
+                assignedAdvisorId: advisorId,
+                title: `Advisory Consultation Review: ${cropCycle.cropName}`,
+                description: `Farmer confirmed requirement completion for ${cropCycle.cropName}.`,
+                status: client_1.CropProblemStatus.RESOLVED,
+                resolvedAt: new Date(),
+                advisorResponse: `Requirement completed & advisory provided.`,
+                farmerRating: rating,
+                farmerFeedback: feedback || 'Requirement completed successfully.',
+            },
+        });
+        await this.notificationsService.create(advisorId, client_1.NotificationType.SYSTEM, '⭐ Farmer Review & Confirmation Received', `${user.name} confirmed your completed advisory for "${cropCycle.cropName}" and rated you ${rating}/5 stars${feedback ? `: "${feedback}"` : ''}.`, { cropCycleId: id, rating, farmerId: user.id });
+        return {
+            success: true,
+            message: `Thank you! Your ${rating}-Star review and requirement confirmation have been recorded.`,
+        };
     }
     async syncAssignedScheduleToSprayItems(cropCycleId, sowingDate, assignedScheduleStr, advisorId) {
         if (!assignedScheduleStr)

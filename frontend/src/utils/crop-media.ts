@@ -1048,3 +1048,78 @@ export async function downloadCropPhoto(
   }
 }
 
+/**
+ * Validates whether a crop cycle has complete mandatory media records before adopting a Crop Doctor.
+ * Mandatory requirement:
+ * 1. Minimum 3 field photos
+ * 2. Minimum 1 field video
+ * 3. Voice note (AUDIO) or crop description/farmer remarks
+ */
+export async function validateCropGalleryCompleteness(
+  cropId: string,
+  localGpsData?: any,
+): Promise<{
+  isComplete: boolean;
+  photoCount: number;
+  hasVideo: boolean;
+  hasVoiceOrNotes: boolean;
+  missingItems: string[];
+}> {
+  let photos: string[] = [];
+  let video: string | null = null;
+  let audio: string | null = null;
+  let remarks: string | null = null;
+
+  try {
+    const [mediaRes, remarkRes] = await Promise.all([
+      fetchCropMediaFromStore(cropId),
+      fetchCropRemarkFromStore(cropId),
+    ]);
+    photos = Array.isArray(mediaRes.photos) ? mediaRes.photos : [];
+    video = mediaRes.video || null;
+    audio = mediaRes.audio || null;
+    remarks = remarkRes.remarksText || null;
+  } catch {
+    // fallback to local GPS cache
+  }
+
+  // Fallback to local GPS cache if remote store had partial/empty fields
+  if (localGpsData) {
+    if (photos.length === 0 && Array.isArray(localGpsData.fieldPhotos) && localGpsData.fieldPhotos.length > 0) {
+      photos = localGpsData.fieldPhotos;
+    }
+    if (!video && localGpsData.fieldVideo) {
+      video = localGpsData.fieldVideo;
+    }
+    if (!audio && localGpsData.fieldAudio) {
+      audio = localGpsData.fieldAudio;
+    }
+    if (!remarks && localGpsData.farmerRemarks?.trim()) {
+      remarks = localGpsData.farmerRemarks.trim();
+    }
+  }
+
+  const photoCount = photos.length;
+  const hasVideo = Boolean(video);
+  const hasVoiceOrNotes = Boolean(audio) || Boolean(remarks?.trim());
+
+  const missingItems: string[] = [];
+  if (photoCount < 3) {
+    missingItems.push(`At least 3 field photos (current: ${photoCount}/3)`);
+  }
+  if (!hasVideo) {
+    missingItems.push('At least 1 crop field video (current: 0/1)');
+  }
+  if (!hasVoiceOrNotes) {
+    missingItems.push('A voice record or crop description notes');
+  }
+
+  return {
+    isComplete: photoCount >= 3 && hasVideo && hasVoiceOrNotes,
+    photoCount,
+    hasVideo,
+    hasVoiceOrNotes,
+    missingItems,
+  };
+}
+

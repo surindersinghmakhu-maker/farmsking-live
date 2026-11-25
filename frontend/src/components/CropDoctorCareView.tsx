@@ -24,7 +24,7 @@ import { useCrops, RegisteredCropField } from '@/src/store/crops-context';
 import { SOIL_TYPE_OPTIONS, WATER_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { useSubscriptionStatus } from '@/src/hooks/useSubscriptionStatus';
 import { useMyAdvisor, useAvailableAdvisors, useMyPendingRequest, useCancelPendingRequest } from '@/src/hooks/useAdvisorAssignments';
-import { useMyCrops, useSubmitCropToAdvisor, useCancelCropSubmission } from '@/src/hooks/useCrops';
+import { useMyCrops, useSubmitCropToAdvisor, useCancelCropSubmission, useRateCropAdvisor } from '@/src/hooks/useCrops';
 import { useCreateCropProblem, useMyCropProblems, useRateCropProblem } from '@/src/hooks/useCropProblems';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { RenewModal } from '@/src/components/RenewPlanCard';
@@ -64,7 +64,8 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
   const { data: subscription, isLoading: isLoadingSubscription } = useSubscriptionStatus();
   const { data: myAdvisor } = useMyAdvisor();
   const { data: myPendingRequest } = useMyPendingRequest();
-  const { data: myCrops } = useMyCrops();
+  const { data: rawCrops } = useMyCrops();
+  const myCrops = useMemo(() => (Array.isArray(rawCrops) ? rawCrops : []), [rawCrops]);
   const cancelPendingRequest = useCancelPendingRequest();
   const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -262,6 +263,10 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
   const createCropProblem = useCreateCropProblem();
   const { data: myCropProblems } = useMyCropProblems();
   const rateCropProblem = useRateCropProblem();
+  const rateAdvisorMutation = useRateCropAdvisor();
+  const [ratingCrop, setRatingCrop] = useState<any | null>(null);
+  const [reviewStars, setReviewStars] = useState<number>(5);
+  const [reviewFeedback, setReviewFeedback] = useState<string>('');
   const [viewingProblem, setViewingProblem] = useState<CropProblem | null>(null);
   const [viewingProblemPhoto, setViewingProblemPhoto] = useState<string | null>(null);
   const [farmerRatingVal, setFarmerRatingVal] = useState<number>(5);
@@ -464,22 +469,46 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
       {!isLoadingSubscription && hireStatus === 'NONE' && !advisorIncluded && (
         <ScrollView style={styles.activeScroll} contentContainerStyle={[styles.activeContent, { paddingBottom: 160, paddingHorizontal: 0, paddingTop: 0 }]} showsVerticalScrollIndicator={false}>
           {headerComponent}
-          <View style={[styles.body, { paddingTop: 20, paddingBottom: 16 }]}>
-            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>Crop Doctor Hub</Text>
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16 }}>
+            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', textAlign: 'center', letterSpacing: -0.2 }}>
+              Crop Doctor Hub
+            </Text>
 
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, width: '100%', maxWidth: 500 }}>
-              <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={() => setIsCropCareModalOpen(true)}>
-                <LinearGradient colors={isDark ? ['#00ff87', '#059669'] : ['#16a34a', '#15803d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hireBtn}>
-                  <Ionicons name="medical" size={18} color="#fff" />
-                  <Text style={styles.hireBtnText}>View Doctor Packages</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={{
+                marginTop: 8,
+                borderRadius: RADIUS.md,
+                overflow: 'hidden',
+                alignSelf: 'center',
+                ...premiumShadow(isDark ? '#059669' : '#16a34a', 'sm'),
+              }}
+              activeOpacity={0.85}
+              onPress={() => setIsCropCareModalOpen(true)}
+            >
+              <LinearGradient
+                colors={isDark ? ['#00ff87', '#059669'] : ['#16a34a', '#15803d']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: 9,
+                  paddingHorizontal: 22,
+                  gap: 8,
+                }}
+              >
+                <Ionicons name="medical" size={16} color="#ffffff" />
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', letterSpacing: 0.2 }}>
+                  View Doctor Packages
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
 
           {/* If farmer has crops, display their crops with 1-click Adopt Doctor button */}
           {(myCrops ?? []).length > 0 && (
-            <View style={{ paddingHorizontal: SPACING.lg, marginTop: 20 }}>
+            <View style={{ paddingHorizontal: SPACING.lg, marginTop: 12 }}>
               <Text style={[styles.progressTitle, { color: colors.text, marginBottom: 12 }]}>Your Registered Crops ({myCrops?.length ?? 0})</Text>
               <View style={{ gap: 10 }}>
                 {(myCrops ?? []).map((crop) => (
@@ -499,83 +528,195 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                       </Text>
                     </View>
 
-                    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-                      {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 ? (
-                        <TouchableOpacity
-                          style={[styles.shareBtn, { backgroundColor: '#16a34a' }]}
-                          activeOpacity={0.85}
-                          disabled={submittingCropId === crop.id}
-                          onPress={() => handleRequestAdvisorReview(crop.id, `${crop.plot?.name || 'Plot'} (${crop.cropName})`, activeAdvisors[0].id)}
-                        >
-                          {submittingCropId === crop.id ? (
-                            <ActivityIndicator color="#ffffff" size="small" />
+                    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      {crop.advisorReviewStatus === 'ACCEPTED' ? (
+                        <>
+                          {crop.notes?.includes('[REQUIREMENT_COMPLETED') || !!crop.assignedSchedule ? (
+                            crop.notes?.includes('[FARMER_CONFIRMED_REVIEW') ? (
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  gap: 5,
+                                  backgroundColor: isDark ? 'rgba(14, 165, 233, 0.15)' : '#e0f2fe',
+                                  paddingHorizontal: 10,
+                                  paddingVertical: 5,
+                                  borderRadius: RADIUS.pill,
+                                  borderWidth: 1,
+                                  borderColor: isDark ? 'rgba(14, 165, 233, 0.3)' : '#7dd3fc',
+                                }}
+                              >
+                                <Ionicons name="checkmark-done" size={13} color="#0284c7" />
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0284c7' }}>
+                                  Requirement Confirmed ✅ · Dr. {crop.assignedAdvisor?.name || 'Doctor'}
+                                </Text>
+                              </View>
+                            ) : (
+                              <TouchableOpacity
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  gap: 5,
+                                  backgroundColor: '#16a34a',
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 5,
+                                  borderRadius: RADIUS.pill,
+                                  ...premiumShadow('#16a34a', 'sm'),
+                                }}
+                                activeOpacity={0.85}
+                                onPress={() => {
+                                  tap();
+                                  setRatingCrop(crop);
+                                  setReviewStars(5);
+                                  setReviewFeedback('');
+                                }}
+                              >
+                                <Ionicons name="star" size={13} color="#ffffff" />
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>
+                                  Requirement Completed · Review & Confirm ⭐
+                                </Text>
+                              </TouchableOpacity>
+                            )
                           ) : (
-                            <>
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#dcfce7',
+                                paddingHorizontal: 10,
+                                paddingVertical: 5,
+                                borderRadius: RADIUS.pill,
+                                borderWidth: 1,
+                                borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : '#86efac',
+                              }}
+                            >
+                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981' }} />
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#34d399' : '#15803d' }}>
+                                👨‍⚕️ Dr. {crop.assignedAdvisor?.name || 'Doctor'} Working on Crop
+                              </Text>
+                            </View>
+                          )}
+
+                          <TouchableOpacity
+                            style={[
+                              styles.shareBtn,
+                              {
+                                backgroundColor: isDark ? 'rgba(56, 189, 248, 0.15)' : '#e0f2fe',
+                                borderWidth: 1,
+                                borderColor: isDark ? 'rgba(56, 189, 248, 0.4)' : '#38bdf8',
+                              },
+                            ]}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              tap();
+                              setAdoptionTargetCrop(crop);
+                              setIsSecondOpinionMode(true);
+                            }}
+                          >
+                            <Ionicons name="medkit-outline" size={13} color={isDark ? '#38bdf8' : '#0284c7'} />
+                            <Text style={[styles.shareBtnText, { color: isDark ? '#38bdf8' : '#0284c7' }]}>
+                              Second Opinion (Other Doctor)
+                            </Text>
+                          </TouchableOpacity>
+                        </>
+                      ) : crop.advisorReviewStatus === 'PENDING' ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={styles.pendingBadge}>
+                            <Ionicons name="time-outline" size={13} color="#d97706" />
+                            <Text style={styles.pendingBadgeText}>
+                              ⏳ Awaiting Dr. {crop.assignedAdvisor?.name || 'Doctor'}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.cancelPendingBtn}
+                            disabled={cancellingCropId === crop.id}
+                            onPress={() => handleCancelAdvisorReview(crop.id)}
+                          >
+                            {cancellingCropId === crop.id ? (
+                              <ActivityIndicator size="small" color="#dc2626" />
+                            ) : (
+                              <Text style={styles.cancelPendingText}>Cancel</Text>
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <>
+                          {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 ? (
+                            <TouchableOpacity
+                              style={[styles.shareBtn, { backgroundColor: '#16a34a' }]}
+                              activeOpacity={0.85}
+                              onPress={() => {
+                                tap();
+                                setAdoptionTargetCrop(crop);
+                                setIsSecondOpinionMode(false);
+                              }}
+                            >
                               <Ionicons name="sparkles" size={13} color="#ffffff" />
                               <Text style={styles.shareBtnText}>
                                 Adopt Free ({activeAdvisors[0].freeSlotsRemaining} left)
                               </Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
-                      ) : activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) <= 0 ? (
-                        <TouchableOpacity
-                          style={[styles.shareBtn, { backgroundColor: '#7c3aed' }]}
-                          activeOpacity={0.85}
-                          onPress={() => {
-                            tap();
-                            setIsCropCareModalOpen(true);
-                          }}
-                        >
-                          <Ionicons name="trending-up" size={13} color="#ffffff" />
-                          <Text style={styles.shareBtnText}>
-                            Upgrade Plan with Dr. {activeAdvisors[0].name.split(' ')[0]}
-                          </Text>
-                        </TouchableOpacity>
-                      ) : null}
+                            </TouchableOpacity>
+                          ) : activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) <= 0 ? (
+                            <TouchableOpacity
+                              style={[styles.shareBtn, { backgroundColor: '#7c3aed' }]}
+                              activeOpacity={0.85}
+                              onPress={() => {
+                                tap();
+                                setIsCropCareModalOpen(true);
+                              }}
+                            >
+                              <Ionicons name="trending-up" size={13} color="#ffffff" />
+                              <Text style={styles.shareBtnText}>
+                                Upgrade Plan with Dr. {activeAdvisors[0].name.split(' ')[0]}
+                              </Text>
+                            </TouchableOpacity>
+                          ) : null}
 
-                      <TouchableOpacity
-                        style={[
-                          styles.shareBtn,
-                          {
-                            backgroundColor:
-                              activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
-                                ? (isDark ? 'rgba(56, 189, 248, 0.15)' : '#e0f2fe')
-                                : colors.primary,
-                            borderWidth:
-                              activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 ? 1 : 0,
-                            borderColor: isDark ? 'rgba(56, 189, 248, 0.4)' : '#38bdf8',
-                          },
-                        ]}
-                        activeOpacity={0.85}
-                        onPress={() => {
-                          tap();
-                          setAdoptionTargetCrop(crop);
-                          setIsSecondOpinionMode(false);
-                        }}
-                      >
-                        <Ionicons
-                          name="person-add-outline"
-                          size={14}
-                          color={
-                            activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
-                              ? (isDark ? '#38bdf8' : '#0284c7')
-                              : '#ffffff'
-                          }
-                        />
-                        <Text
-                          style={[
-                            styles.shareBtnText,
-                            activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 && {
-                              color: isDark ? '#38bdf8' : '#0284c7',
-                            },
-                          ]}
-                        >
-                          {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
-                            ? 'Send to Other Doctor'
-                            : 'Adopt Doctor'}
-                        </Text>
-                      </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[
+                              styles.shareBtn,
+                              {
+                                backgroundColor:
+                                  activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                                    ? (isDark ? 'rgba(56, 189, 248, 0.15)' : '#e0f2fe')
+                                    : colors.primary,
+                                borderWidth:
+                                  activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 ? 1 : 0,
+                                borderColor: isDark ? 'rgba(56, 189, 248, 0.4)' : '#38bdf8',
+                              },
+                            ]}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              tap();
+                              setAdoptionTargetCrop(crop);
+                              setIsSecondOpinionMode(false);
+                            }}
+                          >
+                            <Ionicons
+                              name="person-add-outline"
+                              size={14}
+                              color={
+                                activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                                  ? (isDark ? '#38bdf8' : '#0284c7')
+                                  : '#ffffff'
+                              }
+                            />
+                            <Text
+                              style={[
+                                styles.shareBtnText,
+                                activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0 && {
+                                  color: isDark ? '#38bdf8' : '#0284c7',
+                                },
+                              ]}
+                            >
+                              {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
+                                ? 'Send to Other Doctor'
+                                : 'Adopt Doctor'}
+                            </Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
                     </View>
                   </View>
                 ))}
@@ -588,13 +729,12 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
       {!isLoadingSubscription && hireStatus === 'NONE' && advisorIncluded && (
         <ScrollView style={styles.activeScroll} contentContainerStyle={[styles.activeContent, { paddingBottom: 160, paddingHorizontal: 0, paddingTop: 0 }]} showsVerticalScrollIndicator={Platform.OS === 'web'}>
           {headerComponent}
-          <View style={styles.body}>
-            <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(0, 255, 135, 0.15)' : '#dcfce7' }]}>
-              <Ionicons name="people-outline" size={40} color={isDark ? '#00ff87' : '#15803d'} />
-            </View>
-            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>{t('chooseAdvisor', 'Choose Your Crop Doctor')}</Text>
-            <Text style={[styles.description, { color: isDark ? colors.textMuted : '#334155' }]}>
-              {t('chooseAdvisor', 'Certified Pan-India Crop Care Specialists — Choose an agronomist below to consult.')}
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 16 }}>
+            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', textAlign: 'center', letterSpacing: -0.2 }}>
+              {t('chooseAdvisor', 'Choose Your Crop Doctor')}
+            </Text>
+            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569', textAlign: 'center', marginTop: 4 }}>
+              {t('chooseAdvisorSub', 'Select a certified crop doctor or agronomist below to consult.')}
             </Text>
           </View>
 
@@ -682,15 +822,15 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
       {hireStatus === 'PENDING' && (
         <ScrollView style={styles.activeScroll} contentContainerStyle={[styles.activeContent, { paddingBottom: 160, paddingHorizontal: 0, paddingTop: 0 }]} showsVerticalScrollIndicator={Platform.OS === 'web'}>
           {headerComponent}
-          <View style={[styles.body, { paddingHorizontal: SPACING.lg }]}>
-            <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.16)' : '#fef3c7' }]}>
-              <Ionicons name="hourglass-outline" size={40} color={isDark ? '#fbbf24' : '#d97706'} />
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 16 }}>
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: isDark ? 'rgba(217, 119, 6, 0.16)' : '#fef3c7', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+              <Ionicons name="hourglass-outline" size={24} color={isDark ? '#fbbf24' : '#d97706'} />
             </View>
-            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>Request Sent to Admin</Text>
-            <Text style={[styles.description, { color: isDark ? colors.textMuted : '#334155' }]}>
+            <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', textAlign: 'center' }}>Request Sent to Admin</Text>
+            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569', textAlign: 'center', marginTop: 4, maxWidth: 440 }}>
               Your subscription is awaiting admin approval. An advisor will be assigned once approved.
             </Text>
-            <View style={[styles.pendingChip, { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.15)' : '#fffbeb', borderColor: isDark ? 'rgba(217, 119, 6, 0.3)' : '#fde68a' }]}>
+            <View style={[styles.pendingChip, { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.15)' : '#fffbeb', borderColor: isDark ? 'rgba(217, 119, 6, 0.3)' : '#fde68a', marginTop: 8 }]}>
               <Ionicons name="time-outline" size={14} color={isDark ? '#fbbf24' : '#b45309'} />
               <Text style={[styles.pendingChipText, { color: isDark ? '#fbbf24' : '#b45309' }]}>Awaiting Admin Approval...</Text>
             </View>
@@ -701,15 +841,15 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
       {hireStatus === 'AWAITING_ADVISOR' && (
         <ScrollView style={styles.activeScroll} contentContainerStyle={[styles.activeContent, { paddingBottom: 160, paddingHorizontal: 0, paddingTop: 0 }]} showsVerticalScrollIndicator={Platform.OS === 'web'}>
           {headerComponent}
-          <View style={[styles.body, { paddingHorizontal: SPACING.lg }]}>
-            <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.16)' : '#fef3c7' }]}>
-              <Ionicons name="hourglass-outline" size={40} color={isDark ? '#fbbf24' : '#d97706'} />
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 16 }}>
+            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: isDark ? 'rgba(217, 119, 6, 0.16)' : '#fef3c7', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+              <Ionicons name="hourglass-outline" size={24} color={isDark ? '#fbbf24' : '#d97706'} />
             </View>
-            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>Waiting for {myPendingRequest?.advisor?.name ?? 'Advisor'}</Text>
-            <Text style={[styles.description, { color: isDark ? colors.textMuted : '#334155' }]}>
+            <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', textAlign: 'center' }}>Waiting for {myPendingRequest?.advisor?.name ?? 'Advisor'}</Text>
+            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569', textAlign: 'center', marginTop: 4, maxWidth: 440 }}>
               Your hire request has been sent. Once accepted by the advisor, you will be able to chat and use the schedule.
             </Text>
-            <View style={[styles.pendingChip, { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.15)' : '#fffbeb', borderColor: isDark ? 'rgba(217, 119, 6, 0.3)' : '#fde68a' }]}>
+            <View style={[styles.pendingChip, { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.15)' : '#fffbeb', borderColor: isDark ? 'rgba(217, 119, 6, 0.3)' : '#fde68a', marginTop: 8 }]}>
               <Ionicons name="time-outline" size={14} color={isDark ? '#fbbf24' : '#b45309'} />
               <Text style={[styles.pendingChipText, { color: isDark ? '#fbbf24' : '#b45309' }]}>Awaiting Advisor's Response...</Text>
             </View>
@@ -1407,6 +1547,76 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                                 </TouchableOpacity>
                               </View>
                             )}
+
+                            {advStatus === 'ACCEPTED' && (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                {crop.notes?.includes('[REQUIREMENT_COMPLETED') || !!crop.assignedSchedule ? (
+                                  crop.notes?.includes('[FARMER_CONFIRMED_REVIEW') ? (
+                                    <View
+                                      style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 5,
+                                        backgroundColor: isDark ? 'rgba(14, 165, 233, 0.15)' : '#e0f2fe',
+                                        paddingHorizontal: 9,
+                                        paddingVertical: 4,
+                                        borderRadius: RADIUS.pill,
+                                        borderWidth: 1,
+                                        borderColor: isDark ? 'rgba(14, 165, 233, 0.3)' : '#7dd3fc',
+                                      }}
+                                    >
+                                      <Ionicons name="checkmark-done" size={13} color="#0284c7" />
+                                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7' }}>
+                                        Requirement Confirmed ✅ · Dr. {crop.assignedAdvisor?.name || 'Doctor'}
+                                      </Text>
+                                    </View>
+                                  ) : (
+                                    <TouchableOpacity
+                                      style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 5,
+                                        backgroundColor: '#16a34a',
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 5,
+                                        borderRadius: RADIUS.pill,
+                                      }}
+                                      activeOpacity={0.85}
+                                      onPress={() => {
+                                        tap();
+                                        setRatingCrop(crop);
+                                        setReviewStars(5);
+                                        setReviewFeedback('');
+                                      }}
+                                    >
+                                      <Ionicons name="star" size={13} color="#ffffff" />
+                                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                                        Requirement Completed · Review & Confirm ⭐
+                                      </Text>
+                                    </TouchableOpacity>
+                                  )
+                                ) : (
+                                  <View
+                                    style={{
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      gap: 5,
+                                      backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#dcfce7',
+                                      paddingHorizontal: 9,
+                                      paddingVertical: 4,
+                                      borderRadius: RADIUS.pill,
+                                      borderWidth: 1,
+                                      borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : '#86efac',
+                                    }}
+                                  >
+                                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981' }} />
+                                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#34d399' : '#15803d' }}>
+                                      👨‍⚕️ Dr. {crop.assignedAdvisor?.name || 'Doctor'} Working on Crop
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+                            )}
                           </View>
                         );
                       })
@@ -1886,6 +2096,152 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
           setIsCropCareModalOpen(true);
         }}
       />
+
+      {/* FARMER REQUIREMENT REVIEW & CONFIRMATION MODAL */}
+      <Modal
+        visible={!!ratingCrop}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRatingCrop(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 440, padding: 18, backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: colors.cardBorder }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="checkmark-done-circle" size={24} color="#10b981" />
+                <View>
+                  <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: colors.text }}>
+                    Requirement Confirmation
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted }}>
+                    Review your completed consultation
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setRatingCrop(null)}>
+                <Ionicons name="close" size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            {ratingCrop ? (
+              <View style={{ gap: 12 }}>
+                <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: colors.cardBorder }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: colors.text }}>
+                    🌾 {ratingCrop.cropName} {ratingCrop.variety ? `(${ratingCrop.variety})` : ''}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted, marginTop: 2 }}>
+                    Doctor: Dr. {ratingCrop.assignedAdvisor?.name || 'Certified Specialist'}
+                  </Text>
+                  {ratingCrop.assignedSchedule ? (
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#10b981', marginTop: 4 }}>
+                      📅 Advisory Schedule has been prepared and published to your calendar.
+                    </Text>
+                  ) : null}
+                </View>
+
+                {/* Rating Stars */}
+                <View style={{ alignItems: 'center', gap: 6, marginVertical: 4 }}>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: colors.text }}>
+                    Rate your consultation experience:
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity
+                        key={star}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          tap();
+                          setReviewStars(star);
+                        }}
+                      >
+                        <Ionicons
+                          name={star <= reviewStars ? 'star' : 'star-outline'}
+                          size={28}
+                          color={star <= reviewStars ? '#f59e0b' : (isDark ? '#64748b' : '#cbd5e1')}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#f59e0b' }}>
+                    {reviewStars === 5 ? '⭐⭐⭐⭐⭐ Excellent' :
+                     reviewStars === 4 ? '⭐⭐⭐⭐ Very Good' :
+                     reviewStars === 3 ? '⭐⭐⭐ Good' :
+                     reviewStars === 2 ? '⭐⭐ Fair' : '⭐ Needs Improvement'}
+                  </Text>
+                </View>
+
+                {/* Feedback notes */}
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: colors.text }}>
+                    Doctor Feedback (Optional):
+                  </Text>
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: colors.cardBorder,
+                      borderRadius: RADIUS.md,
+                      padding: 10,
+                      fontSize: 12.5,
+                      fontFamily: FONT.medium,
+                      color: colors.text,
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
+                      minHeight: 65,
+                      textAlignVertical: 'top',
+                    }}
+                    placeholder="e.g. Prompt response, excellent diagnosis and clear spray instructions..."
+                    placeholderTextColor={colors.textMuted}
+                    multiline
+                    value={reviewFeedback}
+                    onChangeText={setReviewFeedback}
+                  />
+                </View>
+
+                {/* Submit button */}
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#16a34a',
+                    paddingVertical: 12,
+                    borderRadius: RADIUS.md,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    gap: 6,
+                    marginTop: 4,
+                  }}
+                  disabled={rateAdvisorMutation.isPending}
+                  onPress={() => {
+                    rateAdvisorMutation.mutate(
+                      { id: ratingCrop.id, rating: reviewStars, feedback: reviewFeedback },
+                      {
+                        onSuccess: (res: any) => {
+                          setRatingCrop(null);
+                          const msg = res?.message || '✅ Thank you! Your review and requirement confirmation have been recorded.';
+                          Platform.OS === 'web' ? alert(msg) : Alert.alert('Requirement Confirmed', msg);
+                        },
+                        onError: (err: any) => {
+                          const msg = err?.response?.data?.message || err?.message || 'Could not submit review.';
+                          Platform.OS === 'web' ? alert(msg) : Alert.alert('Error', msg);
+                        },
+                      }
+                    );
+                  }}
+                >
+                  {rateAdvisorMutation.isPending ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-circle" size={16} color="#ffffff" />
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>
+                        Confirm & Submit Review
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

@@ -38,9 +38,9 @@ export const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   CUSTOMER: { tabs: ['shop', 'cart', 'wallet', 'more'] },
   TRADER: { tabs: ['shop', 'cart', 'orders', 'wallet', 'more'] },
   SELLER: { tabs: ['shop', 'cart', 'wallet', 'more'] },
-  ADVISOR: { tabs: ['index', 'farmers', 'settings', 'shop', 'more'] },
-  FARM_ADVISOR: { tabs: ['index', 'farmers', 'settings', 'shop', 'more'] },
-  GARDEN_ADVISOR: { tabs: ['index', 'farmers', 'settings', 'shop', 'more'] },
+  ADVISOR: { tabs: ['index', 'farmers', 'schedule', 'settings', 'more'] },
+  FARM_ADVISOR: { tabs: ['index', 'farmers', 'schedule', 'settings', 'more'] },
+  GARDEN_ADVISOR: { tabs: ['index', 'farmers', 'schedule', 'settings', 'more'] },
   AGENT: { tabs: ['index', 'referrals', 'wallet', 'more'] },
   NURSERY_OWNER: { tabs: ['index', 'wallet', 'more'] },
   ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
@@ -230,6 +230,20 @@ export function getTabsForRole(role?: string | null): RoleTabItem[] {
           laser: ['#00ff87', '#10b981', '#059669'],
           border: 'rgba(16, 185, 129, 0.50)',
           shadow: '#10b981',
+        };
+      case 'schedule':
+        return {
+          key: 'schedule',
+          tabName: 'schedule',
+          label: 'Schedules',
+          icon: 'calendar',
+          iconOutline: 'calendar-outline',
+          path: `${tabBase}/schedule`,
+          color: '#38bdf8',
+          glow: ['rgba(56, 189, 248, 0.32)', 'rgba(14, 165, 233, 0.18)', 'rgba(56, 189, 248, 0.05)'],
+          laser: ['#38bdf8', '#0ea5e9', '#0284c7'],
+          border: 'rgba(56, 189, 248, 0.50)',
+          shadow: '#38bdf8',
         };
       case 'chat':
         return {

@@ -499,6 +499,39 @@ export declare class CropsService {
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
     }>;
+    completeRequirement(user: AuthUser, id: string, notes?: string, schedule?: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        area: number | null;
+        status: import(".prisma/client").$Enums.CropStatus;
+        notes: string | null;
+        unit: string | null;
+        plotId: string;
+        assignedAdvisorId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
+        cropId: string | null;
+        cropName: string;
+        variety: string | null;
+        plantCount: number | null;
+        sowingDate: Date | null;
+        transplantDate: Date | null;
+        expectedHarvestDate: Date | null;
+        actualHarvestDate: Date | null;
+        stage: import(".prisma/client").$Enums.CropCycleStage;
+        harvestType: import(".prisma/client").$Enums.CropHarvestType;
+        assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
+        advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
+        submittedToAdvisorAt: Date | null;
+        advisorAcceptedAt: Date | null;
+    }>;
+    rateAdvisor(user: AuthUser, id: string, rating: number, feedback?: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
     private syncAssignedScheduleToSprayItems;
     rejectByAdvisor(user: AuthUser, id: string, reason?: string): Promise<{
         id: string;

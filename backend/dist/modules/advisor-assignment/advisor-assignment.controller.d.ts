@@ -254,6 +254,9 @@ export declare class AdvisorAssignmentController {
         doctorConsultationFee: import("@prisma/client/runtime/library").Decimal | null;
     }[]>;
     listAvailableAdvisorsForCrop(user: AuthUser, cropCycleId: string): Promise<{
+        isAlreadyAssignedToThisCrop: boolean;
+        assignedCropReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus | null;
+        activeHiringModelForCrop: import(".prisma/client").$Enums.HiringModelType | null;
         quota: {
             hasActiveMonthlySubscription: boolean;
             activeSubscriptionId: string | null;

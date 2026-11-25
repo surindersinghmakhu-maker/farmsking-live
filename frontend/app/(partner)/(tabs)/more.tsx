@@ -166,10 +166,12 @@ export default function MoreScreen() {
         user.roles.includes('GARDEN_ADVISOR' as any)));
   const isLabourRole = role === 'LABOUR' || role === 'OPERATOR' || user?.role === 'LABOUR' || user?.role === 'OPERATOR' || (Array.isArray(user?.roles) && (user.roles.includes('LABOUR') || user.roles.includes('OPERATOR')));
 
+  const hasFarmerRole = role === 'FARMER' || user?.role === 'FARMER' || (Array.isArray(user?.roles) && user.roles.includes('FARMER'));
+
   const accountItems: AccountItem[] = [
     MY_PROFILE_ITEM,
     MY_ADDRESSES_ITEM,
-    FARMER_ONLY_ITEM,
+    ...(hasFarmerRole ? [FARMER_ONLY_ITEM] : []),
     ...(role === 'GARDEN_ADVISOR'
       ? [
           {
@@ -265,28 +267,6 @@ export default function MoreScreen() {
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, dynStyles.sectionTitle]}>{t('accountSection')}</Text>
                 <View style={[styles.sectionCard, dynStyles.sectionCard]}>
-                  {/* 🌓 Display Theme Mode Toggle (Light / Dark) */}
-                  <TouchableOpacity
-                    style={[styles.row, dynStyles.row]}
-                    activeOpacity={0.7}
-                    onPress={() => toggleThemeMode()}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#fef3c7' : 'rgba(0, 255, 135, 0.12)' }]}>
-                      <Ionicons name={isLight ? 'sunny-outline' : 'moon-outline'} size={18} color={isLight ? '#d97706' : '#00ff87'} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Display Theme Mode</Text>
-                      <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>
-                        {isLight ? 'Light Mode (Daytime View)' : 'Dark Emerald Mode (Executive Night View)'}
-                      </Text>
-                    </View>
-                    <View style={{ backgroundColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.35)' }}>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isLight ? '#0f172a' : '#00ff87' }}>
-                        {isLight ? 'Switch Dark 🌙' : 'Switch Light ☀️'}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-
                   {/* Account Sub-Items listed directly */}
                   {accountItems.map((item) => (
                     <TouchableOpacity
@@ -326,8 +306,8 @@ export default function MoreScreen() {
                     </TouchableOpacity>
                   ) : null}
 
-                  {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
-                  {(() => {
+                  {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM (Only for non-advisors) */}
+                  {!isAdvisorRole && (() => {
                     const isSellerRole = role === ('SELLER' as any) || user?.role === ('SELLER' as any) || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
                     return (
                       <TouchableOpacity

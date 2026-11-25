@@ -127,3 +127,13 @@ export async function updateCropSchedule(id: string, assignedSchedule: string): 
   const { data } = await apiClient.patch<CropCycle>(`/crops/${id}/schedule`, { assignedSchedule });
   return data;
 }
+
+export async function completeCropRequirement(id: string, notes?: string, schedule?: string): Promise<CropCycle> {
+  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/complete-requirement`, { notes, schedule });
+  return data;
+}
+
+export async function rateCropAdvisor(id: string, rating: number, feedback?: string): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string }>(`/crops/${id}/rate-advisor`, { rating, feedback });
+  return data;
+}

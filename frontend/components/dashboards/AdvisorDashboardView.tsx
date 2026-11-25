@@ -24,9 +24,9 @@ import {
   useAdvisorTodaySchedule,
   useRemindSchedule,
 } from '@/src/hooks/useCropActivitySchedules';
-import { useAcceptCropByAdvisor, useRejectCropByAdvisor, usePendingCropsForAdvisor, useAcceptedCropsForAdvisor } from '@/src/hooks/useCrops';
+import { useAcceptCropByAdvisor, useRejectCropByAdvisor, usePendingCropsForAdvisor, useAcceptedCropsForAdvisor, useCompleteCropRequirement } from '@/src/hooks/useCrops';
 import { useMyCallRequests, useResolveCallRequest } from '@/src/hooks/useCallRequests';
-import { useAdvisorWeatherAlerts } from '@/src/hooks/useWeather';
+import { useAdvisorWeatherAlerts, useUserWeather } from '@/src/hooks/useWeather';
 import { useAssignedCropProblems, useRespondToCropProblem } from '@/src/hooks/useCropProblems';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient, resolveMediaUrl } from '@/src/api/client';
@@ -102,6 +102,79 @@ function formatWater(water?: string | null): string {
   return WATER_TYPE_LABELS[water.toUpperCase()] || water;
 }
 
+function CropReviewWeatherSection({ farmerId, isLight, textColor, subTextColor }: { farmerId?: string; isLight: boolean; textColor: string; subTextColor: string }) {
+  const { data: weather, isLoading } = useUserWeather(farmerId);
+
+  return (
+    <View style={[styles.proCardSection, { backgroundColor: isLight ? '#f0f9ff' : '#042238', borderColor: isLight ? '#bae6fd' : 'rgba(56, 189, 248, 0.25)' }]}>
+      <View style={[styles.proCardSectionHeader, { borderBottomColor: isLight ? '#bae6fd' : 'rgba(255, 255, 255, 0.08)' }]}>
+        <Ionicons name="partly-sunny" size={14} color="#0284c7" />
+        <Text style={[styles.proCardSectionTitle, { color: '#0284c7' }]}>Farmer Live Weather Telemetry</Text>
+        {weather?.locationLabel ? (
+          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: subTextColor, marginLeft: 'auto' }}>
+            📍 {weather.locationLabel}
+          </Text>
+        ) : null}
+      </View>
+
+      {isLoading ? (
+        <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+          <ActivityIndicator size="small" color="#0284c7" />
+        </View>
+      ) : weather ? (
+        <View style={{ gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons
+                name={weather.isRaining ? 'rainy' : weather.condition?.toLowerCase().includes('cloud') ? 'cloudy' : 'sunny'}
+                size={22}
+                color={weather.isRaining ? '#0284c7' : '#f59e0b'}
+              />
+              <View>
+                <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: textColor }}>
+                  {weather.temperatureC}°C <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>({weather.condition})</Text>
+                </Text>
+                <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: subTextColor }}>
+                  Feels like {weather.feelsLikeC}°C
+                </Text>
+              </View>
+            </View>
+
+            {weather.isRaining ? (
+              <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
+                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>🌧️ Rain Active</Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <View style={[styles.proGridBox, { flex: 1, backgroundColor: isLight ? '#ffffff' : '#082f49', borderColor: isLight ? '#e0f2fe' : 'rgba(56, 189, 248, 0.2)' }]}>
+              <Text style={[styles.proGridLabel, { color: subTextColor }]}>💧 Humidity</Text>
+              <Text style={[styles.proGridVal, { color: textColor }]}>{weather.humidityPct}%</Text>
+            </View>
+
+            <View style={[styles.proGridBox, { flex: 1, backgroundColor: isLight ? '#ffffff' : '#082f49', borderColor: isLight ? '#e0f2fe' : 'rgba(56, 189, 248, 0.2)' }]}>
+              <Text style={[styles.proGridLabel, { color: subTextColor }]}>💨 Wind Speed</Text>
+              <Text style={[styles.proGridVal, { color: textColor }]}>{(weather.windSpeedMs * 3.6).toFixed(1)} km/h</Text>
+            </View>
+
+            <View style={[styles.proGridBox, { flex: 1, backgroundColor: isLight ? '#ffffff' : '#082f49', borderColor: isLight ? '#e0f2fe' : 'rgba(56, 189, 248, 0.2)' }]}>
+              <Text style={[styles.proGridLabel, { color: subTextColor }]}>🌧️ 3-Day Rain</Text>
+              <Text style={[styles.proGridVal, { color: (weather.forecast ?? []).some(f => f.isRaining || f.precipitationMm >= 2) ? '#0284c7' : textColor }]}>
+                {(weather.forecast ?? []).some(f => f.isRaining || f.precipitationMm >= 2) ? 'Expected' : 'None'}
+              </Text>
+            </View>
+          </View>
+        </View>
+      ) : (
+        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor, fontStyle: 'italic', paddingVertical: 4 }}>
+          Live micro-climate telemetry unavailable for this plot.
+        </Text>
+      )}
+    </View>
+  );
+}
+
 const TAB_META: Record<TabKey, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; border: string }> = {
   SUBMISSIONS: { label: 'Requests', icon: 'cloud-upload', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.12)', border: 'rgba(56, 189, 248, 0.35)' },
   DELAYED: { label: 'Delayed Sprays', icon: 'alert-circle', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.35)' },
@@ -153,6 +226,7 @@ export const AdvisorDashboardView: React.FC = () => {
   const { data: acceptedCrops, isLoading: isLoadingAcceptedCrops } = useAcceptedCropsForAdvisor();
   const acceptCrop = useAcceptCropByAdvisor();
   const rejectCrop = useRejectCropByAdvisor();
+  const completeCropReq = useCompleteCropRequirement();
   const { data: callRequests, isLoading: isLoadingCallRequests } = useMyCallRequests();
   const pendingCallRequests = (callRequests ?? []).filter((r) => r.status === 'PENDING');
   const { data: weatherAlerts, isLoading: isLoadingWeatherAlerts } = useAdvisorWeatherAlerts();
@@ -915,24 +989,6 @@ export const AdvisorDashboardView: React.FC = () => {
                                       row.type === 'CROPS' ? (
                                         <>
                                           <TouchableOpacity
-                                            style={[styles.tableActionBtn, { backgroundColor: '#0284c7' }]}
-                                            onPress={() => router.push({
-                                              pathname: '/(partner)/(tabs)/satellite-map',
-                                              params: {
-                                                cropId: row.raw.id,
-                                                cropName: row.raw.cropName,
-                                                farmerName: row.farmerName,
-                                                plotName: row.raw.plot?.farm?.name || row.raw.plot?.name,
-                                                location: row.location || '30.9085° N, 75.8610° E',
-                                              },
-                                            } as any)}
-                                            activeOpacity={0.8}
-                                          >
-                                            <Ionicons name="planet" size={11} color="#ffffff" />
-                                            <Text style={styles.tableActionBtnText}>Radar</Text>
-                                          </TouchableOpacity>
-
-                                          <TouchableOpacity
                                             style={[styles.tableActionBtn, { backgroundColor: '#2563eb' }]}
                                             onPress={() => setSelectedReviewCrop(row.raw)}
                                             activeOpacity={0.8}
@@ -944,7 +1000,14 @@ export const AdvisorDashboardView: React.FC = () => {
                                           <TouchableOpacity
                                             style={[styles.tableActionBtn, { backgroundColor: '#059669' }]}
                                             disabled={acceptCrop.isPending || rejectCrop.isPending}
-                                            onPress={() => acceptCrop.mutate(row.raw.id)}
+                                            onPress={() => {
+                                              acceptCrop.mutate(row.raw.id, {
+                                                onSuccess: () => {
+                                                  const msg = `✅ Request Accepted!\nThe farmer has been notified that you are actively working on "${row.raw.cropName}".`;
+                                                  Platform.OS === 'web' ? alert(msg) : Alert.alert('Request Accepted', msg);
+                                                },
+                                              });
+                                            }}
                                             activeOpacity={0.8}
                                           >
                                             <Ionicons name="checkmark" size={11} color="#ffffff" />
@@ -1109,7 +1172,32 @@ export const AdvisorDashboardView: React.FC = () => {
                             ) : null}
                           </View>
 
-                          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                            <TouchableOpacity
+                              style={[styles.acceptCropBtn, { backgroundColor: '#10b981', paddingHorizontal: 12, height: 34 }]}
+                              disabled={completeCropReq.isPending}
+                              onPress={() => {
+                                completeCropReq.mutate(
+                                  { id: crop.id, notes: 'Advisory consultation finalized.' },
+                                  {
+                                    onSuccess: () => {
+                                      const msg = `✅ Requirement Completed!\nConfirmation message and review request have been sent to the farmer for "${crop.cropName}".`;
+                                      Platform.OS === 'web' ? alert(msg) : Alert.alert('Requirement Completed', msg);
+                                    },
+                                  }
+                                );
+                              }}
+                            >
+                              {completeCropReq.isPending ? (
+                                <ActivityIndicator color="#ffffff" size="small" />
+                              ) : (
+                                <>
+                                  <Ionicons name="checkmark-done-circle" size={15} color="#ffffff" />
+                                  <Text style={styles.acceptCropBtnText}>Complete Requirement ✅</Text>
+                                </>
+                              )}
+                            </TouchableOpacity>
+
                             <TouchableOpacity
                               style={[styles.acceptCropBtn, { backgroundColor: theme.primary, paddingHorizontal: 14, height: 34 }]}
                               onPress={() => router.push('/(partner)/(tabs)/schedule' as never)}
@@ -1590,9 +1678,9 @@ export const AdvisorDashboardView: React.FC = () => {
                     </View>
 
                     <View style={[styles.proGridBox, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
-                      <Text style={[styles.proGridLabel, { color: subTextColor }]}>💰 Target Price</Text>
+                      <Text style={[styles.proGridLabel, { color: subTextColor }]}>🌿 Growth Stage</Text>
                       <Text style={[styles.proGridVal, { color: textColor }]}>
-                        {(selectedReviewCrop as any).pricePerUnit ? `₹${(selectedReviewCrop as any).pricePerUnit} / ${(selectedReviewCrop as any).unit || 'KG'}` : 'Not specified'}
+                        {selectedReviewCrop.stage || 'Vegetative'}
                       </Text>
                     </View>
                   </View>
@@ -1637,6 +1725,14 @@ export const AdvisorDashboardView: React.FC = () => {
                     </View>
                   </View>
                 </View>
+
+                {/* Section 2.5: Farmer Live Weather Telemetry */}
+                <CropReviewWeatherSection
+                  farmerId={selectedReviewCrop.plot?.farm?.ownerId || (selectedReviewCrop as any).farmerId}
+                  isLight={isLight}
+                  textColor={textColor}
+                  subTextColor={subTextColor}
+                />
 
                 {/* Section 3: Live Satellite Field Scan & Health Report */}
                 <View style={[styles.proCardSection, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
@@ -1688,46 +1784,99 @@ export const AdvisorDashboardView: React.FC = () => {
 
                 {/* Professional Footer Buttons */}
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-                  <TouchableOpacity
-                    style={styles.proRejectBtn}
-                    activeOpacity={0.85}
-                    disabled={rejectCrop.isPending || acceptCrop.isPending}
-                    onPress={() => {
-                      const id = selectedReviewCrop.id;
-                      const name = selectedReviewCrop.cropName;
-                      setSelectedReviewCrop(null);
-                      handleReject(id, name);
-                    }}
-                  >
-                    {rejectCrop.isPending ? (
-                      <ActivityIndicator color="#dc2626" size="small" />
-                    ) : (
-                      <>
-                        <Ionicons name="close-circle" size={16} color="#dc2626" />
-                        <Text style={styles.proRejectBtnText}>Reject</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                  {selectedReviewCrop.advisorReviewStatus === 'ACCEPTED' ? (
+                    <>
+                      <TouchableOpacity
+                        style={[styles.proRejectBtn, { borderColor: '#0284c7', backgroundColor: isLight ? '#f0f9ff' : 'rgba(2, 132, 199, 0.15)' }]}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          setSelectedReviewCrop(null);
+                          router.push('/(partner)/(tabs)/schedule' as never);
+                        }}
+                      >
+                        <Ionicons name="calendar" size={16} color="#0284c7" />
+                        <Text style={[styles.proRejectBtnText, { color: '#0284c7' }]}>Update Schedule</Text>
+                      </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.proAcceptBtn}
-                    activeOpacity={0.85}
-                    disabled={acceptCrop.isPending || rejectCrop.isPending}
-                    onPress={() => {
-                      const id = selectedReviewCrop.id;
-                      setSelectedReviewCrop(null);
-                      acceptCrop.mutate(id);
-                    }}
-                  >
-                    {acceptCrop.isPending ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
-                    ) : (
-                      <>
-                        <Ionicons name="checkmark-circle-sharp" size={18} color="#ffffff" />
-                        <Text style={styles.proAcceptBtnText}>Accept & Add to Roster</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.proAcceptBtn, { backgroundColor: '#10b981' }]}
+                        activeOpacity={0.85}
+                        disabled={completeCropReq.isPending}
+                        onPress={() => {
+                          const id = selectedReviewCrop.id;
+                          const name = selectedReviewCrop.cropName;
+                          completeCropReq.mutate(
+                            { id, notes: 'Agronomy advisory & treatment finalized.' },
+                            {
+                              onSuccess: () => {
+                                setSelectedReviewCrop(null);
+                                const msg = `✅ Requirement Completed!\nConfirmation message and review request have been sent to the farmer for "${name}".`;
+                                Platform.OS === 'web' ? alert(msg) : Alert.alert('Requirement Completed', msg);
+                              },
+                            }
+                          );
+                        }}
+                      >
+                        {completeCropReq.isPending ? (
+                          <ActivityIndicator color="#ffffff" size="small" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark-done-circle" size={18} color="#ffffff" />
+                            <Text style={styles.proAcceptBtnText}>Complete Requirement ✅</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={styles.proRejectBtn}
+                        activeOpacity={0.85}
+                        disabled={rejectCrop.isPending || acceptCrop.isPending}
+                        onPress={() => {
+                          const id = selectedReviewCrop.id;
+                          const name = selectedReviewCrop.cropName;
+                          setSelectedReviewCrop(null);
+                          handleReject(id, name);
+                        }}
+                      >
+                        {rejectCrop.isPending ? (
+                          <ActivityIndicator color="#dc2626" size="small" />
+                        ) : (
+                          <>
+                            <Ionicons name="close-circle" size={16} color="#dc2626" />
+                            <Text style={styles.proRejectBtnText}>Reject</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.proAcceptBtn}
+                        activeOpacity={0.85}
+                        disabled={acceptCrop.isPending || rejectCrop.isPending}
+                        onPress={() => {
+                          const id = selectedReviewCrop.id;
+                          const name = selectedReviewCrop.cropName;
+                          setSelectedReviewCrop(null);
+                          acceptCrop.mutate(id, {
+                            onSuccess: () => {
+                              const msg = `✅ Request Accepted!\nThe farmer has been notified that you are actively working on "${name}".`;
+                              Platform.OS === 'web' ? alert(msg) : Alert.alert('Request Accepted', msg);
+                            },
+                          });
+                        }}
+                      >
+                        {acceptCrop.isPending ? (
+                          <ActivityIndicator color="#ffffff" size="small" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark-circle-sharp" size={18} color="#ffffff" />
+                            <Text style={styles.proAcceptBtnText}>Accept & Start Work</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </View>
               </ScrollView>
             ) : null}

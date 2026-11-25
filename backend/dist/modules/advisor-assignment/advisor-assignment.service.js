@@ -388,10 +388,15 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
                 freeSlotsRemaining = Math.max(0, maxIncluded - activeCropsUnderAdvisor);
                 quotaStatus = freeSlotsRemaining > 0 ? 'INCLUDED_FREE' : 'ADDITIONAL_CROP_FEE';
             }
+            const isAlreadyAssigned = Boolean(cropCycle.assignedAdvisorId === advisor.id &&
+                cropCycle.advisorReviewStatus !== client_1.CropAdvisorReviewStatus.NONE);
             return {
                 ...advisor,
                 activeFarmerCount: _count.advisorAssignmentsAsAdvisor,
                 ...rStats,
+                isAlreadyAssignedToThisCrop: isAlreadyAssigned,
+                assignedCropReviewStatus: isAlreadyAssigned ? cropCycle.advisorReviewStatus : null,
+                activeHiringModelForCrop: isAlreadyAssigned ? cropCycle.hiringModel : null,
                 quota: {
                     hasActiveMonthlySubscription: !!activeSub,
                     activeSubscriptionId: activeSub?.id ?? null,
@@ -701,7 +706,7 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             }
         }
         await this.payoutAdvisorShareOnAccept(assignment.farmerId, user.id);
-        await this.notificationsService.create(assignment.farmerId, client_1.NotificationType.SYSTEM, 'Advisor accepted your request', 'Your advisor has accepted your hire request — you can now chat and get crop guidance.');
+        await this.notificationsService.create(assignment.farmerId, client_1.NotificationType.SYSTEM, '👨‍⚕️ Doctor Working on Request', `Dr. ${user.name} has accepted your hire request and is actively working on your farm advisory.`, { advisorId: user.id, status: 'WORKING' });
         this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(assignment.farmerId).catch(() => { });
         return updated;
     }

@@ -54,6 +54,7 @@ interface PlotRow {
   stage?: string | null;
   area?: number | null;
   sowingDate?: string | null;
+  farmerNotes?: string | null;
 }
 
 interface FarmerGroup {
@@ -281,6 +282,13 @@ function CropCardItem({
             {row.area ? ` · 📏 ${row.area}` : ''}
             {row.sowingDate ? ` · 📅 Sown: ${new Date(row.sowingDate).toLocaleDateString('en-IN')}` : ''}
           </Text>
+          {row.farmerNotes ? (
+            <View style={{ backgroundColor: isLight ? '#f8fafc' : 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: isLight ? '#cbd5e1' : 'rgba(255,255,255,0.08)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, marginTop: 4 }}>
+              <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isLight ? '#334155' : '#cbd5e1' }} numberOfLines={2}>
+                💬 <Text style={{ fontFamily: FONT.bold }}>Farmer Note:</Text> "{row.farmerNotes}"
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -526,6 +534,7 @@ export default function AdvisorFarmsScreen() {
               stage: cropCycle.stage,
               area: cropCycle.area,
               sowingDate: cropCycle.sowingDate,
+              farmerNotes: (cropCycle as any).notes || null,
             });
           });
         });

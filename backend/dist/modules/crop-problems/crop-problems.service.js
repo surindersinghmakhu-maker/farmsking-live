@@ -146,7 +146,7 @@ let CropProblemsService = class CropProblemsService {
         const dateLabel = insertedScheduleDate
             ? insertedScheduleDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
             : null;
-        await this.notificationsService.create(problem.reportedById, client_1.NotificationType.CROP_PROBLEM_UPDATE, 'Advisor responded to your problem report', `Your advisor responded to "${problem.title}": ${dto.advisorResponse ?? 'See details in the app.'}`, { cropProblemId: id });
+        await this.notificationsService.create(problem.reportedById, client_1.NotificationType.CROP_PROBLEM_UPDATE, '✅ Requirement Completed!', `Dr. ${user.name} has completed your requirement for "${problem.title}". Remedy: ${dto.advisorResponse ?? 'Check app for details'}. Please review and confirm your experience.`, { cropProblemId: id, action: 'CONFIRM_REVIEW' });
         const chatText = dateLabel
             ? `${dto.advisorResponse}\n\nSolution also added in your schedule (${dateLabel}).`
             : dto.advisorResponse;

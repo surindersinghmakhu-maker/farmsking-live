@@ -158,7 +158,7 @@ export default function TabLayout() {
   const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
   const visible = new Set(config ? config.tabs : ['index', 'farm', 'records', 'shop', 'more']);
 
-  const roleTabs = getTabsForRole(role);
+  const roleTabs = (getTabsForRole(role) || []).filter(Boolean);
 
   // Robust tab identification by exact route matching
   const getActiveTabKey = (): string => {
@@ -170,13 +170,13 @@ export default function TabLayout() {
       pathname === '/(tabs)/index' ||
       pathname === '';
     if (isHome) {
-      const homeTab = roleTabs.find((t) => t.tabName === 'index');
+      const homeTab = (roleTabs || []).find((t) => t?.tabName === 'index');
       return homeTab ? homeTab.tabName : roleTabs[0]?.tabName || 'index';
     }
     const segments = pathname.replace(/^\/+|\/+$/g, '').split('/');
     // Check specific matches first
-    const matched = roleTabs.find((t) => {
-      if (t.tabName === 'index') return false;
+    const matched = (roleTabs || []).find((t) => {
+      if (!t || t.tabName === 'index') return false;
       return (
         segments.includes(t.tabName) ||
         pathname === `/${t.tabName}` ||

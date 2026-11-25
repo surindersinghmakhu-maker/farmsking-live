@@ -90,6 +90,26 @@ export class CropsController {
     return this.cropsService.updateAssignedSchedule(user, id, dto.assignedSchedule);
   }
 
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/complete-requirement')
+  completeRequirement(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body?: { notes?: string; schedule?: string },
+  ) {
+    return this.cropsService.completeRequirement(user, id, body?.notes, body?.schedule);
+  }
+
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.GARDENER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/rate-advisor')
+  rateAdvisor(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body: { rating: number; feedback?: string },
+  ) {
+    return this.cropsService.rateAdvisor(user, id, body.rating, body?.feedback);
+  }
+
   @Roles(
     Role.CUSTOMER,
     Role.FARMER,

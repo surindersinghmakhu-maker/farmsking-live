@@ -1321,7 +1321,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
 
       // 4. Agronomy Credential & Prescriptions Signature
       icarRegistrationNumber: storedDoctorSettings.icarRegistrationNumber ?? '',
-      qualificationTitle: storedDoctorSettings.qualificationTitle ?? advisor.qualification ?? 'Certified Crop Doctor & Agronomist',
+      qualificationTitle: storedDoctorSettings.qualificationTitle ?? advisor.qualification ?? 'Certified Crop Doctor',
       maxFarmerCapacity: storedDoctorSettings.maxFarmerCapacity ?? 100,
     };
   }

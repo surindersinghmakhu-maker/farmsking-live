@@ -224,7 +224,7 @@ export const translations = {
     downloadRates: "Download Rates",
     viewAllRates: "View All Mandi Rates",
     noMandiData: "No Mandi data available right now",
-    cropDoctorCare: "Crop Doctor & Care Advisory",
+    cropDoctorCare: "Crop Doctor Care",
     cropCareSchedule: "Crop Care Schedule",
     spraySchedule: "Spray Schedule",
     growthStage: "Growth Stage",

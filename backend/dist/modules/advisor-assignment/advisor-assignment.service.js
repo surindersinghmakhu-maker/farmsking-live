@@ -1036,7 +1036,7 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             emergencyConsultation: storedDoctorSettings.emergencyConsultation ?? true,
             welcomeGreeting: storedDoctorSettings.welcomeGreeting ?? 'Welcome to FarmsKing Agronomy Advisory. We are committed to protecting your crops and maximizing your yield.',
             icarRegistrationNumber: storedDoctorSettings.icarRegistrationNumber ?? '',
-            qualificationTitle: storedDoctorSettings.qualificationTitle ?? advisor.qualification ?? 'Certified Crop Doctor & Agronomist',
+            qualificationTitle: storedDoctorSettings.qualificationTitle ?? advisor.qualification ?? 'Certified Crop Doctor',
             maxFarmerCapacity: storedDoctorSettings.maxFarmerCapacity ?? 100,
         };
     }

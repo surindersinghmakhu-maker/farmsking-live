@@ -390,32 +390,36 @@ let CropsService = class CropsService {
                 throw new common_1.BadRequestException(`Doctor ${advisor.name} specializes in other crop categories and does not accept ${cropCycle.category} crops.`);
             }
         }
-        const activeMedia = await this.prisma.mediaStore.findMany({
-            where: {
-                cropId: id,
-                isArchived: false,
-                OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-            },
-            select: { mediaType: true },
-        });
-        const photoCount = activeMedia.filter((m) => m.mediaType === 'IMAGE').length;
-        const hasVideo = activeMedia.some((m) => m.mediaType === 'VIDEO');
-        const hasAudio = activeMedia.some((m) => m.mediaType === 'AUDIO');
-        const remark = await this.prisma.cropRemark.findUnique({
-            where: { cropId: id },
-            select: { remarksText: true },
-        });
         const farmerComment = dto?.notes?.trim();
-        const hasVoiceOrNotes = hasAudio || Boolean(remark?.remarksText?.trim()) || Boolean(farmerComment) || Boolean(cropCycle.notes?.trim());
-        if (photoCount < 3 || !hasVideo || !hasVoiceOrNotes) {
-            const missingList = [];
-            if (photoCount < 3)
-                missingList.push(`At least 3 field photos (current: ${photoCount}/3)`);
-            if (!hasVideo)
-                missingList.push('At least 1 crop field video (current: 0/1)');
-            if (!hasVoiceOrNotes)
-                missingList.push('A voice note or crop description/farmer comment');
-            throw new common_1.BadRequestException(`Crop Gallery incomplete! To adopt a certified Crop Doctor, your crop must have the complete current cycle media records:\n• ${missingList.join('\n• ')}\nPlease upload missing media in Crop Gallery first before adopting.`);
+        const isOneTimeHiring = dto?.hiringModel === client_1.HiringModelType.PAY_PER_CONSULTATION ||
+            cropCycle.hiringModel === client_1.HiringModelType.PAY_PER_CONSULTATION;
+        if (isOneTimeHiring) {
+            const activeMedia = await this.prisma.mediaStore.findMany({
+                where: {
+                    cropId: id,
+                    isArchived: false,
+                    OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+                },
+                select: { mediaType: true },
+            });
+            const photoCount = activeMedia.filter((m) => m.mediaType === 'IMAGE').length;
+            const hasVideo = activeMedia.some((m) => m.mediaType === 'VIDEO');
+            const hasAudio = activeMedia.some((m) => m.mediaType === 'AUDIO');
+            const remark = await this.prisma.cropRemark.findUnique({
+                where: { cropId: id },
+                select: { remarksText: true },
+            });
+            const hasVoiceOrNotes = hasAudio || Boolean(remark?.remarksText?.trim()) || Boolean(farmerComment) || Boolean(cropCycle.notes?.trim());
+            if (photoCount < 3 || !hasVideo || !hasVoiceOrNotes) {
+                const missingList = [];
+                if (photoCount < 3)
+                    missingList.push(`At least 3 field photos (current: ${photoCount}/3)`);
+                if (!hasVideo)
+                    missingList.push('At least 1 crop field video (current: 0/1)');
+                if (!hasVoiceOrNotes)
+                    missingList.push('A voice note or crop description/farmer comment');
+                throw new common_1.BadRequestException(`Crop Gallery incomplete! For one-time consultation, your crop must have the complete current cycle media records:\n• ${missingList.join('\n• ')}\nPlease upload missing media in Crop Gallery first.`);
+            }
         }
         const advisorPlanRec = await this.prisma.advisorTierPlan.findUnique({
             where: { advisorId: targetAdvisorId },
@@ -475,7 +479,7 @@ let CropsService = class CropsService {
             },
         });
     }
-    async acceptByAdvisor(user, id) {
+    async acceptByAdvisor(user, id, dto) {
         const cropCycle = await this.prisma.cropCycle.findFirst({
             where: { id, deletedAt: null },
             include: { plot: { include: { farm: true } } },
@@ -511,13 +515,25 @@ let CropsService = class CropsService {
                 data: { status: client_1.AdvisorAssignmentStatus.ACTIVE, startDate: new Date() },
             });
         }
+        const updateData = {
+            assignedAdvisorId: user.id,
+            advisorReviewStatus: client_1.CropAdvisorReviewStatus.ACCEPTED,
+            advisorAcceptedAt: new Date(),
+        };
+        if (cropCycle.hiringModel !== client_1.HiringModelType.PAY_PER_CONSULTATION) {
+            if (dto?.plantCount !== undefined && dto?.plantCount !== null) {
+                const parsedPlants = Number(dto.plantCount);
+                if (!isNaN(parsedPlants) && parsedPlants > 0) {
+                    updateData.plantCount = Math.round(parsedPlants);
+                }
+            }
+            if (dto?.stage && Object.values(client_1.CropCycleStage).includes(dto.stage)) {
+                updateData.stage = dto.stage;
+            }
+        }
         const updated = await this.prisma.cropCycle.update({
             where: { id },
-            data: {
-                assignedAdvisorId: user.id,
-                advisorReviewStatus: client_1.CropAdvisorReviewStatus.ACCEPTED,
-                advisorAcceptedAt: new Date(),
-            },
+            data: updateData,
         });
         await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, '👨‍⚕️ Doctor Working on Request', `Dr. ${user.name} has accepted your request for "${cropCycle.cropName}". The doctor is actively analyzing your crop details and working on your treatment plan.`, { cropCycleId: updated.id, advisorId: user.id, status: 'WORKING' });
         return updated;

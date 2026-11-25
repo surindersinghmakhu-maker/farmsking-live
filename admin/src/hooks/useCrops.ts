@@ -112,7 +112,11 @@ export function useAcceptedCropsForAdvisor() {
 export function useAcceptCropByAdvisor() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => cropsApi.acceptCropByAdvisor(id),
+    mutationFn: (variables: string | { id: string; payload?: cropsApi.AcceptCropPayload }) => {
+      const id = typeof variables === 'string' ? variables : variables.id;
+      const payload = typeof variables === 'string' ? undefined : variables.payload;
+      return cropsApi.acceptCropByAdvisor(id, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crops', 'advisor', 'pending'] });
       queryClient.invalidateQueries({ queryKey: ['crops', 'advisor', 'accepted'] });

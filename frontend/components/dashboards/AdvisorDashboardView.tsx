@@ -266,6 +266,55 @@ export const AdvisorDashboardView: React.FC = () => {
   const [pendingFarmerToConfirm, setPendingFarmerToConfirm] = useState<any | null>(null);
   const [selectedCropCareTier, setSelectedCropCareTier] = useState<'CROP_ADVISOR_5' | 'CROP_DOCTOR_5' | 'CROP_DOCTOR_10'>('CROP_ADVISOR_5');
 
+  // Pre-acceptance calibration state (plant count & stage modification before accept)
+  const [cropToAcceptConfirm, setCropToAcceptConfirm] = useState<AdvisorReviewCropCycle | null>(null);
+  const [acceptPlantCount, setAcceptPlantCount] = useState<string>('');
+  const [acceptStage, setAcceptStage] = useState<string>('VEGETATIVE');
+
+  const handleInitiateAcceptCrop = (crop: AdvisorReviewCropCycle) => {
+    // If it's one-time consultation, accept directly without modification prompt ("one time wale nu shad ke")
+    if ((crop as any).hiringModel === 'PAY_PER_CONSULTATION') {
+      acceptCrop.mutate(crop.id, {
+        onSuccess: () => {
+          if (selectedReviewCrop?.id === crop.id) setSelectedReviewCrop(null);
+          const msg = `✅ Request Accepted!\nThe farmer has been notified that you are actively working on "${crop.cropName}".`;
+          Platform.OS === 'web' ? alert(msg) : Alert.alert('Request Accepted', msg);
+        },
+      });
+      return;
+    }
+
+    // For continuous doctor adoption, allow doctor to adjust plants and stage before accepting!
+    setAcceptPlantCount(crop.plantCount ? String(crop.plantCount) : '');
+    setAcceptStage(crop.stage || 'VEGETATIVE');
+    setCropToAcceptConfirm(crop);
+  };
+
+  const handleConfirmAcceptWithDetails = () => {
+    if (!cropToAcceptConfirm) return;
+    const id = cropToAcceptConfirm.id;
+    const name = cropToAcceptConfirm.cropName;
+    const parsedPlants = acceptPlantCount.trim() ? parseInt(acceptPlantCount.trim(), 10) : undefined;
+
+    acceptCrop.mutate(
+      {
+        id,
+        payload: {
+          plantCount: parsedPlants && !isNaN(parsedPlants) && parsedPlants > 0 ? parsedPlants : undefined,
+          stage: acceptStage,
+        },
+      },
+      {
+        onSuccess: () => {
+          setCropToAcceptConfirm(null);
+          if (selectedReviewCrop?.id === id) setSelectedReviewCrop(null);
+          const msg = `✅ Crop Adoption Confirmed!\nNumber of plants (${parsedPlants ?? 'Standard'}) and Stage (${acceptStage}) have been calibrated and locked. The farmer has been notified.`;
+          Platform.OS === 'web' ? alert(msg) : Alert.alert('Adoption Accepted', msg);
+        },
+      }
+    );
+  };
+
   const RESOLVED_PAGE_SIZE = 10;
   const totalResolvedPages = Math.ceil(resolvedProblems.length / RESOLVED_PAGE_SIZE) || 1;
   const paginatedResolvedProblems = useMemo(() => {
@@ -1000,14 +1049,7 @@ export const AdvisorDashboardView: React.FC = () => {
                                           <TouchableOpacity
                                             style={[styles.tableActionBtn, { backgroundColor: '#059669' }]}
                                             disabled={acceptCrop.isPending || rejectCrop.isPending}
-                                            onPress={() => {
-                                              acceptCrop.mutate(row.raw.id, {
-                                                onSuccess: () => {
-                                                  const msg = `✅ Request Accepted!\nThe farmer has been notified that you are actively working on "${row.raw.cropName}".`;
-                                                  Platform.OS === 'web' ? alert(msg) : Alert.alert('Request Accepted', msg);
-                                                },
-                                              });
-                                            }}
+                                            onPress={() => handleInitiateAcceptCrop(row.raw)}
                                             activeOpacity={0.8}
                                           >
                                             <Ionicons name="checkmark" size={11} color="#ffffff" />
@@ -1679,9 +1721,30 @@ export const AdvisorDashboardView: React.FC = () => {
 
                     <View style={[styles.proGridBox, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
                       <Text style={[styles.proGridLabel, { color: subTextColor }]}>🌿 Growth Stage</Text>
-                      <Text style={[styles.proGridVal, { color: textColor }]}>
-                        {selectedReviewCrop.stage || 'Vegetative'}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                        <Text style={[styles.proGridVal, { color: textColor }]}>
+                          {selectedReviewCrop.stage || 'Vegetative'}
+                        </Text>
+                        {selectedReviewCrop.advisorReviewStatus === 'ACCEPTED' && (
+                          <View style={styles.lockedBadgeMini}>
+                            <Text style={styles.lockedBadgeTextMini}>🔒 LOCKED</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+
+                    <View style={[styles.proGridBox, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proGridLabel, { color: subTextColor }]}>🌱 Number of Plants</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                        <Text style={[styles.proGridVal, { color: textColor }]}>
+                          {selectedReviewCrop.plantCount ? `${selectedReviewCrop.plantCount} Plants` : 'Standard Acreage'}
+                        </Text>
+                        {selectedReviewCrop.advisorReviewStatus === 'ACCEPTED' && (
+                          <View style={styles.lockedBadgeMini}>
+                            <Text style={styles.lockedBadgeTextMini}>🔒 LOCKED</Text>
+                          </View>
+                        )}
+                      </View>
                     </View>
                   </View>
 
@@ -1855,15 +1918,7 @@ export const AdvisorDashboardView: React.FC = () => {
                         activeOpacity={0.85}
                         disabled={acceptCrop.isPending || rejectCrop.isPending}
                         onPress={() => {
-                          const id = selectedReviewCrop.id;
-                          const name = selectedReviewCrop.cropName;
-                          setSelectedReviewCrop(null);
-                          acceptCrop.mutate(id, {
-                            onSuccess: () => {
-                              const msg = `✅ Request Accepted!\nThe farmer has been notified that you are actively working on "${name}".`;
-                              Platform.OS === 'web' ? alert(msg) : Alert.alert('Request Accepted', msg);
-                            },
-                          });
+                          handleInitiateAcceptCrop(selectedReviewCrop);
                         }}
                       >
                         {acceptCrop.isPending ? (
@@ -1880,6 +1935,134 @@ export const AdvisorDashboardView: React.FC = () => {
                 </View>
               </ScrollView>
             ) : null}
+          </View>
+        </View>
+      </Modal>
+
+      {/* CROP ADOPTION CALIBRATION & ACCEPT MODAL */}
+      <Modal visible={!!cropToAcceptConfirm} transparent animationType="fade" onRequestClose={() => setCropToAcceptConfirm(null)}>
+        <View style={styles.proModalBackdrop}>
+          <View style={[styles.proModalCard, { backgroundColor: isLight ? '#ffffff' : '#071f13', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.25)', maxWidth: 480 }]}>
+            <LinearGradient colors={['#062817', '#0f172a']} style={styles.proModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                <Ionicons name="shield-checkmark" size={18} color="#00ff87" />
+                <View>
+                  <Text style={styles.proModalTitle}>Calibrate & Accept Adoption</Text>
+                  <Text style={styles.proModalSubtitle}>
+                    {cropToAcceptConfirm?.cropName} · {cropToAcceptConfirm?.plot?.farm?.owner?.name || 'Farmer'}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity style={styles.proModalCloseBtn} onPress={() => setCropToAcceptConfirm(null)}>
+                <Ionicons name="close" size={16} color="#ffffff" />
+              </TouchableOpacity>
+            </LinearGradient>
+
+            <View style={{ padding: 18, gap: 14 }}>
+              <View style={{ backgroundColor: isLight ? '#fffbeb' : 'rgba(245, 158, 11, 0.12)', borderWidth: 1, borderColor: isLight ? '#fde68a' : 'rgba(245, 158, 11, 0.3)', borderRadius: RADIUS.md, padding: 10, flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+                <Ionicons name="lock-closed" size={15} color="#f59e0b" style={{ marginTop: 1 }} />
+                <Text style={{ flex: 1, fontSize: 11.5, fontFamily: FONT.medium, color: isLight ? '#92400e' : '#fde68a', lineHeight: 16 }}>
+                  <Text style={{ fontFamily: FONT.bold }}>One-Time Calibration: </Text>
+                  Review and adjust the plant count and current growth stage. These values will be permanently locked once you accept this adoption.
+                </Text>
+              </View>
+
+              {/* Number of Plants Input */}
+              <View style={{ gap: 5 }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
+                  Estimated Number of Plants (Count)
+                </Text>
+                <TextInput
+                  style={[
+                    styles.acceptInput,
+                    {
+                      backgroundColor: isLight ? '#f8fafc' : '#04180d',
+                      borderColor: isLight ? '#cbd5e1' : 'rgba(255, 255, 255, 0.15)',
+                      color: textColor,
+                    },
+                  ]}
+                  value={acceptPlantCount}
+                  onChangeText={setAcceptPlantCount}
+                  keyboardType="numeric"
+                  placeholder="e.g. 2400"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+
+              {/* Growth Stage Selector */}
+              <View style={{ gap: 6 }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
+                  Current Growth Stage
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {(['PLANTATION', 'VEGETATIVE', 'FLOWERING', 'HARVESTING'] as const).map((st) => {
+                    const isSelected = acceptStage === st;
+                    return (
+                      <TouchableOpacity
+                        key={st}
+                        style={[
+                          styles.stageChip,
+                          isSelected && styles.stageChipSelected,
+                          {
+                            backgroundColor: isSelected
+                              ? '#00ff87'
+                              : isLight
+                              ? '#f1f5f9'
+                              : 'rgba(255, 255, 255, 0.05)',
+                            borderColor: isSelected
+                              ? '#00ff87'
+                              : isLight
+                              ? '#cbd5e1'
+                              : 'rgba(255, 255, 255, 0.1)',
+                          },
+                        ]}
+                        onPress={() => setAcceptStage(st)}
+                      >
+                        <Text
+                          style={[
+                            styles.stageChipText,
+                            isSelected ? { color: '#090e17', fontFamily: FONT.extraBold } : { color: textColor },
+                          ]}
+                        >
+                          {st === 'PLANTATION'
+                            ? '🌱 Plantation'
+                            : st === 'VEGETATIVE'
+                            ? '🌿 Vegetative'
+                            : st === 'FLOWERING'
+                            ? '🌸 Flowering'
+                            : '🌾 Harvesting'}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Footer Actions */}
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+                <TouchableOpacity
+                  style={[styles.proRejectBtn, { flex: 1 }]}
+                  onPress={() => setCropToAcceptConfirm(null)}
+                >
+                  <Text style={styles.proRejectBtnText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.proAcceptBtn, { flex: 2 }]}
+                  disabled={acceptCrop.isPending}
+                  onPress={handleConfirmAcceptWithDetails}
+                >
+                  {acceptCrop.isPending ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done-circle" size={16} color="#ffffff" />
+                      <Text style={styles.proAcceptBtnText}>Confirm & Lock Adoption</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
       </Modal>
@@ -3428,6 +3611,40 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT.medium,
     color: '#64748b',
+  },
+  acceptInput: {
+    borderWidth: 1,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
+  stageChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  stageChipSelected: {
+    borderColor: '#00ff87',
+  },
+  stageChipText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+  },
+  lockedBadgeMini: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: 'rgba(234, 179, 8, 0.4)',
+  },
+  lockedBadgeTextMini: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#eab308',
   },
 });
 

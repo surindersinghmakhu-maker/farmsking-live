@@ -107,9 +107,14 @@ export async function listAcceptedCropsForAdvisor(): Promise<AdvisorReviewCropCy
   return data;
 }
 
+export interface AcceptCropPayload {
+  plantCount?: number;
+  stage?: string;
+}
+
 /** Advisor: accept a farmer's submitted crop. */
-export async function acceptCropByAdvisor(id: string): Promise<CropCycle> {
-  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/accept`);
+export async function acceptCropByAdvisor(id: string, payload?: AcceptCropPayload): Promise<CropCycle> {
+  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/accept`, payload);
   return data;
 }
 

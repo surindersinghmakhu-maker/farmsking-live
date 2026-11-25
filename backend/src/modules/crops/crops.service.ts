@@ -445,40 +445,46 @@ export class CropsService {
       }
     }
 
+    const farmerComment = dto?.notes?.trim();
+
     // ── Crop Gallery Completeness Validation ──
     // Minimum mandatory requirements for current cycle:
-    // 1. At least 3 active field photos
-    // 2. At least 1 active field video
-    // 3. A voice note (AUDIO) or text description/farmer comment
-    const activeMedia = await this.prisma.mediaStore.findMany({
-      where: {
-        cropId: id,
-        isArchived: false,
-        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-      },
-      select: { mediaType: true },
-    });
+    // Only enforced for one-time / pay-per-consultation hiring!
+    // For continuous/dedicated doctor hiring (PER_CROP / MONTHLY_SUBSCRIPTION), gallery check is bypassed.
+    const isOneTimeHiring =
+      dto?.hiringModel === HiringModelType.PAY_PER_CONSULTATION ||
+      cropCycle.hiringModel === HiringModelType.PAY_PER_CONSULTATION;
 
-    const photoCount = activeMedia.filter((m) => m.mediaType === 'IMAGE').length;
-    const hasVideo = activeMedia.some((m) => m.mediaType === 'VIDEO');
-    const hasAudio = activeMedia.some((m) => m.mediaType === 'AUDIO');
+    if (isOneTimeHiring) {
+      const activeMedia = await this.prisma.mediaStore.findMany({
+        where: {
+          cropId: id,
+          isArchived: false,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+        },
+        select: { mediaType: true },
+      });
 
-    const remark = await this.prisma.cropRemark.findUnique({
-      where: { cropId: id },
-      select: { remarksText: true },
-    });
-    const farmerComment = dto?.notes?.trim();
-    const hasVoiceOrNotes = hasAudio || Boolean(remark?.remarksText?.trim()) || Boolean(farmerComment) || Boolean(cropCycle.notes?.trim());
+      const photoCount = activeMedia.filter((m) => m.mediaType === 'IMAGE').length;
+      const hasVideo = activeMedia.some((m) => m.mediaType === 'VIDEO');
+      const hasAudio = activeMedia.some((m) => m.mediaType === 'AUDIO');
 
-    if (photoCount < 3 || !hasVideo || !hasVoiceOrNotes) {
-      const missingList: string[] = [];
-      if (photoCount < 3) missingList.push(`At least 3 field photos (current: ${photoCount}/3)`);
-      if (!hasVideo) missingList.push('At least 1 crop field video (current: 0/1)');
-      if (!hasVoiceOrNotes) missingList.push('A voice note or crop description/farmer comment');
+      const remark = await this.prisma.cropRemark.findUnique({
+        where: { cropId: id },
+        select: { remarksText: true },
+      });
+      const hasVoiceOrNotes = hasAudio || Boolean(remark?.remarksText?.trim()) || Boolean(farmerComment) || Boolean(cropCycle.notes?.trim());
 
-      throw new BadRequestException(
-        `Crop Gallery incomplete! To adopt a certified Crop Doctor, your crop must have the complete current cycle media records:\n• ${missingList.join('\n• ')}\nPlease upload missing media in Crop Gallery first before adopting.`,
-      );
+      if (photoCount < 3 || !hasVideo || !hasVoiceOrNotes) {
+        const missingList: string[] = [];
+        if (photoCount < 3) missingList.push(`At least 3 field photos (current: ${photoCount}/3)`);
+        if (!hasVideo) missingList.push('At least 1 crop field video (current: 0/1)');
+        if (!hasVoiceOrNotes) missingList.push('A voice note or crop description/farmer comment');
+
+        throw new BadRequestException(
+          `Crop Gallery incomplete! For one-time consultation, your crop must have the complete current cycle media records:\n• ${missingList.join('\n• ')}\nPlease upload missing media in Crop Gallery first.`,
+        );
+      }
     }
 
     // Check Advisor capacity limit (Advisor Lite: 5 crops max, Advisor Plus: 10 crops max)
@@ -561,7 +567,7 @@ export class CropsService {
   }
 
   /** Advisor accepts a farmer's submitted crop — the crop shows up as accepted in the advisor's roster. */
-  async acceptByAdvisor(user: AuthUser, id: string) {
+  async acceptByAdvisor(user: AuthUser, id: string, dto?: { plantCount?: number; stage?: CropCycleStage }) {
     const cropCycle = await this.prisma.cropCycle.findFirst({
       where: { id, deletedAt: null },
       include: { plot: { include: { farm: true } } },
@@ -601,13 +607,28 @@ export class CropsService {
       });
     }
 
+    const updateData: any = {
+      assignedAdvisorId: user.id,
+      advisorReviewStatus: CropAdvisorReviewStatus.ACCEPTED,
+      advisorAcceptedAt: new Date(),
+    };
+
+    // If not one-time hiring, doctor can adjust number of plants and stage before accepting (locked afterwards)
+    if (cropCycle.hiringModel !== HiringModelType.PAY_PER_CONSULTATION) {
+      if (dto?.plantCount !== undefined && dto?.plantCount !== null) {
+        const parsedPlants = Number(dto.plantCount);
+        if (!isNaN(parsedPlants) && parsedPlants > 0) {
+          updateData.plantCount = Math.round(parsedPlants);
+        }
+      }
+      if (dto?.stage && Object.values(CropCycleStage).includes(dto.stage)) {
+        updateData.stage = dto.stage;
+      }
+    }
+
     const updated = await this.prisma.cropCycle.update({
       where: { id },
-      data: {
-        assignedAdvisorId: user.id,
-        advisorReviewStatus: CropAdvisorReviewStatus.ACCEPTED,
-        advisorAcceptedAt: new Date(),
-      },
+      data: updateData,
     });
 
     await this.notificationsService.create(

@@ -11,6 +11,7 @@ import { UpdateCropDto } from './dto/update-crop.dto';
 import { RejectCropDto } from './dto/reject-crop.dto';
 import { UpdateCropScheduleDto } from './dto/update-crop-schedule.dto';
 import { SubmitCropToAdvisorDto } from './dto/submit-crop-to-advisor.dto';
+import { AcceptCropByAdvisorDto } from './dto/accept-crop.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(
@@ -74,8 +75,12 @@ export class CropsController {
 
   @Roles(Role.ADVISOR)
   @Post(':id/accept')
-  acceptByAdvisor(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.cropsService.acceptByAdvisor(user, id);
+  acceptByAdvisor(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto?: AcceptCropByAdvisorDto,
+  ) {
+    return this.cropsService.acceptByAdvisor(user, id, dto);
   }
 
   @Roles(Role.ADVISOR)

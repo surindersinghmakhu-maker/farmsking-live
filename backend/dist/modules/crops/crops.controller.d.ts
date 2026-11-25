@@ -5,6 +5,7 @@ import { UpdateCropDto } from './dto/update-crop.dto';
 import { RejectCropDto } from './dto/reject-crop.dto';
 import { UpdateCropScheduleDto } from './dto/update-crop-schedule.dto';
 import { SubmitCropToAdvisorDto } from './dto/submit-crop-to-advisor.dto';
+import { AcceptCropByAdvisorDto } from './dto/accept-crop.dto';
 export declare class CropsController {
     private readonly cropsService;
     constructor(cropsService: CropsService);
@@ -213,7 +214,7 @@ export declare class CropsController {
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
     }>;
-    acceptByAdvisor(user: AuthUser, id: string): Promise<{
+    acceptByAdvisor(user: AuthUser, id: string, dto?: AcceptCropByAdvisorDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

@@ -18,8 +18,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { resolveMediaUrl } from '@/src/api/client';
-import { useAvailableAdvisorsForCrop } from '@/src/hooks/useAdvisorAssignments';
-import { useSubmitCropToAdvisor } from '@/src/hooks/useCrops';
+import { useAvailableAdvisorsForCrop, useMyAdvisor } from '@/src/hooks/useAdvisorAssignments';
+import { useMyCrops, useSubmitCropToAdvisor } from '@/src/hooks/useCrops';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import { validateCropGalleryCompleteness } from '@/src/utils/crop-media';
@@ -73,6 +73,8 @@ export function CropDoctorAdoptionModal({
   onUpgradePlan,
 }: CropDoctorAdoptionModalProps) {
   const { data: advisors, isLoading } = useAvailableAdvisorsForCrop(crop?.id, visible);
+  const { data: myAdvisor } = useMyAdvisor();
+  const { data: myCrops = [] } = useMyCrops();
   const { data: appSettings } = useAppSettings();
   const submitCrop = useSubmitCropToAdvisor();
   const initiatePayment = useInitiateFarmerPlanPayment();
@@ -83,6 +85,7 @@ export function CropDoctorAdoptionModal({
   const [selectedPlanModel, setSelectedPlanModel] = useState<SelectedPlanType>('PER_CROP');
   const [farmerComment, setFarmerComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAllDoctors, setShowAllDoctors] = useState(false);
 
   // Gallery completeness check state
   const [galleryCheckResult, setGalleryCheckResult] = useState<{
@@ -138,8 +141,29 @@ export function CropDoctorAdoptionModal({
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  const selectedDoctor = useMemo(() => {
+  // Filter for hired doctors (active monthly subscription, assigned advisor, or assigned on any crop)
+  const hiredDoctors = useMemo(() => {
     const list = Array.isArray(advisors) ? advisors : [];
+    return list.filter((a) => {
+      const hasMonthly = Boolean(a.quota?.hasActiveMonthlySubscription);
+      const isMyAdvisor = Boolean(myAdvisor?.advisor?.id === a.id);
+      const isHiredOnCrops = Array.isArray(myCrops) && myCrops.some(
+        (c) => c.assignedAdvisorId === a.id || (c as any).assignedAdvisor?.id === a.id
+      );
+      return hasMonthly || isMyAdvisor || isHiredOnCrops;
+    });
+  }, [advisors, myAdvisor, myCrops]);
+
+  const displayedDoctors = useMemo(() => {
+    const list = Array.isArray(advisors) ? advisors : [];
+    if (hiredDoctors.length > 0 && !showAllDoctors) {
+      return hiredDoctors;
+    }
+    return list;
+  }, [advisors, hiredDoctors, showAllDoctors]);
+
+  const selectedDoctor = useMemo(() => {
+    const list = displayedDoctors;
     if (list.length === 0) return null;
     if (selectedDoctorId) {
       const found = list.find((a) => a.id === selectedDoctorId);
@@ -150,7 +174,7 @@ export function CropDoctorAdoptionModal({
       (a) => !((a as any).isAlreadyAssignedToThisCrop || (crop?.assignedAdvisorId === a.id && crop?.advisorReviewStatus !== 'NONE')),
     );
     return firstAvailable || list[0];
-  }, [advisors, selectedDoctorId, crop]);
+  }, [displayedDoctors, selectedDoctorId, crop]);
 
   // Determine running plan level with this doctor or for this crop
   // Hierarchy:
@@ -243,10 +267,13 @@ export function CropDoctorAdoptionModal({
     };
   }, [selectedDoctor, selectedPlanModel]);
 
-  // Gallery verification guard
+  // Gallery verification guard — ONLY enforced for ONE-TIME / PAY-PER-CONSULTATION / Second Opinion
   const ensureGalleryComplete = (): boolean => {
+    const isOneTime = selectedPlanModel === 'PAY_PER_CONSULTATION' || isSecondOpinion;
+    if (!isOneTime) return true; // Continuous doctor adoption can be assigned without gallery completeness!
+
     if (galleryCheckResult && !galleryCheckResult.isComplete) {
-      const msg = `⚠️ Crop Gallery Incomplete\n\nTo adopt a certified Crop Doctor, your crop must have the complete current cycle media records:\n\n• ${galleryCheckResult.missingItems.join('\n• ')}\n\nPlease upload these in Crop Gallery first before adopting a doctor.`;
+      const msg = `⚠️ Crop Media Required: ${galleryCheckResult.missingItems.join(', ')}. Complete in Crop Gallery for one-time consultation.`;
       if (Platform.OS === 'web') alert(msg);
       else Alert.alert('Crop Gallery Incomplete', msg);
       return false;
@@ -462,8 +489,8 @@ export function CropDoctorAdoptionModal({
                 </View>
                 <Text style={styles.headerSubtitle}>
                   {isSecondOpinion
-                    ? `Independent plant pathology review & direct consultation for ${crop.cropName}`
-                    : `Specialized certified agronomic supervision for ${crop.cropName}`}
+                    ? `Second opinion review for ${crop.cropName}`
+                    : `Direct doctor supervision for ${crop.cropName}`}
                 </Text>
               </View>
               <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
@@ -560,26 +587,19 @@ export function CropDoctorAdoptionModal({
             </View>
           )}
 
-          {/* GALLERY VERIFICATION WARNING BANNER */}
-          {galleryCheckResult && !galleryCheckResult.isComplete && !upiCheckoutData && (
-            <View style={styles.galleryWarningBox}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="warning" size={16} color="#f59e0b" />
-                <Text style={styles.galleryWarningTitle}>Crop Gallery Incomplete (Current Cycle)</Text>
+          {/* GALLERY VERIFICATION WARNING BANNER (ONLY FOR ONE-TIME / PAY_PER_CONSULTATION) */}
+          {(selectedPlanModel === 'PAY_PER_CONSULTATION' || isSecondOpinion) &&
+            galleryCheckResult &&
+            !galleryCheckResult.isComplete &&
+            !upiCheckoutData && (
+              <View style={styles.galleryWarningBoxCompact}>
+                <Ionicons name="warning" size={14} color="#f59e0b" style={{ marginTop: 1 }} />
+                <Text style={styles.galleryWarningTextCompact}>
+                  <Text style={{ fontFamily: FONT.bold, color: '#fbbf24' }}>Crop Media Required: </Text>
+                  {galleryCheckResult.missingItems.join(', ')}. Complete in Crop Gallery for one-time review.
+                </Text>
               </View>
-              <Text style={styles.galleryWarningDesc}>
-                To adopt a certified Crop Doctor, your crop must have complete media records:
-              </Text>
-              <View style={{ gap: 2, marginTop: 4 }}>
-                {galleryCheckResult.missingItems.map((item, idx) => (
-                  <Text key={idx} style={styles.galleryWarningItem}>• {item}</Text>
-                ))}
-              </View>
-              <Text style={styles.galleryWarningFootnote}>
-                Please visit Crop Gallery first to upload the required field photos & video.
-              </Text>
-            </View>
-          )}
+            )}
 
           {/* Body */}
           <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false}>
@@ -707,102 +727,148 @@ export function CropDoctorAdoptionModal({
               </View>
             ) : (
               <>
-                {/* STEP 1: SELECT DOCTOR */}
+                {/* STEP 1: SELECT DOCTOR (HIRED DOCTORS FILTER) */}
                 {currentStep === 1 && (
                   <>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                      <Text style={styles.sectionHeader}>Step 1: Select Certified Specialist</Text>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                        {advisors.length} Doctor{advisors.length > 1 ? 's' : ''} Available
+                    <View style={styles.stepHeaderRow}>
+                      <Text style={styles.sectionHeader}>
+                        {showAllDoctors
+                          ? `All Available Specialists (${advisors.length})`
+                          : `Hired Specialists (${hiredDoctors.length})`}
                       </Text>
+                      {hiredDoctors.length > 0 && (
+                        <TouchableOpacity
+                          style={styles.toggleAllBtn}
+                          onPress={() => {
+                            tap();
+                            setShowAllDoctors((prev) => !prev);
+                          }}
+                        >
+                          <Text style={styles.toggleAllBtnText}>
+                            {showAllDoctors ? 'Hired Only' : 'Browse All'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
 
-                    <View style={styles.doctorsList}>
-                      {advisors.map((advisor) => {
-                        const isAlreadyAssigned = Boolean(
-                          (advisor as any).isAlreadyAssignedToThisCrop ||
-                          (crop?.assignedAdvisorId === advisor.id && crop?.advisorReviewStatus !== 'NONE'),
-                        );
-                        const isSelected = selectedDoctor?.id === advisor.id;
-                        const avatar = resolveMediaUrl(advisor.photoUrl) || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=120';
-                        const quota = advisor.quota;
+                    {hiredDoctors.length === 0 && !showAllDoctors ? (
+                      <View style={styles.noHiredCard}>
+                        <View style={styles.noHiredIconBox}>
+                          <Ionicons name="medkit" size={24} color="#00ff87" />
+                        </View>
+                        <Text style={styles.noHiredTitle}>No Hired Doctor Found</Text>
+                        <Text style={styles.noHiredSub}>
+                          Hire a dedicated Crop Doctor first under Crop Doctor Care to adopt this crop under direct supervision.
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.hireDoctorCtaBtn}
+                          onPress={() => {
+                            tap();
+                            onClose();
+                            if (onUpgradePlan) onUpgradePlan();
+                          }}
+                        >
+                          <Ionicons name="add-circle" size={15} color="#090e17" />
+                          <Text style={styles.hireDoctorCtaText}>Hire a Crop Doctor</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.browseAllLinkBtn}
+                          onPress={() => {
+                            tap();
+                            setShowAllDoctors(true);
+                          }}
+                        >
+                          <Text style={styles.browseAllLinkText}>Browse all available doctors ▼</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.doctorsList}>
+                        {displayedDoctors.map((advisor) => {
+                          const isAlreadyAssigned = Boolean(
+                            (advisor as any).isAlreadyAssignedToThisCrop ||
+                            (crop?.assignedAdvisorId === advisor.id && crop?.advisorReviewStatus !== 'NONE'),
+                          );
+                          const isSelected = selectedDoctor?.id === advisor.id;
+                          const avatar = resolveMediaUrl(advisor.photoUrl) || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=120';
+                          const quota = advisor.quota;
 
-                        return (
-                          <TouchableOpacity
-                            key={advisor.id}
-                            style={[
-                              styles.doctorCard,
-                              isSelected && styles.doctorCardSelected,
-                              isAlreadyAssigned && styles.doctorCardDisabled,
-                            ]}
-                            disabled={isAlreadyAssigned}
-                            onPress={() => {
-                              tap();
-                              setSelectedDoctorId(advisor.id);
-                            }}
-                          >
-                            <View style={styles.doctorHeaderRow}>
-                              <Image source={{ uri: avatar }} style={styles.doctorAvatar} />
-                              <View style={styles.doctorInfoCol}>
-                                <View style={styles.doctorNameRow}>
-                                  <Text style={styles.doctorName}>{advisor.name}</Text>
-                                  <View style={styles.verifiedBadge}>
-                                    <Ionicons name="checkmark-circle" size={13} color="#00ff87" />
-                                    <Text style={styles.verifiedText}>Verified</Text>
+                          return (
+                            <TouchableOpacity
+                              key={advisor.id}
+                              style={[
+                                styles.doctorCard,
+                                isSelected && styles.doctorCardSelected,
+                                isAlreadyAssigned && styles.doctorCardDisabled,
+                              ]}
+                              disabled={isAlreadyAssigned}
+                              onPress={() => {
+                                tap();
+                                setSelectedDoctorId(advisor.id);
+                              }}
+                            >
+                              <View style={styles.doctorHeaderRow}>
+                                <Image source={{ uri: avatar }} style={styles.doctorAvatar} />
+                                <View style={styles.doctorInfoCol}>
+                                  <View style={styles.doctorNameRow}>
+                                    <Text style={styles.doctorName}>{advisor.name}</Text>
+                                    <View style={styles.verifiedBadge}>
+                                      <Ionicons name="checkmark-circle" size={13} color="#00ff87" />
+                                      <Text style={styles.verifiedText}>Verified</Text>
+                                    </View>
+                                  </View>
+
+                                  <Text style={styles.doctorSpecialty} numberOfLines={1}>
+                                    {advisor.profileTitle || advisor.specialization || 'Agronomy Specialist'}
+                                  </Text>
+
+                                  <View style={styles.doctorRatingRow}>
+                                    <Ionicons name="star" size={13} color="#f59e0b" />
+                                    <Text style={styles.doctorRatingVal}>{advisor.rating ? advisor.rating.toFixed(1) : '5.0'}</Text>
+                                    <Text style={styles.doctorRatingCount}>({advisor.ratingCount || 12} reviews)</Text>
+                                    <Text style={styles.doctorKingId}>• {advisor.kingId || 'FK-DOC'}</Text>
                                   </View>
                                 </View>
 
-                                <Text style={styles.doctorSpecialty} numberOfLines={1}>
-                                  {advisor.profileTitle || advisor.specialization || 'Agronomy Specialist'}
-                                </Text>
-
-                                <View style={styles.doctorRatingRow}>
-                                  <Ionicons name="star" size={13} color="#f59e0b" />
-                                  <Text style={styles.doctorRatingVal}>{advisor.rating ? advisor.rating.toFixed(1) : '5.0'}</Text>
-                                  <Text style={styles.doctorRatingCount}>({advisor.ratingCount || 12} reviews)</Text>
-                                  <Text style={styles.doctorKingId}>• {advisor.kingId || 'FK-DOC'}</Text>
-                                </View>
+                                {isAlreadyAssigned ? (
+                                  <View style={styles.alreadyAssignedBadge}>
+                                    <Ionicons name="shield-checkmark" size={12} color="#f59e0b" />
+                                    <Text style={styles.alreadyAssignedText}>Assigned</Text>
+                                  </View>
+                                ) : (
+                                  <View style={[styles.radioCircle, isSelected && styles.radioCircleSelected]}>
+                                    {isSelected && <View style={styles.radioInner} />}
+                                  </View>
+                                )}
                               </View>
 
+                              {/* Quota / Status Badges */}
                               {isAlreadyAssigned ? (
-                                <View style={styles.alreadyAssignedBadge}>
-                                  <Ionicons name="shield-checkmark" size={12} color="#f59e0b" />
-                                  <Text style={styles.alreadyAssignedText}>Assigned</Text>
+                                <View style={styles.alreadyAssignedPill}>
+                                  <Ionicons name="checkmark-done" size={13} color="#f59e0b" />
+                                  <Text style={styles.alreadyAssignedPillText}>
+                                    Already assigned to this crop.
+                                  </Text>
                                 </View>
-                              ) : (
-                                <View style={[styles.radioCircle, isSelected && styles.radioCircleSelected]}>
-                                  {isSelected && <View style={styles.radioInner} />}
+                              ) : quota?.quotaStatus === 'INCLUDED_FREE' ? (
+                                <View style={styles.freeQuotaPill}>
+                                  <Ionicons name="gift" size={13} color="#10b981" />
+                                  <Text style={styles.freeQuotaText}>
+                                    Monthly Retainer ({quota.freeSlotsRemaining} free slot left)
+                                  </Text>
                                 </View>
-                              )}
-                            </View>
-
-                            {/* Quota / Status Badges */}
-                            {isAlreadyAssigned ? (
-                              <View style={styles.alreadyAssignedPill}>
-                                <Ionicons name="checkmark-done" size={13} color="#f59e0b" />
-                                <Text style={styles.alreadyAssignedPillText}>
-                                  Dr. {advisor.name} is already assigned to this crop. You cannot re-adopt the same doctor.
-                                </Text>
-                              </View>
-                            ) : quota?.quotaStatus === 'INCLUDED_FREE' ? (
-                              <View style={styles.freeQuotaPill}>
-                                <Ionicons name="gift" size={13} color="#10b981" />
-                                <Text style={styles.freeQuotaText}>
-                                  Included in Active Monthly Care ({quota.freeSlotsRemaining} free crop slot left)
-                                </Text>
-                              </View>
-                            ) : quota?.quotaStatus === 'ADDITIONAL_CROP_FEE' ? (
-                              <View style={styles.extraQuotaPill}>
-                                <Ionicons name="layers" size={13} color="#6366f1" />
-                                <Text style={styles.extraQuotaText}>
-                                  Monthly Quota In Use ({quota.activeCropsUnderAdvisor} crops active) • Extra Crop: ₹{quota.additionalCropFee}/mo
-                                </Text>
-                              </View>
-                            ) : null}
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
+                              ) : quota?.quotaStatus === 'ADDITIONAL_CROP_FEE' ? (
+                                <View style={styles.extraQuotaPill}>
+                                  <Ionicons name="layers" size={13} color="#6366f1" />
+                                  <Text style={styles.extraQuotaText}>
+                                    Monthly Active • Add-on: ₹{quota.additionalCropFee}/mo
+                                  </Text>
+                                </View>
+                              ) : null}
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    )}
                   </>
                 )}
 
@@ -842,9 +908,9 @@ export function CropDoctorAdoptionModal({
                     {runningPlanRank === 3 && !isSecondOpinion ? (
                       <>
                         <View style={styles.planNoticeCard}>
-                          <Ionicons name="information-circle" size={16} color="#38bdf8" />
+                          <Ionicons name="information-circle" size={15} color="#38bdf8" />
                           <Text style={styles.planNoticeText}>
-                            Active Monthly VIP Retainer running with Dr. {selectedDoctor.name}. Lower-tier plans (Per Crop Season & SOS Consultation) are closed.
+                            Active Monthly Retainer with Dr. {selectedDoctor.name}. Lower tiers closed.
                           </Text>
                         </View>
 
@@ -918,16 +984,16 @@ export function CropDoctorAdoptionModal({
                         {/* Notice if Per Crop or SOS is already running */}
                         {runningPlanRank === 2 ? (
                           <View style={styles.planNoticeCard}>
-                            <Ionicons name="information-circle" size={16} color="#38bdf8" />
+                            <Ionicons name="information-circle" size={15} color="#38bdf8" />
                             <Text style={styles.planNoticeText}>
-                              Full Crop Season Care is already running on this crop. Lower-tier SOS Consultation is closed; only Monthly VIP Care is available to upgrade.
+                              Season Care active on this crop. Upgrade to Monthly Care anytime.
                             </Text>
                           </View>
                         ) : runningPlanRank === 1 ? (
                           <View style={styles.planNoticeCard}>
-                            <Ionicons name="information-circle" size={16} color="#38bdf8" />
+                            <Ionicons name="information-circle" size={15} color="#38bdf8" />
                             <Text style={styles.planNoticeText}>
-                              Single Prescription consultation was previously taken. You can upgrade to Full Crop Season or Monthly VIP Care.
+                              Single consultation completed. Upgrade to Season or Monthly Care.
                             </Text>
                           </View>
                         ) : null}
@@ -1438,7 +1504,103 @@ const styles = StyleSheet.create({
     backgroundColor: '#00ff87',
   },
 
-  // Gallery verification box
+  // Gallery verification box (compact)
+  galleryWarningBoxCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderBottomWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.25)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  galleryWarningTextCompact: {
+    flex: 1,
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+    lineHeight: 16,
+  },
+  stepHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  toggleAllBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+  },
+  toggleAllBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  noHiredCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 8,
+    marginVertical: 10,
+  },
+  noHiredIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  noHiredTitle: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  noHiredSub: {
+    fontSize: 11.5,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    textAlign: 'center',
+    maxWidth: 320,
+    lineHeight: 16,
+  },
+  hireDoctorCtaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#00ff87',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+    marginTop: 6,
+  },
+  hireDoctorCtaText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#090e17',
+  },
+  browseAllLinkBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 2,
+  },
+  browseAllLinkText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    textDecorationLine: 'underline',
+  },
   galleryWarningBox: {
     backgroundColor: 'rgba(245, 158, 11, 0.12)',
     borderBottomWidth: 1,

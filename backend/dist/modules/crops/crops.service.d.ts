@@ -1,3 +1,4 @@
+import { CropCycleStage } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PlotsService } from '../plots/plots.service';
 import { FarmerPlansService } from '../farmer-plans/farmer-plans.service';
@@ -441,7 +442,10 @@ export declare class CropsService {
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
     }>;
-    acceptByAdvisor(user: AuthUser, id: string): Promise<{
+    acceptByAdvisor(user: AuthUser, id: string, dto?: {
+        plantCount?: number;
+        stage?: CropCycleStage;
+    }): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

@@ -16,7 +16,8 @@ export const IsoMaintenanceGuard: React.FC<IsoMaintenanceGuardProps> = ({ module
     try {
       setLoading(true);
       const controls = await getIsoModuleControls();
-      const match = controls.find((c) => c.moduleKey.toUpperCase() === moduleKey.toUpperCase());
+      const safeControls = Array.isArray(controls) ? controls : (controls as any)?.data || [];
+      const match = Array.isArray(safeControls) ? safeControls.find((c) => c?.moduleKey?.toUpperCase() === moduleKey.toUpperCase()) : null;
       setControl(match || null);
     } catch (e) {
       console.warn('Failed to check ISO module status:', e);

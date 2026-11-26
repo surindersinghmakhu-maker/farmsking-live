@@ -222,7 +222,7 @@ export const SuperAdminDashboardView: React.FC = () => {
 
   const handleConfirmResolve = () => {
     if (!resolvingTarget) return;
-    const targetConv = rawConversations.find((c: any) => (c.farmerId || c.id) === resolvingTarget.id);
+    const targetConv = (rawConversations || []).find((c: any) => (c.farmerId || c.id) === resolvingTarget.id);
     const newResolved: ResolvedRequestItem = {
       id: resolvingTarget.id,
       farmerName: resolvingTarget.name,

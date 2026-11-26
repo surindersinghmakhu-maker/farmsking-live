@@ -122,6 +122,7 @@ let AuthService = AuthService_1 = class AuthService {
         this.registerOtpStore = new Map();
         this.partyOtpStore = new Map();
         this.partnerSignupOtpStore = new Map();
+        this.upiOtpStore = new Map();
         this.partnerVerifiedMap = new Map();
     }
     async sendWhatsAppOtp(mobile, otpCode) {
@@ -378,6 +379,33 @@ let AuthService = AuthService_1 = class AuthService {
             message: existingUser?.kingId
                 ? `Verified registered FarmsKing user (${existingUser.kingId}).`
                 : 'Mobile number verified via server OTP.',
+        };
+    }
+    async sendUpiUpdateOtp(userId) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user || !user.mobile) {
+            throw new common_1.BadRequestException('No registered mobile number found for this account.');
+        }
+        const cleanMobile = this.normalizeIndianMobile(user.mobile);
+        const challenge = await this.issueMobileOtpChallenge(this.upiOtpStore, `upi:${userId}`, cleanMobile, 10 * 60 * 1000, 6);
+        return {
+            ...challenge,
+            mobileMasked: `+91 ${cleanMobile.slice(0, 2)}******${cleanMobile.slice(-2)}`,
+        };
+    }
+    async verifyUpiUpdateOtp(userId, otp, upiId) {
+        this.verifyMobileOtpChallenge(this.upiOtpStore, `upi:${userId}`, otp);
+        const cleanUpi = (upiId || '').trim();
+        const updatedUser = await this.prisma.user.update({
+            where: { id: userId },
+            data: { upiId: cleanUpi || null },
+            select: SAFE_USER_SELECT,
+        });
+        return {
+            success: true,
+            message: 'UPI ID verified and updated successfully.',
+            upiId: updatedUser.upiId,
+            user: updatedUser,
         };
     }
     sanitizePartnerApplication(app) {

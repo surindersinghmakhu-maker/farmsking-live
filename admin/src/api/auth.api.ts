@@ -113,6 +113,16 @@ export async function verifyLoginOtpApi(payload: { mobile: string; otp: string }
   return data;
 }
 
+export async function sendUpiUpdateOtpApi(): Promise<{ success: boolean; message: string; mobileMasked?: string; devOtp?: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; mobileMasked?: string; devOtp?: string }>('/auth/upi-otp/send');
+  return data;
+}
+
+export async function verifyUpiUpdateOtpApi(payload: { otp: string; upiId: string }): Promise<{ success: boolean; message: string; upiId?: string; user?: any }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; upiId?: string; user?: any }>('/auth/upi-otp/verify', payload);
+  return data;
+}
+
 export async function firebaseLoginApi(idToken: string): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/firebase-login', { idToken });
   return data;

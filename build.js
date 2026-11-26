@@ -30,12 +30,12 @@ try {
 
   if (fs.existsSync(frontendDir)) {
     console.log('⚡ Running Expo Export for Frontend...');
-    execSync('npx expo export -p web', { cwd: frontendDir, env: { ...process.env, EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1', CI: '1' }, stdio: 'inherit' });
+    execSync('npx.cmd expo export -p web', { cwd: frontendDir, env: { ...process.env, EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1', CI: '1' }, stdio: 'inherit' });
   }
 
   if (fs.existsSync(adminDir)) {
     console.log('⚡ Running Expo Export for Admin...');
-    execSync('npx expo export -p web', { cwd: adminDir, env: { ...process.env, EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1', CI: '1' }, stdio: 'inherit' });
+    execSync('npx.cmd expo export -p web', { cwd: adminDir, env: { ...process.env, EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1', CI: '1' }, stdio: 'inherit' });
   }
 
   console.log('✅ Expo Web build for both Frontend & Admin completed successfully!');

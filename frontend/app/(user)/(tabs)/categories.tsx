@@ -30,7 +30,7 @@ export default function CategoriesScreen() {
 
   const filteredProducts = (products ?? []).filter((p) => activeCategory === 'All' || p.category === activeCategory);
 
-  const cartQtyFor = (productId: string) => items.find((i) => i.productId === productId)?.quantity ?? 0;
+  const cartQtyFor = (productId: string) => (items || []).find((i) => i.productId === productId)?.quantity ?? 0;
 
   return (
     <View style={styles.container}>

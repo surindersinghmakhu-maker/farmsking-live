@@ -6,10 +6,19 @@ import { useRouter } from 'expo-router';
 
 export function GlobalErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
   const router = useRouter();
+
+  React.useEffect(() => {
+    if (typeof console !== 'undefined') {
+      console.error('🔴 GlobalErrorBoundary Caught Error:', error?.message, error?.stack);
+    }
+  }, [error]);
+
   const handleRetry = () => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && error?.message?.includes('insertBefore')) {
-      window.location.reload();
-      return;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (error?.message?.includes('insertBefore') || error?.message?.includes('find')) {
+        window.location.reload();
+        return;
+      }
     }
     retry();
   };
@@ -26,6 +35,11 @@ export function GlobalErrorBoundary({ error, retry }: { error: Error; retry: () 
         <Text style={styles.errorText} numberOfLines={4}>
           {error?.message || 'An unexpected error occurred.'}
         </Text>
+        {Platform.OS === 'web' && typeof window !== 'undefined' ? (
+          <Text style={{ fontSize: 11, color: '#64748b', marginTop: 6, fontFamily: 'monospace' }}>
+            URL: {window.location.pathname}
+          </Text>
+        ) : null}
       </View>
 
       <TouchableOpacity style={styles.retryBtn} onPress={handleRetry} activeOpacity={0.8}>

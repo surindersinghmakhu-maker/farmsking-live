@@ -26,7 +26,7 @@ import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
 import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress, useSetDefaultAddress } from '@/src/hooks/useAddresses';
-import { verifyAccountPassword, sendEmailVerificationApi } from '@/src/api/auth.api';
+import { verifyAccountPassword, sendEmailVerificationApi, sendUpiUpdateOtpApi, verifyUpiUpdateOtpApi } from '@/src/api/auth.api';
 import type { CustomerAddress } from '@/src/api/addresses.api';
 import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
 import { uploadPhoto } from '@/src/api/uploads.api';
@@ -209,6 +209,70 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleInitiateUpiUpdate = async () => {
+    const cleanUpi = upiId.trim();
+    if (cleanUpi && (!cleanUpi.includes('@') || cleanUpi.length < 5)) {
+      Alert.alert('Invalid UPI ID', 'Please enter a valid UPI ID (e.g. yourname@oksbi or 9876543210@paytm).');
+      return;
+    }
+    if (cleanUpi === (user?.upiId || '').trim()) {
+      Alert.alert('Notice', 'This is already your current registered UPI ID.');
+      setIsEditingUpi(false);
+      return;
+    }
+
+    setIsSendingUpiOtp(true);
+    try {
+      const res = await sendUpiUpdateOtpApi();
+      const isLocalhostEnv =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1' ||
+          window.location.hostname.includes('192.168.'));
+      if (res?.devOtp && isLocalhostEnv) {
+        setUpiDevOtp(res.devOtp);
+        setUpiOtpCode(String(res.devOtp));
+      } else {
+        setUpiOtpCode('');
+      }
+      setUpiMaskedMobile(res?.mobileMasked || (user?.mobile ? `+91 ${getCleanMobile(user.mobile).slice(0, 2)}******${getCleanMobile(user.mobile).slice(-2)}` : 'registered mobile'));
+      setIsUpiOtpModalOpen(true);
+      Alert.alert('📲 OTP Sent', res?.message || 'Verification code sent to your registered mobile number.');
+    } catch (err: any) {
+      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to send OTP to registered mobile.');
+    } finally {
+      setIsSendingUpiOtp(false);
+    }
+  };
+
+  const handleConfirmUpiOtp = async () => {
+    if (!upiOtpCode.trim() || upiOtpCode.trim().length !== 6) {
+      Alert.alert('Invalid Code', 'Please enter the 6-digit OTP code received on your registered mobile.');
+      return;
+    }
+    setIsVerifyingUpiOtp(true);
+    try {
+      const res = await verifyUpiUpdateOtpApi({
+        otp: upiOtpCode.trim(),
+        upiId: upiId.trim(),
+      });
+      if (res.success) {
+        setIsUpiOtpModalOpen(false);
+        setIsEditingUpi(false);
+        setUpiOtpCode('');
+        setUpiDevOtp(null);
+        Alert.alert('✅ UPI ID Updated', 'Your UPI ID has been verified and updated successfully. Future sale bills will now use this UPI QR code.');
+        await refreshUser();
+      } else {
+        Alert.alert('Verification Failed', res.message || 'Incorrect OTP code.');
+      }
+    } catch (err: any) {
+      Alert.alert('Verification Error', err?.response?.data?.message || err?.message || 'Failed to verify OTP.');
+    } finally {
+      setIsVerifyingUpiOtp(false);
+    }
+  };
+
   const redirectUri = AuthSession.makeRedirectUri(
     Platform.OS === 'web'
       ? ({ useProxy: false } as any)
@@ -370,6 +434,13 @@ export default function ProfileScreen() {
     getCleanMobile(user?.farmMobile) || getCleanMobile(user?.mobile) || ''
   );
   const [upiId, setUpiId] = useState(user?.upiId || '');
+  const [isEditingUpi, setIsEditingUpi] = useState(false);
+  const [isSendingUpiOtp, setIsSendingUpiOtp] = useState(false);
+  const [isVerifyingUpiOtp, setIsVerifyingUpiOtp] = useState(false);
+  const [isUpiOtpModalOpen, setIsUpiOtpModalOpen] = useState(false);
+  const [upiOtpCode, setUpiOtpCode] = useState('');
+  const [upiDevOtp, setUpiDevOtp] = useState<string | null>(null);
+  const [upiMaskedMobile, setUpiMaskedMobile] = useState<string>('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
@@ -1112,6 +1183,77 @@ export default function ProfileScreen() {
                   );
                 })()}
 
+                {/* UPI ID for Farmer Sale Bill QR Code */}
+                <View style={{ marginTop: 8, marginBottom: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>UPI ID (VPA) for Sale Bill QR</Text>
+                    {user?.upiId ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                        <Ionicons name="checkmark-circle" size={13} color="#16a34a" />
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>ACTIVE</Text>
+                      </View>
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                        <Ionicons name="information-circle-outline" size={13} color="#64748b" />
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>NOT SET (BLANK BOX ON BILL)</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <View style={[styles.input, { flex: 1, height: 40, paddingVertical: 0, paddingHorizontal: 10, backgroundColor: isEditingUpi ? '#ffffff' : '#f8fafc', borderColor: isEditingUpi ? '#16a34a' : '#e2e8f0', flexDirection: 'row', alignItems: 'center' }]}>
+                      <Ionicons name="qr-code-outline" size={16} color="#94a3b8" style={{ marginRight: 6 }} />
+                      <TextInput
+                        style={{ flex: 1, fontSize: 13, color: '#0f172a' }}
+                        value={upiId}
+                        onChangeText={setUpiId}
+                        placeholder="example@okaxis or 9876543210@upi"
+                        placeholderTextColor="#94a3b8"
+                        autoCapitalize="none"
+                        editable={isEditingUpi}
+                      />
+                      {user?.upiId && !isEditingUpi ? (
+                        <Ionicons name="shield-checkmark" size={18} color="#16a34a" style={{ marginLeft: 4 }} />
+                      ) : null}
+                    </View>
+
+                    {!isEditingUpi ? (
+                      <TouchableOpacity
+                        style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 12, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' }}
+                        onPress={() => setIsEditingUpi(true)}
+                      >
+                        <Text style={{ color: '#475569', fontSize: 11.5, fontFamily: FONT.bold }}>Update</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={{ flexDirection: 'row', gap: 4 }}>
+                        <TouchableOpacity
+                          style={{ backgroundColor: '#16a34a', paddingHorizontal: 12, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center' }}
+                          onPress={handleInitiateUpiUpdate}
+                          disabled={isSendingUpiOtp}
+                        >
+                          {isSendingUpiOtp ? (
+                            <ActivityIndicator size="small" color="#ffffff" />
+                          ) : (
+                            <Text style={{ color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold }}>Save UPI</Text>
+                          )}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' }}
+                          onPress={() => {
+                            setUpiId(user?.upiId || '');
+                            setIsEditingUpi(false);
+                          }}
+                        >
+                          <Text style={{ color: '#64748b', fontSize: 11.5, fontFamily: FONT.bold }}>Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 4, lineHeight: 14 }}>
+                    Your sale bill QR code is generated directly from this UPI ID for buyers to scan and pay you. If left blank, bills display a blank box.
+                  </Text>
+                </View>
+
                 {/* Link/Unlink/Switch Google Account Security Card */}
                 <View style={{ marginTop: 10, padding: 12, borderRadius: RADIUS.md, backgroundColor: user?.googleId ? '#f0fdf4' : '#f8fafc', borderWidth: 1, borderColor: user?.googleId ? '#bbf7d0' : '#e2e8f0', gap: 8 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1301,6 +1443,86 @@ export default function ProfileScreen() {
                 >
                   <Text style={{ color: '#0284c7', fontSize: 12, fontFamily: FONT.bold }}>
                     {isSendingOtp ? 'Resending...' : 'Didn\'t receive OTP? Resend via SMS'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          {/* 📲 UPI ID OTP Verification Modal */}
+          <Modal
+            visible={isUpiOtpModalOpen}
+            animationType="fade"
+            transparent
+            onRequestClose={() => {
+              setIsUpiOtpModalOpen(false);
+              setUpiOtpCode('');
+            }}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="shield-checkmark" size={20} color="#16a34a" />
+                    <Text style={styles.modalTitle}>Confirm UPI ID Update</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setIsUpiOtpModalOpen(false)}>
+                    <Ionicons name="close" size={20} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#475569', marginBottom: 6 }}>
+                  Enter the 6-digit OTP code sent to your registered mobile:{' '}
+                  <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{upiMaskedMobile || 'registered mobile'}</Text>
+                </Text>
+
+                <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: RADIUS.md, padding: 8, marginBottom: 10 }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#166534' }}>
+                    New UPI ID: <Text style={{ fontFamily: FONT.bold }}>{upiId || '(Clear / None)'}</Text>
+                  </Text>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#15803d', marginTop: 2 }}>
+                    This UPI ID will generate the payment QR code on your sale bills.
+                  </Text>
+                </View>
+
+                {upiDevOtp ? (
+                  <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: RADIUS.sm, padding: 6, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#1d4ed8' }}>Dev Test OTP: {upiDevOtp}</Text>
+                  </View>
+                ) : null}
+
+                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>6-Digit OTP Code *</Text>
+                <TextInput
+                  style={[styles.modalInput, { fontSize: 18, fontFamily: FONT.bold, letterSpacing: 4, textAlign: 'center' }]}
+                  value={upiOtpCode}
+                  onChangeText={setUpiOtpCode}
+                  placeholder="123456"
+                  placeholderTextColor="#cbd5e1"
+                  keyboardType="number-pad"
+                  textContentType="oneTimeCode"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                />
+
+                <TouchableOpacity
+                  style={[styles.modalSubmitBtn, { backgroundColor: '#16a34a', marginTop: 14 }]}
+                  onPress={handleConfirmUpiOtp}
+                  disabled={isVerifyingUpiOtp}
+                >
+                  {isVerifyingUpiOtp ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.modalSubmitText}>Confirm & Update UPI ID</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ marginTop: 12, alignItems: 'center' }}
+                  onPress={handleInitiateUpiUpdate}
+                  disabled={isSendingUpiOtp}
+                >
+                  <Text style={{ color: '#0284c7', fontSize: 12, fontFamily: FONT.bold }}>
+                    {isSendingUpiOtp ? 'Resending...' : "Didn't receive OTP? Resend via SMS"}
                   </Text>
                 </TouchableOpacity>
               </View>

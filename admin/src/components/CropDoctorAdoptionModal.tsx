@@ -163,8 +163,8 @@ export function CropDoctorAdoptionModal({
   }, [advisors, hiredDoctors, showAllDoctors]);
 
   const selectedDoctor = useMemo(() => {
-    const list = displayedDoctors;
-    if (list.length === 0) return null;
+    const list = displayedDoctors || [];
+    if (!Array.isArray(list) || list.length === 0) return null;
     if (selectedDoctorId) {
       const found = list.find((a) => a.id === selectedDoctorId);
       if (found) return found;

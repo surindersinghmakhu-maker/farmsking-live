@@ -982,10 +982,10 @@ export default function PublicLandingPage() {
     utterance.rate = 0.92;
     utterance.pitch = 1.0;
 
-    const voices = window.speechSynthesis.getVoices();
-    const punjabiVoice = voices.find((v) => v.lang === 'pa-IN' || v.lang.startsWith('pa'));
-    const hindiVoice = voices.find((v) => v.lang === 'hi-IN' || v.lang.startsWith('hi'));
-    const indianVoice = voices.find((v) => v.lang.includes('IN') || v.lang.includes('India'));
+    const voices = (typeof window !== 'undefined' && window.speechSynthesis?.getVoices) ? window.speechSynthesis.getVoices() : [];
+    const punjabiVoice = (voices || []).find((v) => v.lang === 'pa-IN' || v.lang.startsWith('pa'));
+    const hindiVoice = (voices || []).find((v) => v.lang === 'hi-IN' || v.lang.startsWith('hi'));
+    const indianVoice = (voices || []).find((v) => v.lang.includes('IN') || v.lang.includes('India'));
 
     if (punjabiVoice) {
       utterance.voice = punjabiVoice;

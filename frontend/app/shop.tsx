@@ -941,7 +941,7 @@ export default function ShopScreen() {
   const activeProductCount = (products ?? []).filter((p) => p.isActive).length;
   const inactiveProductCount = (products ?? []).filter((p) => !p.isActive).length;
 
-  const cartQtyFor = (productId: string) => items.find((i) => i.productId === productId)?.quantity ?? 0;
+  const cartQtyFor = (productId: string) => (items || []).find((i) => i.productId === productId)?.quantity ?? 0;
 
   const discountPercent = useMemo(() => {
     const mrp = Number(newMrpPrice);

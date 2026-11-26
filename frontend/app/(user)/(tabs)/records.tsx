@@ -767,7 +767,7 @@ export default function RecordsScreen() {
     tap();
     const isParty = Boolean(item.partyId || (item.buyerName && item.buyerName !== 'Cash Sale' && item.buyerName !== 'Direct / Cash'));
 
-    const foundParty = parties.find(p => p.id === item.partyId || (p.name && p.name.trim().toLowerCase() === item.buyerName?.trim().toLowerCase()));
+    const foundParty = (parties || []).find(p => p.id === item.partyId || (p.name && p.name.trim().toLowerCase() === item.buyerName?.trim().toLowerCase()));
     const partyObj = foundParty || (isParty ? ({ id: item.partyId || `party-${Date.now()}`, name: item.buyerName || 'Party', mobile: item.partyMobile || '' } as Party) : null);
 
     let loadedItems: Array<{ id: string; cropId: string; cropName: string; unit: string; qty: number; rate: number; amount: number }> = [];
@@ -1801,12 +1801,12 @@ export default function RecordsScreen() {
   const overallNet = totalSalesRevenue - totalSpent;
   const maxOverallValue = Math.max(1, totalSalesRevenue, totalSpent);
 
-  const selectedFarmerCrop = harvestingCrops.find((c) => c.id === selectedCropId) ?? harvestingCrops[0];
+  const selectedFarmerCrop = (harvestingCrops || []).find((c) => c.id === selectedCropId) ?? (harvestingCrops || [])[0];
 
   const handleSelectFarmerCrop = (cropId: string) => {
     tap();
     setSelectedCropId(cropId);
-    const found = harvestingCrops.find((c) => c.id === cropId);
+    const found = (harvestingCrops || []).find((c) => c.id === cropId);
     if (found) {
       setSaleRate(found.pricePerUnit);
     }
@@ -1946,7 +1946,7 @@ export default function RecordsScreen() {
 
     // Validate estimated max rate (+10% cap over all farmers) for all items in the cart
     for (const item of itemsToSave) {
-      const crop = harvestingCrops.find((c) => c.id === item.cropId) || farmerCrops.find((c) => c.id === item.cropId);
+      const crop = (harvestingCrops || []).find((c) => c.id === item.cropId) || (farmerCrops || []).find((c) => c.id === item.cropId);
       const { highestFarmerRate, maxAllowedRate } = getCropMaxRateDetails(
         item.cropName,
         crop?.maxPricePerUnit || crop?.pricePerUnit
@@ -2341,7 +2341,7 @@ export default function RecordsScreen() {
         partyRole: amountNum === 0 ? 'Farm Owner / Self' : (expenseRecipientType === 'LABOUR' ? 'Labour Worker' : expenseRecipientType === 'SUPPLIER' ? 'Supplier / Trader' : 'Cash Vendor'),
         amount: amountNum,
         paymentMode: amountNum === 0 ? 'FREE / 0 Expense' : (expensePaymentMode === 'CREDIT' ? 'CREDIT / Khata' : 'CASH / Direct'),
-        categoryOrWorkType: displayCategories.find((c) => c.id === activeCatId)?.labelEn || (expenseRecipientType === 'LABOUR' ? labourWorkType : 'Farm Expense'),
+        categoryOrWorkType: (displayCategories || []).find((c) => c.id === activeCatId)?.labelEn || (expenseRecipientType === 'LABOUR' ? labourWorkType : 'Farm Expense'),
         description: combinedNotes,
       };
 
@@ -3798,13 +3798,13 @@ export default function RecordsScreen() {
                           >
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                               <Ionicons
-                                name={(displayCategories.find((c) => c.id === categoryId)?.icon as any) || 'pricetag-outline'}
+                                name={((displayCategories || []).find((c) => c.id === categoryId)?.icon as any) || 'pricetag-outline'}
                                 size={15}
                                 color="#dc2626"
                               />
                               <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }} numberOfLines={1}>
                                 {(() => {
-                                  const selected = displayCategories.find((c) => c.id === categoryId);
+                                  const selected = (displayCategories || []).find((c) => c.id === categoryId);
                                   return selected ? selected.labelEn : 'Select Category';
                                 })()}
                               </Text>

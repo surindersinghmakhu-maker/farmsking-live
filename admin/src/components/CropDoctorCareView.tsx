@@ -230,7 +230,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
           plotName: c.plot?.name,
         };
 
-        const existing = list.find((item) => item.id === adv.id);
+        const existing = (list || []).find((item) => item.id === adv.id);
         if (existing) {
           existing.supervisedCrops.push(cropInfo);
         } else if (!seenIds.has(adv.id)) {

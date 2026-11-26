@@ -100,6 +100,22 @@ export class AuthController {
     return this.authService.verifyPartyOtp(user.id, body.mobile, body.otp);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('upi-otp/send')
+  sendUpiUpdateOtp(@CurrentUser() user: AuthUser) {
+    return this.authService.sendUpiUpdateOtp(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('upi-otp/verify')
+  verifyUpiUpdateOtp(@CurrentUser() user: AuthUser, @Body() body: { otp: string; upiId: string }) {
+    return this.authService.verifyUpiUpdateOtp(user.id, body.otp, body.upiId);
+  }
+
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('partner-otp/send')

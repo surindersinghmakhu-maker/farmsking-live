@@ -176,12 +176,12 @@ export function FarmerPlanUpgradeModal({
 
   // Dynamic upgrade quote calculation
   const activeVariants = useMemo(() => {
-    return pricingList
-      .filter((it: FarmerPlanPricing) => it.plan === pickedPlan && it.isActive !== false)
-      .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
+    return (Array.isArray(pricingList) ? pricingList : [])
+      .filter((it: FarmerPlanPricing) => it && it.plan === pickedPlan && it.isActive !== false)
+      .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a?.billingPeriodDays || 0) - Number(b?.billingPeriodDays || 0));
   }, [pricingList, pickedPlan]);
 
-  const selectedDays = selectedDaysMap[pickedPlan] || activeVariants[0]?.billingPeriodDays || 365;
+  const selectedDays = selectedDaysMap[pickedPlan] || (activeVariants || [])[0]?.billingPeriodDays || 365;
   const { data: upgradeQuote } = useUpgradeQuote(pickedPlan, selectedDays, visible && pickedPlan !== 'FREE');
 
   // Dynamic tier configuration from Admin
@@ -197,7 +197,7 @@ export function FarmerPlanUpgradeModal({
     if (upgradeQuote?.netPayableAmount != null) {
       return upgradeQuote.netPayableAmount;
     }
-    const variant = activeVariants.find((v: any) => Number(v.billingPeriodDays) === Number(selectedDays)) || activeVariants[0];
+    const variant = (activeVariants || []).find((v: any) => Number(v?.billingPeriodDays) === Number(selectedDays)) || (activeVariants || [])[0];
     return variant ? Number(variant.price) : Number(currentTierConfig?.price || 199);
   }, [pickedPlan, currentTierConfig, upgradeQuote, activeVariants, selectedDays]);
 

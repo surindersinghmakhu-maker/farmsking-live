@@ -101,6 +101,7 @@ export class AuthService {
   private readonly registerOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
   private readonly partyOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
   private readonly partnerSignupOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
+  private readonly upiOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
   private readonly partnerVerifiedMap = new Map<string, number>();
 
   constructor(
@@ -435,6 +436,41 @@ export class AuthService {
       message: existingUser?.kingId
         ? `Verified registered FarmsKing user (${existingUser.kingId}).`
         : 'Mobile number verified via server OTP.',
+    };
+  }
+
+  async sendUpiUpdateOtp(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.mobile) {
+      throw new BadRequestException('No registered mobile number found for this account.');
+    }
+    const cleanMobile = this.normalizeIndianMobile(user.mobile);
+    const challenge = await this.issueMobileOtpChallenge(
+      this.upiOtpStore,
+      `upi:${userId}`,
+      cleanMobile,
+      10 * 60 * 1000,
+      6,
+    );
+    return {
+      ...challenge,
+      mobileMasked: `+91 ${cleanMobile.slice(0, 2)}******${cleanMobile.slice(-2)}`,
+    };
+  }
+
+  async verifyUpiUpdateOtp(userId: string, otp: string, upiId: string) {
+    this.verifyMobileOtpChallenge(this.upiOtpStore, `upi:${userId}`, otp);
+    const cleanUpi = (upiId || '').trim();
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { upiId: cleanUpi || null },
+      select: SAFE_USER_SELECT,
+    });
+    return {
+      success: true,
+      message: 'UPI ID verified and updated successfully.',
+      upiId: updatedUser.upiId,
+      user: updatedUser,
     };
   }
 

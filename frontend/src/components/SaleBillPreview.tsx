@@ -190,13 +190,19 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
     ? Number(inv.netReceivable)
     : grossBal - rcvd;
 
-  const activeUpiId = inv.farmerUpiId || user?.upiId || settings?.upiId || 'surindersinghmakhu-5@oksbi';
+  const farmerUpiId = (inv.farmerUpiId || user?.upiId || '').trim();
+  const hasFarmerUpi = Boolean(farmerUpiId);
   const isNetPayable = netBal < 0; // Party has overpaid — we owe them money
-  // QR: if balance is minus (payable), show UPI ID only without amount; otherwise include amount
-  const upiPayUrl = isNetPayable
-    ? `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(inv.farmerName || 'FarmsKing')}&cu=INR`
-    : `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(inv.farmerName || 'FarmsKing')}&am=${netBal}&cu=INR`;
-  const qrCodeUri = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=1&ecc=H&data=${encodeURIComponent(upiPayUrl)}`;
+  // QR: Only generate if farmer has registered their personal UPI ID in profile.
+  // Otherwise, leave QR empty/blank without falling back to company/admin UPI.
+  const upiPayUrl = hasFarmerUpi
+    ? (isNetPayable
+        ? `upi://pay?pa=${encodeURIComponent(farmerUpiId)}&pn=${encodeURIComponent(inv.farmerName || user?.name || 'Farmer')}&cu=INR`
+        : `upi://pay?pa=${encodeURIComponent(farmerUpiId)}&pn=${encodeURIComponent(inv.farmerName || user?.name || 'Farmer')}&am=${netBal}&cu=INR`)
+    : null;
+  const qrCodeUri = upiPayUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=1&ecc=H&data=${encodeURIComponent(upiPayUrl)}`
+    : null;
   const captureSafeQrUri = useCaptureSafeImageUri(qrCodeUri);
   const resolvedQrUri = Platform.OS === 'web' ? captureSafeQrUri : qrCodeUri;
   const totalQtyText = useMemo(() => {
@@ -431,7 +437,7 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
           <View style={[billStyles.billUpiQrBoxLeft, isNetPayable && { borderColor: '#fecaca', backgroundColor: '#fef2f2' }]}>
             <View style={{ flex: 1, justifyContent: 'center', gap: 1 }}>
               <Text style={[billStyles.billUpiTitle, isNetPayable && { color: '#dc2626' }]}>
-                {isNetPayable ? '↩️ Pay via UPI' : '📲 Pay via UPI'}
+                {hasFarmerUpi ? (isNetPayable ? '↩️ Pay via UPI' : '📲 Pay via UPI') : 'Payment Details'}
               </Text>
               <Text style={[billStyles.billUpiAmtText, isNetPayable && { color: '#dc2626' }]}>
                 {isNetPayable ? 'Net Payable:' : 'Net Receivable:'}
@@ -443,7 +449,11 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
             <View style={billStyles.billQrWrapper}>
               {resolvedQrUri ? (
                 <Image source={{ uri: resolvedQrUri }} style={billStyles.billQrImage} resizeMode="contain" />
-              ) : null}
+              ) : (
+                <View style={[billStyles.billQrImage, { borderWidth: 1, borderColor: '#cbd5e1', borderStyle: 'dashed', borderRadius: 4, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' }]}>
+                  <Text style={{ fontSize: 7, fontFamily: FONT.semiBold, color: '#94a3b8', textAlign: 'center' }}>No UPI</Text>
+                </View>
+              )}
             </View>
           </View>
         ) : null}

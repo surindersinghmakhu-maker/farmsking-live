@@ -223,7 +223,7 @@ export default function AgriStoreEnterpriseHub() {
         await apiClient.post(`/orders/${orderId}/mark-delivered`);
       } else {
         // Ensure order passes through CONFIRMED -> PACKED before DISPATCH if newly placed
-        const cur = orders.find((o) => o.id === orderId);
+        const cur = (orders || []).find((o) => o.id === orderId);
         if (cur?.status === 'PLACED') {
           await apiClient.post(`/orders/${orderId}/confirm`);
           await apiClient.post(`/orders/${orderId}/mark-packed`);

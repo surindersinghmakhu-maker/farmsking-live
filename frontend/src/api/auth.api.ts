@@ -112,6 +112,16 @@ export async function sendMobileLinkOtpApi(mobile: string): Promise<{ success: b
   return data;
 }
 
+export async function sendUpiUpdateOtpApi(): Promise<{ success: boolean; message: string; mobileMasked?: string; devOtp?: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; mobileMasked?: string; devOtp?: string }>('/auth/upi-otp/send');
+  return data;
+}
+
+export async function verifyUpiUpdateOtpApi(payload: { otp: string; upiId: string }): Promise<{ success: boolean; message: string; upiId?: string; user?: any }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; upiId?: string; user?: any }>('/auth/upi-otp/verify', payload);
+  return data;
+}
+
 export async function verifyMobileLinkOtpApi(payload: { mobile: string; otp: string; password?: string }): Promise<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }> {
   const { data } = await apiClient.post<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }>('/auth/verify-mobile-link-otp', payload);
   return data;

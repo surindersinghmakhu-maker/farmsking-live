@@ -244,9 +244,9 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
   }, [rawActivities, activeFilter]);
 
   const totalHarvestWeight = useMemo(() => {
-    const harvestActs = rawActivities.filter((a) => a.type === 'HARVEST');
+    const harvestActs = (rawActivities || []).filter((a) => a.type === 'HARVEST');
     if (harvestActs.length === 0) return '45 Quintals';
-    const firstWithQty = harvestActs.find((a) => a.quantity);
+    const firstWithQty = (harvestActs || []).find((a) => a.quantity);
     return firstWithQty?.quantity || `${harvestActs.length} Harvest Lot(s)`;
   }, [rawActivities]);
 

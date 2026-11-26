@@ -51,6 +51,53 @@ export declare class AuthController {
         registeredName: string | null;
         message: string;
     }>;
+    sendUpiUpdateOtp(user: AuthUser): Promise<{
+        mobileMasked: string;
+        success: boolean;
+        mobile: string;
+        sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
+        message: string;
+        devOtp: string | undefined;
+        expiresInSeconds: number;
+    }>;
+    verifyUpiUpdateOtp(user: AuthUser, body: {
+        otp: string;
+        upiId: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        upiId: string | null;
+        user: {
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
+            googleId: string | null;
+            village: string | null;
+            district: string | null;
+            state: string | null;
+            pincode: string | null;
+            postOffice: string | null;
+            preferredLanguage: string;
+            sprayTankSizeL: number | null;
+            soilType: import(".prisma/client").$Enums.SoilType | null;
+            waterType: import(".prisma/client").$Enums.WaterType | null;
+            upiId: string | null;
+            billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            referredById: string | null;
+            isPhoneVerified: boolean;
+            createdAt: Date;
+        };
+    }>;
     sendPartnerSignupOtp(body: SendMobileOtpDto): Promise<{
         success: boolean;
         mobile: string;

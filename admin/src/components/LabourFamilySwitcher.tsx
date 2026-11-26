@@ -205,8 +205,9 @@ export function LabourFamilySwitcher({
 
   // Active Worker Object
   const activeWorker = useMemo(() => {
-    if (!selectedWorkerId && displayWorkers.length > 0) return displayWorkers[0];
-    return displayWorkers.find((w) => w.id === selectedWorkerId) || displayWorkers[0] || null;
+    const list = displayWorkers || [];
+    if (!selectedWorkerId && list.length > 0) return list[0];
+    return list.find((w) => w.id === selectedWorkerId) || list[0] || null;
   }, [displayWorkers, selectedWorkerId]);
 
   // Active Farmer Object (Landowner / Employer)
@@ -214,10 +215,11 @@ export function LabourFamilySwitcher({
     if (activeWorker && (activeWorker as any).farmer) {
       return (activeWorker as any).farmer;
     }
-    if (activeFarmerId && availableFarmers.length > 0) {
-      return availableFarmers.find((f) => f.id === activeFarmerId) || availableFarmers[0];
+    const farmersList = availableFarmers || [];
+    if (activeFarmerId && farmersList.length > 0) {
+      return farmersList.find((f) => f.id === activeFarmerId) || farmersList[0];
     }
-    return availableFarmers[0] || null;
+    return farmersList[0] || null;
   }, [activeWorker, activeFarmerId, availableFarmers]);
 
   // Trigger external edit modal signal

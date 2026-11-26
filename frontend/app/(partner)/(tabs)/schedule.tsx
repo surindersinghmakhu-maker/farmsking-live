@@ -724,7 +724,7 @@ export function ScheduleScreen() {
 
   const handleDeleteTemplate = (tplId: string) => {
     tap();
-    const tpl = templates.find((t) => t.id === tplId);
+    const tpl = (templates || []).find((t) => t.id === tplId);
     const doDelete = () => {
       setTemplates((prev) => prev.filter((t) => t.id !== tplId));
     };
@@ -1480,7 +1480,7 @@ export function ScheduleScreen() {
               {taskCategories.map((cat) => {
                 const isSelected =
                   activeTaskPickerRow?.source === 'SCHEDULE'
-                    ? editingScheduleItems.find((r) => r.id === activeTaskPickerRow.idOrIdx)?.taskType === cat
+                    ? (editingScheduleItems || []).find((r) => r.id === activeTaskPickerRow.idOrIdx)?.taskType === cat
                     : newTemplateTasks[activeTaskPickerRow?.idOrIdx as number]?.taskType === cat;
 
                 return (

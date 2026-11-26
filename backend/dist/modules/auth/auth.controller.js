@@ -65,6 +65,12 @@ let AuthController = class AuthController {
     verifyPartyOtp(user, body) {
         return this.authService.verifyPartyOtp(user.id, body.mobile, body.otp);
     }
+    sendUpiUpdateOtp(user) {
+        return this.authService.sendUpiUpdateOtp(user.id);
+    }
+    verifyUpiUpdateOtp(user, body) {
+        return this.authService.verifyUpiUpdateOtp(user.id, body.otp, body.upiId);
+    }
     sendPartnerSignupOtp(body) {
         return this.authService.sendPartnerSignupOtp(body.mobile);
     }
@@ -207,6 +213,27 @@ __decorate([
     __metadata("design:paramtypes", [Object, otp_dto_1.VerifyMobileOtpDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyPartyOtp", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('upi-otp/send'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sendUpiUpdateOtp", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('upi-otp/verify'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyUpiUpdateOtp", null);
 __decorate([
     (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

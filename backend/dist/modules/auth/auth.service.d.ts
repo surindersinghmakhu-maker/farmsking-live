@@ -38,6 +38,7 @@ export declare class AuthService {
     private readonly registerOtpStore;
     private readonly partyOtpStore;
     private readonly partnerSignupOtpStore;
+    private readonly upiOtpStore;
     private readonly partnerVerifiedMap;
     constructor(prisma: PrismaService, jwtService: JwtService, whatsappBotService: WhatsappBotService, whatsappGroupSyncService: WhatsAppGroupSyncService, appSettingsService: AppSettingsService, walletService: WalletService, userSessionService: UserSessionService, emailService: EmailService, uploadsService?: UploadsService | undefined, smsService?: SmsService | undefined);
     sendWhatsAppOtp(mobile: string, otpCode: string): Promise<{
@@ -99,6 +100,50 @@ export declare class AuthService {
         kingId: string | null;
         registeredName: string | null;
         message: string;
+    }>;
+    sendUpiUpdateOtp(userId: string): Promise<{
+        mobileMasked: string;
+        success: boolean;
+        mobile: string;
+        sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
+        message: string;
+        devOtp: string | undefined;
+        expiresInSeconds: number;
+    }>;
+    verifyUpiUpdateOtp(userId: string, otp: string, upiId: string): Promise<{
+        success: boolean;
+        message: string;
+        upiId: string | null;
+        user: {
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
+            googleId: string | null;
+            village: string | null;
+            district: string | null;
+            state: string | null;
+            pincode: string | null;
+            postOffice: string | null;
+            preferredLanguage: string;
+            sprayTankSizeL: number | null;
+            soilType: import(".prisma/client").$Enums.SoilType | null;
+            waterType: import(".prisma/client").$Enums.WaterType | null;
+            upiId: string | null;
+            billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            referredById: string | null;
+            isPhoneVerified: boolean;
+            createdAt: Date;
+        };
     }>;
     private sanitizePartnerApplication;
     private buildPartnerUserSummary;

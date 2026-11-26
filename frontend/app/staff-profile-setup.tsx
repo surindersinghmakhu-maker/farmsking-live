@@ -30,12 +30,19 @@ const ROLE_LABELS: Record<string, { title: string; color: string; icon: string; 
     icon: 'leaf',
     description: 'Advise farmers on crop management. Complete your profile for admin approval.',
   },
+  ADVISOR: {
+    title: 'Crop Doctor / Farm Advisor',
+    color: '#059669',
+    icon: 'medkit',
+    description: 'Provide expert crop health consultations and diagnosis. Complete your profile for admin approval.',
+  },
 };
 
 const SPECIALIZATION_OPTIONS: Record<string, string[]> = {
   TECHNICAL_TRAINER: ['Web Application Training', 'Digital Tools', 'System Support', 'Other'],
   DOCTOR: ['Crop Disease Diagnosis', 'Pest Management', 'Soil Health', 'Organic Farming', 'Vegetable Crops', 'Fruit Crops', 'Other'],
   FARM_ADVISOR: ['Wheat/Paddy', 'Vegetables', 'Fruit Crops', 'Organic Farming', 'Water Management', 'Other'],
+  ADVISOR: ['Crop Disease Diagnosis', 'Pest Management', 'Soil Health', 'Organic Farming', 'Vegetable Crops', 'Fruit Crops', 'Other'],
 };
 
 export default function StaffProfileSetupScreen() {

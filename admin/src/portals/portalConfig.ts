@@ -28,7 +28,7 @@ export const PORTALS: Record<PortalId, PortalTheme> = {
     bgGradient: ['#040f1c', '#061a30'],
     sidebarBg: '#040f1c',
     icon: 'shield-checkmark',
-    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'],
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT', 'ADVISOR', 'FARM_ADVISOR', 'DOCTOR'],
   },
   GARDEN: {
     name: 'GreenSpace™',
@@ -64,7 +64,7 @@ export const PORTALS: Record<PortalId, PortalTheme> = {
     bgGradient: ['#07170c', '#0c2414'],
     sidebarBg: '#07170c',
     icon: 'leaf',
-    allowedRoles: ['FARMER', 'SUPERVISOR', 'LABOUR', 'FARM_ADVISOR', 'SUPER_ADMIN', 'ADMIN'],
+    allowedRoles: ['FARMER', 'SUPERVISOR', 'LABOUR', 'FARM_ADVISOR', 'ADVISOR', 'DOCTOR', 'SUPER_ADMIN', 'ADMIN'],
   },
   STAFF: {
     name: 'Operations Desk',
@@ -76,7 +76,7 @@ export const PORTALS: Record<PortalId, PortalTheme> = {
     bgGradient: ['#0c0a21', '#141038'],
     sidebarBg: '#0c0a21',
     icon: 'people',
-    allowedRoles: ['MANAGER', 'TECHNICAL_TRAINER', 'AGENT', 'SUPER_ADMIN', 'ADMIN'],
+    allowedRoles: ['MANAGER', 'TECHNICAL_TRAINER', 'AGENT', 'ADVISOR', 'FARM_ADVISOR', 'DOCTOR', 'SUPER_ADMIN', 'ADMIN'],
   },
 };
 
@@ -89,10 +89,10 @@ export function getPortalForRole(role?: string | null): PortalId {
   if (!role) return 'ADMIN_HQ';
   const r = role.toUpperCase();
 
-  if (['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'].includes(r)) return 'ADMIN_HQ';
+  if (['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT', 'ADVISOR', 'FARM_ADVISOR', 'DOCTOR'].includes(r)) return 'ADMIN_HQ';
   if (['GARDENER', 'GARDEN_ADVISOR'].includes(r)) return 'GARDEN';
   if (['SELLER', 'TRADER'].includes(r)) return 'SHOP';
-  if (['FARMER', 'SUPERVISOR', 'LABOUR', 'FARM_ADVISOR'].includes(r)) return 'FARMER';
+  if (['FARMER', 'SUPERVISOR', 'LABOUR'].includes(r)) return 'FARMER';
   if (r === 'AGENT') return 'STAFF';
 
   return 'ADMIN_HQ';

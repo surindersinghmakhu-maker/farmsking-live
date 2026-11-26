@@ -63,7 +63,7 @@ function RootNavigation() {
     const isPublicRoute = isRootRoute || currentGroup === 'topic' || currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you' || currentGroup === 'public-store' || currentGroup === 'support' || currentGroup === 'contact-us';
     const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
 
-    const STAFF_ROLES = ['TECHNICAL_TRAINER', 'FARM_ADVISOR', 'DOCTOR'];
+    const STAFF_ROLES = ['TECHNICAL_TRAINER', 'FARM_ADVISOR', 'DOCTOR', 'ADVISOR'];
 
     if (!user && !inAuthGroup && !isPublicRoute) {
       router.replace('/(auth)/login');

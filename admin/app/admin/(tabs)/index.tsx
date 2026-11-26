@@ -95,6 +95,7 @@ export default function HomeScreen() {
         return <FarmerDashboardView onOpenAdminChat={() => setShowAdminChatModal(true)} />;
       case 'ADVISOR':
       case 'FARM_ADVISOR':
+      case 'DOCTOR':
         return <AdvisorDashboardView />;
       case 'GARDEN_ADVISOR':
         return <GardenAdvisorDashboardView />;

@@ -150,7 +150,11 @@ function evaluatePortalEligibility(user, portal) {
     }
     const activeRoles = getActiveRolesList(user);
     if (portal === 'ADMIN') {
-        const isStaff = activeRoles.some((r) => exports.ADMIN_STAFF_ROLES.includes(r));
+        const isStaff = activeRoles.some((r) => exports.ADMIN_STAFF_ROLES.includes(r) ||
+            r === client_1.Role.ADVISOR ||
+            r === 'DOCTOR' ||
+            r === 'FARM_ADVISOR' ||
+            r === 'GARDEN_ADVISOR');
         if (!isStaff) {
             return {
                 allowed: false,

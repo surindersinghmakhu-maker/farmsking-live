@@ -184,7 +184,14 @@ export function evaluatePortalEligibility(
 
   // Security Guard for Admin Portal
   if (portal === 'ADMIN') {
-    const isStaff = activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r));
+    const isStaff = activeRoles.some(
+      (r) =>
+        ADMIN_STAFF_ROLES.includes(r) ||
+        r === Role.ADVISOR ||
+        (r as any) === 'DOCTOR' ||
+        (r as any) === 'FARM_ADVISOR' ||
+        (r as any) === 'GARDEN_ADVISOR',
+    );
     if (!isStaff) {
       return {
         allowed: false,

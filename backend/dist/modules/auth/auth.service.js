@@ -2159,7 +2159,7 @@ let AuthService = AuthService_1 = class AuthService {
         const pincode = dto.pincode?.trim() || undefined;
         if (existingAny) {
             this.verifiedOtpMobiles.delete(cleanMobile);
-            if (existingAny.deletedAt !== null) {
+            if (existingAny.deletedAt != null) {
                 const updatedUser = await this.prisma.user.update({
                     where: { id: existingAny.id },
                     data: {
@@ -2179,7 +2179,7 @@ let AuthService = AuthService_1 = class AuthService {
                     },
                 });
                 await this.markVerifiedLeadCompleted(cleanMobile, updatedUser, client_1.VerifiedLeadStatus.COMPLETED_SELF);
-                const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = updatedUser;
+                const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = (updatedUser || {});
                 return {
                     isNewUser: false,
                     ...this.buildAuthResponse(safeUser),

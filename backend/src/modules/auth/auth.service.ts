@@ -2634,7 +2634,7 @@ export class AuthService {
 
     if (existingAny) {
       this.verifiedOtpMobiles.delete(cleanMobile);
-      if (existingAny.deletedAt !== null) {
+      if (existingAny.deletedAt != null) {
         // User was previously soft-deleted. Reactivate account seamlessly!
         const updatedUser = await this.prisma.user.update({
           where: { id: existingAny.id },
@@ -2655,7 +2655,7 @@ export class AuthService {
           },
         });
         await this.markVerifiedLeadCompleted(cleanMobile, updatedUser, VerifiedLeadStatus.COMPLETED_SELF);
-        const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = updatedUser;
+        const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = (updatedUser || {}) as any;
         return {
           isNewUser: false,
           ...this.buildAuthResponse(safeUser as any),

@@ -111,6 +111,9 @@ const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   MANAGER: { tabs: ['index', 'super-coupons', 'super-accounts', 'admin_more'] },
   MARKET_MANAGER: { tabs: ['index', 'super-coupons', 'super-accounts', 'admin_more'] },
   ACCOUNTANT: { tabs: ['index', 'super-accounts', 'seller-payouts', 'admin-sellers', 'admin_more'] },
+  ADVISOR: { tabs: ['index', 'crop-disease-scanner', 'chat', 'admin_more'] },
+  FARM_ADVISOR: { tabs: ['index', 'crop-disease-scanner', 'chat', 'admin_more'] },
+  DOCTOR: { tabs: ['index', 'crop-disease-scanner', 'chat', 'admin_more'] },
 };
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {

@@ -159,37 +159,6 @@ export const CropSelectionModal: React.FC<CropSelectionModalProps> = ({
               })
             )}
 
-            {/* General Farm Option */}
-            {crops.length > 0 && (
-              <TouchableOpacity
-                style={[
-                  styles.cropOptionRow,
-                  {
-                    backgroundColor: selectedCropId === 'GENERAL'
-                      ? (isDark ? 'rgba(16, 185, 129, 0.16)' : '#f0fdf4')
-                      : (isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc'),
-                    borderColor: selectedCropId === 'GENERAL' ? '#10b981' : (isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'),
-                  },
-                ]}
-                onPress={() => {
-                  tap();
-                  setSelectedCropId('GENERAL');
-                }}
-              >
-                <View style={[styles.radioCircle, { borderColor: selectedCropId === 'GENERAL' ? '#10b981' : '#94a3b8' }]}>
-                  {selectedCropId === 'GENERAL' ? <View style={styles.radioInner} /> : null}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.cropNameText, { color: isDark ? '#ffffff' : '#0f172a' }]}>
-                    🌱 General Farm Advisory (Whole Farm Consultation)
-                  </Text>
-                  <Text style={[styles.cropDetailText, { color: isDark ? colors.textMuted : '#64748b' }]}>
-                    General soil, weather telemetry, or seed planning across your entire farm
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-
             {/* Optional Issue Notes */}
             <View style={{ marginTop: 4 }}>
               <Text style={[styles.sectionLabel, { color: isDark ? '#ffffff' : '#1e293b' }]}>

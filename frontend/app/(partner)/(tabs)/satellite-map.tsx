@@ -653,7 +653,7 @@ export default function SatelliteMapScreen() {
         cropName={selectedPlot?.cropName}
         plotName={selectedPlot?.name}
         location={selectedPlot?.coordsText}
-        existingGpsData={cropFields.find((c) => c.id === selectedPlot?.id)?.gpsData}
+        existingGpsData={(cropFields || []).find((c) => c.id === selectedPlot?.id)?.gpsData}
         onClose={() => setShowLocationModal(false)}
         onSaveLocation={(data) => {
           setIsAdminUnlocked(false);

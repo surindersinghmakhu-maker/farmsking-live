@@ -111,7 +111,7 @@ export function AnimatedPurpleBottomBar({
   };
 
   const activeTabKey = getActiveTabKey();
-  const currentTab = roleTabs.find((t) => t.tabName === activeTabKey) || roleTabs[0];
+  const currentTab = (roleTabs || []).find((t) => t.tabName === activeTabKey) || (roleTabs || [])[0];
 
   // Direct pixel measurement of each tab item (zero math drift, zero index skip)
   const tabLayouts = useRef<{ [key: string]: { x: number; width: number } }>({});
@@ -210,7 +210,7 @@ export function AnimatedPurpleBottomBar({
         {visibleRoutes.map((route: any) => {
           const isFocused = route.name === activeTabKey;
           const { options } = descriptors[route.key];
-          const tabMeta = roleTabs.find((t) => t.tabName === route.name);
+          const tabMeta = (roleTabs || []).find((t) => t.tabName === route.name);
 
           const label =
             options.tabBarLabel !== undefined

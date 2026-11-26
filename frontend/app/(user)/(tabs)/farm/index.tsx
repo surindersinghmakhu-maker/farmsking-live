@@ -587,7 +587,7 @@ export default function FarmListScreen() {
     setPendingStageUpdate(null);
 
     if (targetStage === 'COMPLETED') {
-      const cropItem = cropFields.find((c) => c.id === targetCropId);
+      const cropItem = (cropFields || []).find((c) => c.id === targetCropId);
       if (cropItem) {
         setCropToComplete(cropItem);
         setCompletionReviewModalVisible(true);

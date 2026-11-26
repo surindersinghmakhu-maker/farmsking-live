@@ -871,7 +871,7 @@ export function useCrops(): CropsContextValue {
     plotNameArg?: string,
     locationArg?: string
   ) => {
-    const targetCrop = cropFields.find((c) => c.id === cropId || c.cropId === cropId);
+    const targetCrop = (cropFields || []).find((c) => c.id === cropId || c.cropId === cropId);
     const newReq: GpsUnlockRequest = {
       id: 'req-gps-' + Date.now(),
       cropId: targetCrop?.id || cropId,
@@ -888,7 +888,7 @@ export function useCrops(): CropsContextValue {
   };
 
   const acceptGpsUnlockRequest = (requestId: string, remark?: string) => {
-    const targetReq = gpsUnlockRequests.find((r) => r.id === requestId);
+    const targetReq = (gpsUnlockRequests || []).find((r) => r.id === requestId);
     setGpsUnlockRequests((prev) =>
       prev.map((r) =>
         r.id === requestId

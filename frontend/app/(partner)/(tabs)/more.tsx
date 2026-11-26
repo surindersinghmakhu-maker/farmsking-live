@@ -146,7 +146,7 @@ export default function MoreScreen() {
   };
 
 
-  const currentLanguageName = LANGUAGE_OPTIONS.find((opt) => opt.code === language)?.nativeName ?? 'English';
+  const currentLanguageName = LANGUAGE_OPTIONS?.find((opt) => opt.code === language)?.nativeName ?? 'English';
 
   const showShopSection = role !== 'CUSTOMER' && role !== 'ADMIN' && role !== 'SUPER_ADMIN';
   const showSuperAdminSection = role === 'SUPER_ADMIN' || role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';

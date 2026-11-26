@@ -38,7 +38,7 @@ export function AnimatedPurpleBottomBar({ state, descriptors, navigation, onTabP
     }
 
     const segments = (pathname || '').replace(/^\/+|\/+$/g, '').split('/');
-    const matched = (visibleRoutes || []).find((r: any) => {
+    const matched = (visibleRoutes || [])?.find((r: any) => {
       if (r.name === 'index') return false;
       return (
         segments.includes(r.name) ||

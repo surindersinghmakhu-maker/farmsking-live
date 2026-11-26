@@ -123,7 +123,7 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
             remarkRes.history || [],
           );
           const pastCount = batches.filter((b) => !b.isActiveDisplay).length;
-          const activeBatch = (batches || []).find((b) => b.isActiveDisplay);
+          const activeBatch = (batches || [])?.find((b) => b.isActiveDisplay);
           const gps = cropGpsDataMap[c.id] || c.gpsData;
           const localActive = isLocalGpsMediaActive(gps);
           const expiry =

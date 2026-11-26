@@ -230,7 +230,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
           plotName: c.plot?.name,
         };
 
-        const existing = (list || []).find((item) => item.id === adv.id);
+        const existing = (list || [])?.find((item) => item.id === adv.id);
         if (existing) {
           existing.supervisedCrops.push(cropInfo);
         } else if (!seenIds.has(adv.id)) {
@@ -337,13 +337,13 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
     }
   };
 
-  const soilTypeLabel = useMemo(() => (Array.isArray(SOIL_TYPE_OPTIONS) ? SOIL_TYPE_OPTIONS : []).find((o) => o.value === soilTypeVal)?.label, [soilTypeVal]);
-  const waterTypeLabel = useMemo(() => (Array.isArray(WATER_TYPE_OPTIONS) ? WATER_TYPE_OPTIONS : []).find((o) => o.value === waterTypeVal)?.label, [waterTypeVal]);
+  const soilTypeLabel = useMemo(() => (Array.isArray(SOIL_TYPE_OPTIONS) ? SOIL_TYPE_OPTIONS : [])?.find((o) => o.value === soilTypeVal)?.label, [soilTypeVal]);
+  const waterTypeLabel = useMemo(() => (Array.isArray(WATER_TYPE_OPTIONS) ? WATER_TYPE_OPTIONS : [])?.find((o) => o.value === waterTypeVal)?.label, [waterTypeVal]);
   const isFarmProfileComplete = !!farmPhotoUri && !!sprayTankSize;
 
   const targetPlotForProblem = useMemo(() => {
     const idToFind = selectedCropForProblem || acceptedRealCrops[0]?.id;
-    return (myCrops ?? []).find((c) => c.id === idToFind);
+    return (myCrops ?? [])?.find((c) => c.id === idToFind);
   }, [selectedCropForProblem, acceptedRealCrops, myCrops]);
 
   const chooseAdvisor = useChooseAdvisor();

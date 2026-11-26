@@ -725,7 +725,7 @@ export const WebCameraVideoRecorderModal: React.FC<WebCameraVideoRecorderModalPr
     }
 
     const mimeCandidates = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
-    const supportedMime = mimeCandidates.find((m) => MediaRecorder.isTypeSupported(m));
+    const supportedMime = mimeCandidates?.find((m) => MediaRecorder.isTypeSupported(m));
     const recorder = supportedMime
       ? new MediaRecorder(recordingStream, { mimeType: supportedMime })
       : new MediaRecorder(recordingStream);

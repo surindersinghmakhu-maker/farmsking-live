@@ -433,7 +433,7 @@ export function SupervisorManagementModal({
                         </View>
                         <View style={styles.permsBadgeWrap}>
                           {(sup.supervisorPermissions ?? []).map((p) => {
-                            const match = PERMISSION_OPTIONS.find((o) => o.id === p);
+                            const match = PERMISSION_OPTIONS?.find((o) => o.id === p);
                             return (
                               <View key={p} style={styles.permBadge}>
                                 <Text style={styles.permBadgeText}>{match?.label ?? p}</Text>

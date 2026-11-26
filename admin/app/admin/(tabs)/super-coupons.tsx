@@ -332,7 +332,7 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
   const totalRedeemed = allCoupons.reduce((sum, c) => sum + c.usedCount, 0) + allPlanCoupons.filter((c) => c.isUsed).length;
 
   const filteredSubTabs = categoryFilter === 'ALL' ? MAIN_SUB_TABS : MAIN_SUB_TABS.filter((t) => t.category === categoryFilter);
-  const activeMeta = MAIN_SUB_TABS.find((t) => t.value === activeTab);
+  const activeMeta = MAIN_SUB_TABS?.find((t) => t.value === activeTab);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -942,7 +942,7 @@ function EditPlanMultiDurationPricingModal({
 
   const handleAddRate = () => {
     const existingDays = rateRows.map((r) => r.days);
-    const nextDays = [30, 60, 90, 180, 365, 730].find((d) => !existingDays.includes(d)) || 30;
+    const nextDays = [30, 60, 90, 180, 365, 730]?.find((d) => !existingDays.includes(d)) || 30;
     setRateRows((prev) => [...prev, { days: nextDays, price: '', adminShareValue: '', partnerShareValue: '10', advisorShareValue: '', isActive: true }]);
   };
 
@@ -1668,7 +1668,7 @@ function CreateCouponModal({ visible, onClose }: { visible: boolean; onClose: ()
         ),
       );
       setSuccessCodes(
-        codes.map((c, i) => ({ name: partners.find((p) => p.id === selectedPartnerIds[i])?.name ?? 'Partner', code: c.code })),
+        codes.map((c, i) => ({ name: partners?.find((p) => p.id === selectedPartnerIds[i])?.name ?? 'Partner', code: c.code })),
       );
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Could not create coupon(s).');
@@ -1918,7 +1918,7 @@ function ReferralCouponGenerateSection() {
       const res = await issueCoupon.mutateAsync(target === 'ONE' ? partnerId : undefined);
       setSuccessMsg(
         target === 'ONE'
-          ? `Issued coupon ${res.coupons[0]?.code} to ${partners.find((p) => p.id === partnerId)?.name ?? 'the partner'}.`
+          ? `Issued coupon ${res.coupons[0]?.code} to ${partners?.find((p) => p.id === partnerId)?.name ?? 'the partner'}.`
           : `Issued ${res.issuedCount} coupon(s) to every active agent.`,
       );
     } catch (err: any) {
@@ -2423,7 +2423,7 @@ type CouponLockMode = 'OPEN' | 'ADVISOR' | 'PARTNER';
 
 /** BASIC/PREMIUM farmer-plan coupons — new farmers get their first plan, existing ones extend/renew, and it can be issued to an advisor to hand out. */
 function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, daysGranted: number): number | null {
-  const p = pricing.find((row) => row.plan === plan);
+  const p = pricing?.find((row) => row.plan === plan);
   if (!p) return null;
   const amount = Math.round(Number(p.price) * (daysGranted / p.billingPeriodDays) * 100) / 100;
   return amount > 0 ? amount : null;
@@ -2608,7 +2608,7 @@ function CreateFarmerPlanCouponModal({
 
   const availableLockModes: CouponLockMode[] = ['OPEN', 'ADVISOR', 'PARTNER'];
 
-  const planPricing = pricing.find((p) => p.plan === plan && Number(p.billingPeriodDays) === Number(daysGranted)) || pricing.find((p) => p.plan === plan);
+  const planPricing = pricing?.find((p) => p.plan === plan && Number(p.billingPeriodDays) === Number(daysGranted)) || pricing?.find((p) => p.plan === plan);
   const planAmount = (() => {
     const days = Number(daysGranted);
     if (!planPricing || !days) return null;
@@ -2830,7 +2830,7 @@ function CreateFarmerPlanCouponModal({
                   ) : null}
                   {assignedAdvisorId ? (
                     <Text style={styles.helperText}>
-                      Issued to advisor: {advisors.find((a) => a.id === assignedAdvisorId)?.name} — they can apply it to any of their farmers.
+                      Issued to advisor: {advisors?.find((a) => a.id === assignedAdvisorId)?.name} — they can apply it to any of their farmers.
                     </Text>
                   ) : (
                     <Text style={styles.helperText}>Search and pick an advisor above.</Text>
@@ -2860,7 +2860,7 @@ function CreateFarmerPlanCouponModal({
                   ) : null}
                   {assignedBusinessPartnerId ? (
                     <Text style={styles.helperText}>
-                      Issued to partner: {partners.find((p) => p.id === assignedBusinessPartnerId)?.name} — they earn a commission when a farmer redeems it.
+                      Issued to partner: {partners?.find((p) => p.id === assignedBusinessPartnerId)?.name} — they earn a commission when a farmer redeems it.
                     </Text>
                   ) : (
                     <Text style={styles.helperText}>Search and pick a agent above.</Text>
@@ -2948,7 +2948,7 @@ function FarmerPlanAddDaysSection() {
           ))}
         </View>
       ) : null}
-      {farmerId ? <Text style={styles.helperText}>Selected Farmer: {farmers.find((f) => f.id === farmerId)?.name}</Text> : null}
+      {farmerId ? <Text style={styles.helperText}>Selected Farmer: {farmers?.find((f) => f.id === farmerId)?.name}</Text> : null}
 
       <Text style={styles.label}>Plan Tier</Text>
       <View style={styles.chipRow}>
@@ -2988,7 +2988,7 @@ function FarmerPlanAddDaysSection() {
       ) : null}
       {advisorId ? (
         <Text style={styles.helperText}>
-          Selected Advisor: {advisors.find((a) => a.id === advisorId)?.name} — Advisor Share will be credited to their wallet.
+          Selected Advisor: {advisors?.find((a) => a.id === advisorId)?.name} — Advisor Share will be credited to their wallet.
         </Text>
       ) : null}
 
@@ -3769,11 +3769,11 @@ function SavedEntriesSection() {
   };
 
   // Option labels display helpers
-  const selectedFarmerLabel = farmerOptions.find((f) => f.value === selectedFarmerId)?.label || 'All Farmers';
-  const selectedDateLabel = dateOptions.find((d) => d.value === selectedDateRange)?.label || 'All Dates';
-  const selectedStateLabel = stateOptions.find((s) => s.value === selectedState)?.label || 'All States';
-  const selectedCategoryLabel = categoryOptions.find((c) => c.value === selectedCategoryKey)?.label || 'All Categories';
-  const selectedSubcategoryLabel = subcategoryOptions.find((s) => s.value === selectedSubcategory)?.label || 'All Subcategories';
+  const selectedFarmerLabel = farmerOptions?.find((f) => f.value === selectedFarmerId)?.label || 'All Farmers';
+  const selectedDateLabel = dateOptions?.find((d) => d.value === selectedDateRange)?.label || 'All Dates';
+  const selectedStateLabel = stateOptions?.find((s) => s.value === selectedState)?.label || 'All States';
+  const selectedCategoryLabel = categoryOptions?.find((c) => c.value === selectedCategoryKey)?.label || 'All Categories';
+  const selectedSubcategoryLabel = subcategoryOptions?.find((s) => s.value === selectedSubcategory)?.label || 'All Subcategories';
 
   return (
     <View style={{ gap: 14 }}>

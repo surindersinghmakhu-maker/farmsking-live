@@ -59,7 +59,7 @@ export function useReminderAlertOnLoad(enabled: boolean) {
         : Array.isArray((notifications as any)?.notifications)
           ? (notifications as any).notifications
           : [];
-    const reminder = (notifList || []).find((n: any) => n?.type === 'SPRAY_REMINDER' && !n?.isRead && n?.data?.isReminder === true);
+    const reminder = (notifList || [])?.find((n: any) => n?.type === 'SPRAY_REMINDER' && !n?.isRead && n?.data?.isReminder === true);
     if (!reminder) return;
 
     hasShown.current = true;

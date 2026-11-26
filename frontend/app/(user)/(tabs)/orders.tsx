@@ -96,8 +96,8 @@ export default function OrdersScreen() {
                   inputRange: [0, 1, 2, 3],
                   outputRange: ['0%', '25%', '50%', '75%'],
                 }),
-                backgroundColor: ORDER_TABS.find((t) => t.id === filter)?.color || theme.primary,
-                ...premiumShadow(ORDER_TABS.find((t) => t.id === filter)?.color || theme.primary, 'xs'),
+                backgroundColor: ORDER_TABS?.find((t) => t.id === filter)?.color || theme.primary,
+                ...premiumShadow(ORDER_TABS?.find((t) => t.id === filter)?.color || theme.primary, 'xs'),
               },
             ]}
           />

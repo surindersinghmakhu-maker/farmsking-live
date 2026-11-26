@@ -166,11 +166,11 @@ export function CropDoctorAdoptionModal({
     const list = displayedDoctors || [];
     if (!Array.isArray(list) || list.length === 0) return null;
     if (selectedDoctorId) {
-      const found = list.find((a) => a.id === selectedDoctorId);
+      const found = list?.find((a) => a.id === selectedDoctorId);
       if (found) return found;
     }
     // Pick first doctor who is not already assigned to this crop
-    const firstAvailable = list.find(
+    const firstAvailable = list?.find(
       (a) => !((a as any).isAlreadyAssignedToThisCrop || (crop?.assignedAdvisorId === a.id && crop?.advisorReviewStatus !== 'NONE')),
     );
     return firstAvailable || list[0];

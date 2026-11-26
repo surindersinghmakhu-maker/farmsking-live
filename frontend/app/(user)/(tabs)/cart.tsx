@@ -84,9 +84,9 @@ export default function CartScreen() {
 
   React.useEffect(() => {
     if (Array.isArray(addresses) && addresses.length > 0) {
-      const currentExists = selectedAddressId ? addresses.find((a) => a.id === selectedAddressId) : null;
+      const currentExists = selectedAddressId ? addresses?.find((a) => a.id === selectedAddressId) : null;
       if (!currentExists) {
-        const target = addresses.find((a) => a.isDefault) || addresses[0];
+        const target = addresses?.find((a) => a.isDefault) || addresses[0];
         setSelectedAddressId(target.id);
         setDeliveryAddress(composeAddress(target));
       }

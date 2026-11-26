@@ -129,7 +129,7 @@ export default function NewSettingsScreen() {
     if (tabParam === 'OTHER' || tabParam === 'OTHERS' || tabParam === 'SYSTEM' || tabParam === 'MISC') {
       return 'OTHER';
     }
-    const found = SETTINGS_TABS.find((t) => t.id === tabParam);
+    const found = SETTINGS_TABS?.find((t) => t.id === tabParam);
     return found ? found.id : 'ABOUT';
   });
 

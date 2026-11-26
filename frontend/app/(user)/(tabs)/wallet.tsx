@@ -248,7 +248,7 @@ export function downloadJpgCouponCard({
 
 function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, daysGranted: number): number | null {
   const list = Array.isArray(pricing) ? pricing : (pricing as any)?.items || (pricing as any)?.data || [];
-  const p = list.find((row: any) => row.plan === plan);
+  const p = list?.find((row: any) => row.plan === plan);
   if (!p) return null;
   const amount = Math.round(Number(p.price) * (daysGranted / p.billingPeriodDays) * 100) / 100;
   return amount > 0 ? amount : null;

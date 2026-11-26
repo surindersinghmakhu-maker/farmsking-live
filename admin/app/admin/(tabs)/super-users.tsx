@@ -398,11 +398,11 @@ export default function SuperUsersScreen() {
   const visibleItems = items.slice((page - 1) * pageSize, page * pageSize);
 
   const currentCustomSubLabel =
-    CUSTOM_SUB_FILTERS.find((c) => c.value === customSubFilter)?.label || 'Custom';
+    CUSTOM_SUB_FILTERS?.find((c) => c.value === customSubFilter)?.label || 'Custom';
 
   const currentFilterLabel = filter === 'ALL'
     ? (group === 'CLIENTS' ? 'Clients' : group === 'PARTNERS' ? 'Partners' : 'Staff')
-    : Object.values(FILTERS_BY_GROUP).flat().find(f => f.value === filter)?.label || 'Users';
+    : Object.values(FILTERS_BY_GROUP).flat()?.find(f => f.value === filter)?.label || 'Users';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>

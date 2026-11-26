@@ -102,7 +102,7 @@ export default function FarmDetailScreen() {
     setShowForm(true);
   };
 
-  const selectedCategory = CROP_CATEGORIES.find((c) => c.value === category)!;
+  const selectedCategory = CROP_CATEGORIES?.find((c) => c.value === category)!;
   const isSaving = createPlot.isPending || createCrop.isPending;
 
   const resetForm = () => {

@@ -180,7 +180,7 @@ export function ThirdPartyServicesSection() {
   }
 
   // Active Category details
-  const activePill = CATEGORY_PILLS.find((p) => p.key === activeCategory) || CATEGORY_PILLS[0];
+  const activePill = CATEGORY_PILLS?.find((p) => p.key === activeCategory) || CATEGORY_PILLS[0];
 
   // Helper for active badge display in navigation
   const getActiveBadgeText = (key: ServiceCategory): string => {

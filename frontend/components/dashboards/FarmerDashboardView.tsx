@@ -204,7 +204,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
       : Array.isArray((pricing as any)?.data)
         ? (pricing as any).data
         : [];
-  const planPrice = (Array.isArray(pricingList) ? pricingList : []).find((p: any) => p?.plan === plan)?.price;
+  const planPrice = (Array.isArray(pricingList) ? pricingList : [])?.find((p: any) => p?.plan === plan)?.price;
 
   const planActionLabel = 'VIP Pass';
 

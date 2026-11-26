@@ -114,7 +114,7 @@ export default function PlotDetailScreen() {
   const [remarks, setRemarks] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const selectedCategory = CROP_CATEGORIES.find((c) => c.value === category)!;
+  const selectedCategory = CROP_CATEGORIES?.find((c) => c.value === category)!;
 
   const resetForm = () => {
     setCategory('VEGETABLES');

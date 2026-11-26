@@ -458,7 +458,7 @@ export function UnifiedAddUserModal({
   };
 
   const currentRoles = (category && ROLES_BY_CATEGORY[category]) ? ROLES_BY_CATEGORY[category].filter((r) => !r.superAdminOnly || isSuperAdmin) : [];
-  const selectedRoleMeta = (currentRoles || []).find((r) => r.value === selectedRole);
+  const selectedRoleMeta = (currentRoles || [])?.find((r) => r.value === selectedRole);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isMobile = windowWidth < 640;

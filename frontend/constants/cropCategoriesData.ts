@@ -101,6 +101,8 @@ export const INITIAL_CROP_CATEGORIES: CropCategory[] = [
   { id: 'other', name: 'Other Crops', hindiName: 'Other Crops', icon: 'add-circle-outline', color: '#64748b', bg: '#f1f5f9' },
 ];
 
+export const CROP_CATEGORIES: CropCategory[] = INITIAL_CROP_CATEGORIES;
+
 export const INITIAL_CROPS_LIST: CropItem[] = [
   // ── 1. Flowers & Floriculture (Continuous / Daily Harvest) ──────────────────
   { id: 'fl1', categoryId: 'flowers', name: 'Rose', hindiName: 'Rose', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Bunch', defaultPrice: 40, harvestType: 'CONTINUOUS' },

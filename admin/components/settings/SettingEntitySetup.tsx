@@ -1466,7 +1466,7 @@ export default function SettingEntitySetup() {
                     DYNAMIC TOKENS (CLICK TO APPEND TO SUBJECT):
                   </Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
-                    {(EMAIL_TEMPLATE_ITEMS.find((t) => t.key === activeEmailTmpl)?.vars || []).map((v) => (
+                    {(EMAIL_TEMPLATE_ITEMS?.find((t) => t.key === activeEmailTmpl)?.vars || []).map((v) => (
                       <TouchableOpacity
                         key={v}
                         style={[styles.varChip, { backgroundColor: innerBg, borderColor: cardBorder }]}

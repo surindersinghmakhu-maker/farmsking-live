@@ -154,11 +154,11 @@ export default function TabLayout() {
       pathname === '/(tabs)/index' ||
       pathname === '';
     if (isHome) {
-      const homeTab = (roleTabs || []).find((t) => t?.tabName === 'index');
+      const homeTab = (roleTabs || [])?.find((t) => t?.tabName === 'index');
       return homeTab ? homeTab.tabName : roleTabs[0]?.tabName || 'index';
     }
     const segments = pathname.replace(/^\/+|\/+$/g, '').split('/');
-    const matched = (roleTabs || []).find((t) => {
+    const matched = (roleTabs || [])?.find((t) => {
       if (!t || t.tabName === 'index') return false;
       return (
         segments.includes(t.tabName) ||

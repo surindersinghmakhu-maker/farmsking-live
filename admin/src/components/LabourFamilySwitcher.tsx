@@ -207,7 +207,7 @@ export function LabourFamilySwitcher({
   const activeWorker = useMemo(() => {
     const list = displayWorkers || [];
     if (!selectedWorkerId && list.length > 0) return list[0];
-    return list.find((w) => w.id === selectedWorkerId) || list[0] || null;
+    return list?.find((w) => w.id === selectedWorkerId) || list[0] || null;
   }, [displayWorkers, selectedWorkerId]);
 
   // Active Farmer Object (Landowner / Employer)
@@ -217,7 +217,7 @@ export function LabourFamilySwitcher({
     }
     const farmersList = availableFarmers || [];
     if (activeFarmerId && farmersList.length > 0) {
-      return farmersList.find((f) => f.id === activeFarmerId) || farmersList[0];
+      return farmersList?.find((f) => f.id === activeFarmerId) || farmersList[0];
     }
     return farmersList[0] || null;
   }, [activeWorker, activeFarmerId, availableFarmers]);

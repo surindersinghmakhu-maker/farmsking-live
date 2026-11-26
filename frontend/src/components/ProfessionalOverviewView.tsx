@@ -438,7 +438,7 @@ function CropStatementModal({
 
   const { data: myCrops = [] } = useMyCrops();
   const foundCrop = useMemo(() => {
-    return (myCrops || []).find(
+    return (myCrops || [])?.find(
       (c) => c.cropName && c.cropName.toLowerCase().trim() === cropName.toLowerCase().trim()
     );
   }, [myCrops, cropName]);

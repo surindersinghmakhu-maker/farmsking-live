@@ -223,7 +223,7 @@ export function PartyPicker({
     const cleaned = num.trim().replace(/\D/g, '');
     if (cleaned.length >= 10) {
       // Search in existing parties and labour workers for matching mobile
-      const match = (combinedList || []).find((item) => item.mobile && item.mobile.replace(/\D/g, '').includes(cleaned));
+      const match = (combinedList || [])?.find((item) => item.mobile && item.mobile.replace(/\D/g, '').includes(cleaned));
       if (match) {
         tap();
         setNewName(match.name);

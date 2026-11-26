@@ -46,7 +46,7 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
       const lower = clean.toLowerCase();
       if (!seen.has(lower)) {
         seen.add(lower);
-        const cat = CROP_CATEGORIES.find((cat) => cat.id === c.categoryId);
+        const cat = (CROP_CATEGORIES || []).find((cat) => cat.id === c.categoryId);
         list.push({ id: c.id, name: clean, categoryId: c.categoryId, categoryName: cat?.name || 'General' });
       }
     });
@@ -794,7 +794,7 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
                       All Categories ({masterSystemCrops.length})
                     </Text>
                   </TouchableOpacity>
-                  {CROP_CATEGORIES.map((cat) => {
+                  {(CROP_CATEGORIES || []).map((cat) => {
                     const count = masterSystemCrops.filter((c) => c.categoryId === cat.id).length;
                     if (count === 0) return null;
                     const isActive = selectedCropCategory === cat.id;

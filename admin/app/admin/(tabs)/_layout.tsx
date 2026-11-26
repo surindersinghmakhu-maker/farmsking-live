@@ -302,9 +302,9 @@ export default function TabLayout() {
   };
 
   const rolePillars = getPillarsForRole(role) || [];
-  const activePillar = (rolePillars || []).find((p) => p?.id === selectedPillarId) || rolePillars[0] || ADMIN_PILLARS[0];
+  const activePillar = (rolePillars || [])?.find((p) => p?.id === selectedPillarId) || rolePillars[0] || ADMIN_PILLARS[0];
 
-  const activeSubTab = (activePillar?.subTabs || []).find((tab) => {
+  const activeSubTab = (activePillar?.subTabs || [])?.find((tab) => {
     const isIndexActive = tab.path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
     const isOtherActive = tab.path !== '/admin/(tabs)' && pathname.includes(tab.path.split('/').pop() || '');
     const currentFilter = localParams?.filter || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('filter') : undefined);

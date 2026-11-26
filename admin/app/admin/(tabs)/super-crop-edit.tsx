@@ -90,7 +90,7 @@ export default function SuperCropEditScreen() {
         }
 
         if (result.plot?.areaUnit) {
-          const found = LAND_AREA_UNITS.find(u => u.unit.toLowerCase().includes((result.plot?.areaUnit || '').toLowerCase()));
+          const found = LAND_AREA_UNITS?.find(u => u.unit.toLowerCase().includes((result.plot?.areaUnit || '').toLowerCase()));
           if (found) setAreaUnit(found.unit);
         }
 
@@ -99,7 +99,7 @@ export default function SuperCropEditScreen() {
         setStage(result.stage ?? 'PLANTATION');
 
         if (result.category) {
-          const matched = INITIAL_CROP_CATEGORIES.find(c => c.name.toLowerCase().includes((result.category || '').toLowerCase()));
+          const matched = INITIAL_CROP_CATEGORIES?.find(c => c.name.toLowerCase().includes((result.category || '').toLowerCase()));
           if (matched) setSelectedCatId(matched.id);
         }
 

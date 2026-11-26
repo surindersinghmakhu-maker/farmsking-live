@@ -40,6 +40,11 @@ export function GlobalErrorBoundary({ error, retry }: { error: Error; retry: () 
             URL: {window.location.pathname}
           </Text>
         ) : null}
+        {error?.stack ? (
+          <Text style={{ fontSize: 10, color: '#dc2626', marginTop: 6, fontFamily: 'monospace' }} numberOfLines={6}>
+            {error.stack}
+          </Text>
+        ) : null}
       </View>
 
       <TouchableOpacity style={styles.retryBtn} onPress={handleRetry} activeOpacity={0.8}>

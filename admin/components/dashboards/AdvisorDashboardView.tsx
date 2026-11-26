@@ -514,7 +514,7 @@ export const AdvisorDashboardView: React.FC = () => {
     PROBLEMS: isLoadingProblems,
   };
 
-  const defaultTab = useMemo<TabKey>(() => (Array.isArray(TAB_ORDER) ? TAB_ORDER.find((k) => (counts?.[k] ?? 0) > 0) : undefined) ?? 'TODAY', []); // eslint-disable-line react-hooks/exhaustive-deps
+  const defaultTab = useMemo<TabKey>(() => (Array.isArray(TAB_ORDER) ? TAB_ORDER?.find((k) => (counts?.[k] ?? 0) > 0) : undefined) ?? 'TODAY', []); // eslint-disable-line react-hooks/exhaustive-deps
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
   const [isMessengerOpen, setIsMessengerOpen] = useState(false);
 

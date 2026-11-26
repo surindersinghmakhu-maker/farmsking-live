@@ -730,7 +730,7 @@ export function ServiceProvidersHub() {
 
   const handleSave = useCallback(async (service: ServiceCategory) => {
     const providerId = activeProviders[service.id];
-    const provider = (service.providers || []).find((p) => p.id === providerId);
+    const provider = (service.providers || [])?.find((p) => p.id === providerId);
     if (!provider) return;
 
     setSaving((prev) => ({ ...prev, [service.id]: true }));
@@ -799,7 +799,7 @@ export function ServiceProvidersHub() {
       {SERVICES.map((service) => {
         const isExpanded = expandedService === service.id;
         const currentProviderId = activeProviders[service.id];
-        const currentProvider = (service.providers || []).find((p) => p.id === currentProviderId);
+        const currentProvider = (service.providers || [])?.find((p) => p.id === currentProviderId);
         const isSaving = saving[service.id];
         const isOk = savedOk[service.id];
         const errorMsg = errors[service.id];

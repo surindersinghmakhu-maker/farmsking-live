@@ -446,7 +446,7 @@ export default function SuperSettingsScreen() {
     );
   }
 
-  const selectedCategory = TOOL_SERVICES_FILTERS.find((c) => c.key === activeFilter) || TOOL_SERVICES_FILTERS[0];
+  const selectedCategory = TOOL_SERVICES_FILTERS?.find((c) => c.key === activeFilter) || TOOL_SERVICES_FILTERS[0];
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>

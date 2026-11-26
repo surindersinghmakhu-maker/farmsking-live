@@ -275,7 +275,7 @@ export default function AdminProductsScreen() {
 
   // Selected Store Object
   const selectedStore = useMemo(() => {
-    return verifiedStores.find((s) => s.id === selectedSellerStoreId);
+    return verifiedStores?.find((s) => s.id === selectedSellerStoreId);
   }, [verifiedStores, selectedSellerStoreId]);
 
   // Filtered Active Sellers for Modal Selector

@@ -497,7 +497,7 @@ export default function AdvisorFarmsScreen() {
   }, [groupByMode, selectedStageRadio]);
 
   const currentOption = useMemo(() => {
-    return dropdownOptions.find((opt) => opt.key === activeDropdownKey) || dropdownOptions[0];
+    return dropdownOptions?.find((opt) => opt.key === activeDropdownKey) || dropdownOptions[0];
   }, [activeDropdownKey, dropdownOptions]);
 
   const toggleGroupCollapse = (groupKey: string) => {
@@ -1008,7 +1008,7 @@ export default function AdvisorFarmsScreen() {
                   (() => {
                     const groupKey = `stage-${selectedStageRadio}`;
                     const isExpanded = expandedGroupKeys[groupKey] !== false;
-                    const stageLabel = STAGE_RADIO_OPTIONS.find((s) => s.key === selectedStageRadio)?.label || 'Growth Stage';
+                    const stageLabel = STAGE_RADIO_OPTIONS?.find((s) => s.key === selectedStageRadio)?.label || 'Growth Stage';
                     return (
                       <View style={[styles.farmerCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#f1f5f9' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                         <TouchableOpacity

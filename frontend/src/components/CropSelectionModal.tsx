@@ -55,7 +55,7 @@ export const CropSelectionModal: React.FC<CropSelectionModalProps> = ({
     }
   };
 
-  const selectedCrop = cropList.find((c) => c.id === selectedCropId);
+  const selectedCrop = cropList?.find((c) => c.id === selectedCropId);
   const selectedCropName = selectedCrop ? selectedCrop.cropName : 'General Farm Advisory';
 
   const handleConfirm = () => {

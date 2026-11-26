@@ -282,7 +282,7 @@ export function AdminStaffManagementModal({
                         {st.adminStaffPermissions && st.adminStaffPermissions.length > 0 ? (
                           <View style={styles.permsWrap}>
                             {st.adminStaffPermissions.map((p) => {
-                              const match = STAFF_PERMISSIONS.find((s) => s.id === p);
+                              const match = STAFF_PERMISSIONS?.find((s) => s.id === p);
                               return (
                                 <View key={p} style={styles.permBadge}>
                                   <Text style={styles.permBadgeText}>{match?.label ?? p}</Text>

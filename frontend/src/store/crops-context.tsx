@@ -665,7 +665,7 @@ export function useCrops(): CropsContextValue {
     }
 
     const plots = await plotsApi.listPlotsForFarm(farm.id);
-    const existingPlot = (plots || []).find((p) => p.name === targetPlotName);
+    const existingPlot = (plots || [])?.find((p) => p.name === targetPlotName);
     if (existingPlot) return existingPlot;
 
     return plotsApi.createPlot({
@@ -701,7 +701,7 @@ export function useCrops(): CropsContextValue {
   };
 
   const editCrop = async (cropId: string, values: CropFormValues) => {
-    const targetCrop = (myCrops || []).find((c) => c.id === cropId);
+    const targetCrop = (myCrops || [])?.find((c) => c.id === cropId);
     if (targetCrop?.plotId || targetCrop?.plot?.id) {
       const plotId = (targetCrop.plotId || targetCrop.plot?.id)!;
       const sharedCrops = myCrops.filter((c) => (c.plotId || c.plot?.id) === plotId);
@@ -771,7 +771,7 @@ export function useCrops(): CropsContextValue {
   };
 
   const recordSale = async (cropId: string, payload: SalePayload) => {
-    const crop = (myCrops || []).find((c) => c.id === cropId);
+    const crop = (myCrops || [])?.find((c) => c.id === cropId);
     if (!crop) return;
 
     const quantity = Number(payload.quantity);
@@ -844,10 +844,10 @@ export function useCrops(): CropsContextValue {
   };
 
   const applySpecialTreatmentToCrop = async (cropId: string, treatmentId: string) => {
-    const treatment = (specialTreatments || []).find((t) => t.id === treatmentId);
+    const treatment = (specialTreatments || [])?.find((t) => t.id === treatmentId);
     if (!treatment) return;
 
-    const existingSchedule = (myCrops || []).find((c) => c.id === cropId)?.assignedSchedule ?? undefined;
+    const existingSchedule = (myCrops || [])?.find((c) => c.id === cropId)?.assignedSchedule ?? undefined;
     const dateFormatted = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     const treatmentHeader = `\n🚨 Special Remedy Applied (${treatment.problemTitle} - ${dateFormatted}):`;
     const taskLines = treatment.remedyTasks.map((task) => {
@@ -871,7 +871,7 @@ export function useCrops(): CropsContextValue {
     plotNameArg?: string,
     locationArg?: string
   ) => {
-    const targetCrop = (cropFields || []).find((c) => c.id === cropId || c.cropId === cropId);
+    const targetCrop = (cropFields || [])?.find((c) => c.id === cropId || c.cropId === cropId);
     const newReq: GpsUnlockRequest = {
       id: 'req-gps-' + Date.now(),
       cropId: targetCrop?.id || cropId,
@@ -888,7 +888,7 @@ export function useCrops(): CropsContextValue {
   };
 
   const acceptGpsUnlockRequest = (requestId: string, remark?: string) => {
-    const targetReq = (gpsUnlockRequests || []).find((r) => r.id === requestId);
+    const targetReq = (gpsUnlockRequests || [])?.find((r) => r.id === requestId);
     setGpsUnlockRequests((prev) =>
       prev.map((r) =>
         r.id === requestId

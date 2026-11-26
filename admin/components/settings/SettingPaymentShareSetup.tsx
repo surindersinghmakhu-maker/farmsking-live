@@ -280,7 +280,7 @@ export default function SettingPaymentShareSetup() {
 
   const currentActivePartnerKey = (intForm.logistics?.activeProvider || 'SHIPROCKET').toUpperCase();
   const activeLogisticsPartner =
-    LOGISTICS_PARTNERS.find((p) => p.id === currentActivePartnerKey) || LOGISTICS_PARTNERS[0];
+    LOGISTICS_PARTNERS?.find((p) => p.id === currentActivePartnerKey) || LOGISTICS_PARTNERS[0];
 
   const partnerDeliveryFees: Record<string, number> = {
     SHIPROCKET: 65,

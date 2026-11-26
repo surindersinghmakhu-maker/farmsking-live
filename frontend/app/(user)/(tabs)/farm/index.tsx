@@ -587,7 +587,7 @@ export default function FarmListScreen() {
     setPendingStageUpdate(null);
 
     if (targetStage === 'COMPLETED') {
-      const cropItem = (cropFields || []).find((c) => c.id === targetCropId);
+      const cropItem = (cropFields || [])?.find((c) => c.id === targetCropId);
       if (cropItem) {
         setCropToComplete(cropItem);
         setCompletionReviewModalVisible(true);
@@ -2778,7 +2778,7 @@ export default function FarmListScreen() {
             </View>
 
             {pendingDetailModalCrop ? (() => {
-              const req = (gpsUnlockRequests || []).find(
+              const req = (gpsUnlockRequests || [])?.find(
                 (r) => (r.cropId === pendingDetailModalCrop.id || r.cropId === pendingDetailModalCrop.cropId) && r.status === 'PENDING'
               );
               return (

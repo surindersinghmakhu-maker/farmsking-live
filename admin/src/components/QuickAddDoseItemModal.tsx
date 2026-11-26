@@ -97,7 +97,7 @@ export function QuickAddDoseItemModal({
               onPress={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <Text style={[styles.dropdownButtonText, !sprayType && { color: '#94a3b8' }]}>
-                {SPRAY_TYPE_OPTIONS.find((opt) => opt.key === sprayType)?.label ?? 'Select Category (Spray Type)'}
+                {SPRAY_TYPE_OPTIONS?.find((opt) => opt.key === sprayType)?.label ?? 'Select Category (Spray Type)'}
               </Text>
               <Ionicons name={isDropdownOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
             </TouchableOpacity>

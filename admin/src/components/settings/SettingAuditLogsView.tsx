@@ -38,7 +38,7 @@ export default function SettingAuditLogsView() {
   const [visibleCount, setVisibleCount] = useState(25);
 
   const activePrefix = useMemo(() => {
-    const found = CATEGORIES.find((c) => c.id === selectedCategory);
+    const found = CATEGORIES?.find((c) => c.id === selectedCategory);
     return found?.prefix || undefined;
   }, [selectedCategory]);
 

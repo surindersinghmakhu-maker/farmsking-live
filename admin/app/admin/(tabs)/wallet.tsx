@@ -247,7 +247,7 @@ export function downloadJpgCouponCard({
 
 function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, daysGranted: number): number | null {
   const list = Array.isArray(pricing) ? pricing : (pricing as any)?.items || (pricing as any)?.data || [];
-  const p = list.find((row: any) => row.plan === plan);
+  const p = list?.find((row: any) => row.plan === plan);
   if (!p) return null;
   const amount = Math.round(Number(p.price) * (daysGranted / p.billingPeriodDays) * 100) / 100;
   return amount > 0 ? amount : null;
@@ -1736,7 +1736,7 @@ function GenerateCouponModal({ visible, onClose }: { visible: boolean; onClose: 
 
   const quantity = Math.max(1, parseInt(quantityStr, 10) || 1);
   const pricingList = Array.isArray(pricing) ? pricing : (pricing as any)?.items || (pricing as any)?.data || [];
-  const planPricing = pricingList.find((p: any) => p.plan === plan);
+  const planPricing = pricingList?.find((p: any) => p.plan === plan);
   const ratio = planPricing ? Number(daysGranted) / planPricing.billingPeriodDays : 0;
   const basePrice = planPricing ? Math.round(Number(planPricing.price) * ratio * 100) / 100 : 0;
 
@@ -1887,7 +1887,7 @@ function GenerateCouponModal({ visible, onClose }: { visible: boolean; onClose: 
                     </View>
                   ) : null}
                   {assignedFarmerId ? (
-                    <Text style={styles.emptyText}>Locked to: {(farmers || []).find((f) => f.farmerId === assignedFarmerId)?.farmer?.name}</Text>
+                    <Text style={styles.emptyText}>Locked to: {(farmers || [])?.find((f) => f.farmerId === assignedFarmerId)?.farmer?.name}</Text>
                   ) : (
                     <Text style={styles.emptyText}>Leave blank for an open code you can hand to any of your farmers.</Text>
                   )}

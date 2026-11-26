@@ -655,9 +655,9 @@ export default function ShopScreen() {
 
   React.useEffect(() => {
     if (savedAddresses.length > 0) {
-      const currentExists = selectedAddressId ? savedAddresses.find((a) => a.id === selectedAddressId) : null;
+      const currentExists = selectedAddressId ? savedAddresses?.find((a) => a.id === selectedAddressId) : null;
       if (!currentExists) {
-        const target = savedAddresses.find((a) => a.isDefault) || savedAddresses[0];
+        const target = savedAddresses?.find((a) => a.isDefault) || savedAddresses[0];
         setSelectedAddressId(target.id);
         setDeliveryAddress(composeAddress(target));
       }
@@ -953,7 +953,7 @@ export default function ShopScreen() {
   const activeProductCount = (products ?? []).filter((p) => p.isActive).length;
   const inactiveProductCount = (products ?? []).filter((p) => !p.isActive).length;
 
-  const cartQtyFor = (productId: string) => (items || []).find((i) => i.productId === productId)?.quantity ?? 0;
+  const cartQtyFor = (productId: string) => (items || [])?.find((i) => i.productId === productId)?.quantity ?? 0;
 
   const discountPercent = useMemo(() => {
     const mrp = Number(newMrpPrice);
@@ -3649,7 +3649,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       { key: 'Farmer Made Foods', icon: '👨‍🌾', label: 'Farmer Made Foods' },
                       { key: 'Farmer Plan & Coupons', icon: '🎟️', label: 'Deals & VIP Coupons' },
                     ];
-                    const currentCatObj = catList.find(c => c.key === newCategory) || catList[0];
+                    const currentCatObj = catList?.find(c => c.key === newCategory) || catList[0];
                     return (
                       <View style={{ position: 'relative' }}>
                         <TouchableOpacity
@@ -5504,7 +5504,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
       {/* 🔥 Shop Launch Hot Deal Promotional Popup Banner */}
       <HotDealPopupModal
         visible={isHotDealModalVisible && hotDealBannerEnabled}
-        featuredProduct={products && products.length > 0 ? (products.find(p => p.stockQty > 0) || products[0]) : null}
+        featuredProduct={products && products.length > 0 ? (products?.find(p => p.stockQty > 0) || products[0]) : null}
         headlineTitle={hotDealTitle}
         onClose={() => setIsHotDealModalVisible(false)}
         onAddToCartAndBuy={(prod) => {
@@ -5710,7 +5710,7 @@ function FarmsKingProductDetailModal({
         let p = basePrice;
         let m = baseMrp;
         if ((product as any)?.variants && Array.isArray((product as any).variants)) {
-          const found = (product as any).variants.find((v: any) => v.packSize === sz || v.size === sz || v.name === sz);
+          const found = (product as any).variants?.find((v: any) => v.packSize === sz || v.size === sz || v.name === sz);
           if (found) {
             p = Number(found.price || basePrice);
             m = Number(found.mrp || Math.round(p * 1.25));

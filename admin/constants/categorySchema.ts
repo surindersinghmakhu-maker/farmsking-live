@@ -281,7 +281,7 @@ export const getCategoryFieldConfig = (categoryNameOrSlug: string, productTypeHi
   const all = getAllCategoryConfigs();
   const search = (categoryNameOrSlug || '').trim().toLowerCase();
 
-  const found = all.find(
+  const found = all?.find(
     (c) =>
       c.name.toLowerCase() === search ||
       c.slug.toLowerCase() === search ||

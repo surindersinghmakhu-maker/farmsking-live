@@ -31,7 +31,7 @@ type DoseUnit = (typeof DOSE_UNITS)[number];
 /** Splits a saved dose string like "2 ml" back into its value and unit, for prefilling the edit form. */
 function splitDose(dose: string | undefined | null): { value: string; unit: DoseUnit } {
   if (!dose) return { value: '', unit: 'ml' };
-  const match = DOSE_UNITS.find((u) => dose.trim().toLowerCase().endsWith(u.toLowerCase()));
+  const match = DOSE_UNITS?.find((u) => dose.trim().toLowerCase().endsWith(u.toLowerCase()));
   if (!match) return { value: dose, unit: 'ml' };
   return { value: dose.slice(0, dose.length - match.length).trim(), unit: match };
 }

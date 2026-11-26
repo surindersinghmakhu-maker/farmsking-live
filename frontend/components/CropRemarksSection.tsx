@@ -130,7 +130,7 @@ export const CropRemarksSection: React.FC<CropRemarksSectionProps> = ({
         'audio/ogg;codecs=opus',
         'audio/ogg',
       ];
-      const supportedMime = mimeCandidates.find((m) => MediaRecorder.isTypeSupported(m));
+      const supportedMime = mimeCandidates?.find((m) => MediaRecorder.isTypeSupported(m));
       const recorder = supportedMime
         ? new MediaRecorder(stream, { mimeType: supportedMime })
         : new MediaRecorder(stream);

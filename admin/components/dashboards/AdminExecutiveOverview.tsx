@@ -598,7 +598,7 @@ export const AdminExecutiveOverview: React.FC = () => {
 
             {/* Active Hub Card Summary */}
             {(() => {
-              const currentHub = ADMIN_PILLARS.find((p) => p.id === selectedMobilePillar) || ADMIN_PILLARS[0];
+              const currentHub = ADMIN_PILLARS?.find((p) => p.id === selectedMobilePillar) || ADMIN_PILLARS[0];
               return (
                 <View
                   style={[

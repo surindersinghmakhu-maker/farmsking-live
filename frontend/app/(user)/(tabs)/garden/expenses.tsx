@@ -208,7 +208,7 @@ export default function GardenExpensesScreen() {
 
     setSavingHarvest(true);
     try {
-      const selectedPlant = (harvestPlants || []).find((p: any) => p.id === harvestPlantId);
+      const selectedPlant = (harvestPlants || [])?.find((p: any) => p.id === harvestPlantId);
       const plantName = selectedPlant?.name || 'Plant';
       const qty = Number(harvestQty);
       const rate = Number(harvestMarketRate);
@@ -239,7 +239,7 @@ export default function GardenExpensesScreen() {
       setHarvestNote('');
       setHarvestUnit('kg');
     } catch {
-      const selectedPlant = (harvestPlants || []).find((p: any) => p.id === harvestPlantId);
+      const selectedPlant = (harvestPlants || [])?.find((p: any) => p.id === harvestPlantId);
       const plantName = selectedPlant?.name || 'Plant';
       setHarvestSuccess({
         qty: harvestQty,

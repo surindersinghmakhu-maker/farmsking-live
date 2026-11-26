@@ -697,7 +697,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
         setArea(numericVal || '1');
 
         const restUnitText = parts.slice(1).join(' ').trim();
-        const foundUnit = LAND_AREA_UNITS.find(
+        const foundUnit = LAND_AREA_UNITS?.find(
           (u) => u.unit.toLowerCase() === restUnitText.toLowerCase() || u.label.toLowerCase() === restUnitText.toLowerCase()
         );
         if (foundUnit) {
@@ -715,7 +715,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
       if (editingCrop.irrigationType) setSelectedIrrigation(editingCrop.irrigationType);
       if (editingCrop.harvestType) setCustomHarvestType(editingCrop.harvestType);
 
-      const matchedCat = INITIAL_CROP_CATEGORIES.find((c) => c.name === editingCrop.categoryName) || INITIAL_CROP_CATEGORIES[0];
+      const matchedCat = INITIAL_CROP_CATEGORIES?.find((c) => c.name === editingCrop.categoryName) || INITIAL_CROP_CATEGORIES[0];
       setSelectedCatId(matchedCat.id);
 
       const baseName = editingCrop.cropName.replace(/\s*\([^)]*\)/g, '').trim();
@@ -745,7 +745,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
 
   const currentCategory = useMemo(() => {
     return (
-      INITIAL_CROP_CATEGORIES.find((c) => c.id === selectedCatId) ||
+      INITIAL_CROP_CATEGORIES?.find((c) => c.id === selectedCatId) ||
       INITIAL_CROP_CATEGORIES[0]
     );
   }, [selectedCatId]);
@@ -1091,7 +1091,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     }}
                   >
                     <Ionicons
-                      name={(IRRIGATION_TYPES.find((irr) => irr.type === selectedIrrigation)?.icon as any) || 'water-outline'}
+                      name={(IRRIGATION_TYPES?.find((irr) => irr.type === selectedIrrigation)?.icon as any) || 'water-outline'}
                       size={14}
                       color="#0284c7"
                     />
@@ -1113,7 +1113,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     }}
                   >
                     <Ionicons
-                      name={(CROP_UNITS.find((u) => u.unit === selectedUnit)?.icon as any) || 'scale-outline'}
+                      name={(CROP_UNITS?.find((u) => u.unit === selectedUnit)?.icon as any) || 'scale-outline'}
                       size={14}
                       color="#16a34a"
                     />

@@ -120,7 +120,7 @@ export function MarketRatesCard() {
 
     const targetStates = Array.from(uniqueStateSet);
 
-    const cropRateObj = (subcategoryRates || []).find((r) => r.displayTitle?.toLowerCase() === cropName.toLowerCase());
+    const cropRateObj = (subcategoryRates || [])?.find((r) => r.displayTitle?.toLowerCase() === cropName.toLowerCase());
     const localAvg = cropRateObj?.localAvgRate ?? null;
     const localMin = cropRateObj?.localMinRate ?? localAvg;
     const localMax = cropRateObj?.localMaxRate ?? localAvg;

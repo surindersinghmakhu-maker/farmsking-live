@@ -46,7 +46,7 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
   return data;
 }
 
-export async function forgotPasswordStart(payload: { mobile: string; pincode: string }): Promise<{ success: boolean; message: string; devOtp?: string }> {
+export async function forgotPasswordStart(payload: { mobile: string; pincode?: string }): Promise<{ success: boolean; message: string; devOtp?: string }> {
   const { data } = await apiClient.post('/auth/forgot-password/start', payload);
   return data;
 }
@@ -58,6 +58,11 @@ export async function forgotPasswordVerify(payload: { mobile: string; otp: strin
 
 export async function forgotPasswordReset(payload: { mobile: string; otp: string; newPassword: string }): Promise<{ success: boolean; message: string }> {
   const { data } = await apiClient.post('/auth/forgot-password/reset', payload);
+  return data;
+}
+
+export async function changePasswordApi(payload: { oldPassword?: string; newPassword: string; resetOtp?: string }): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.post('/auth/change-password', payload);
   return data;
 }
 

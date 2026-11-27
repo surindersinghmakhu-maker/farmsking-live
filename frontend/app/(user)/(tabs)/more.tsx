@@ -39,6 +39,7 @@ const getCleanMobile = (mobile?: string | null) => {
 type AccountItem = { key: TranslationKey; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string };
 
 const MY_PROFILE_ITEM: AccountItem = { key: 'myProfile', label: 'My Profile', icon: 'person-outline', href: '/profile?tab=PROFILE' };
+const CHANGE_PASSWORD_ITEM: AccountItem = { key: 'changePassword' as any, label: 'Change Login Password', icon: 'key-outline', href: '/profile?tab=PROFILE&openPassword=true' };
 const MY_ADDRESSES_ITEM: AccountItem = { key: 'myAddresses' as any, label: 'My Addresses', icon: 'location-outline', href: '/profile?tab=ADDRESSES' };
 const NOTIFICATIONS_ITEM: AccountItem = { key: 'notifications', label: 'Notification & Weather Preferences', icon: 'notifications-outline', href: '/notification-settings' };
 const FARMER_ONLY_ITEM: AccountItem = { key: 'editFarmProfile', label: 'Farmer Special Profile', icon: 'flask-outline', href: '/farmer-profile-setup' };
@@ -205,6 +206,7 @@ export default function MoreScreen() {
 
   const accountItems: AccountItem[] = [
     MY_PROFILE_ITEM,
+    CHANGE_PASSWORD_ITEM,
     MY_ADDRESSES_ITEM,
     NOTIFICATIONS_ITEM,
     ...(role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || role === 'ADVISOR'
@@ -1433,8 +1435,8 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
       setFormTagline(appSettings?.tagline || 'Agricultural & Farm Management Master Platform');
       setFormLogoUrl(appSettings?.logoUrl || '');
       setFormUpiId(appSettings?.upiId || 'surindersinghmakhu-5@oksbi');
-      setFormUpiPayeeName(appSettings?.upiPayeeName || 'Surinder Singh');
-      setFormAdminName((appSettings as any)?.adminName || contact?.name || 'Surinder Singh (Super Admin)');
+      setFormUpiPayeeName(appSettings?.upiPayeeName || 'FARMSKING TECHNOLOGIES');
+      setFormAdminName((appSettings as any)?.adminName || contact?.name || 'FarmsKing Super Admin');
       setFormAdminMobile((appSettings as any)?.adminMobile || contact?.mobile || user?.mobile || '9577622000');
       setFormAdminEmail((appSettings as any)?.adminEmail || contact?.email || 'support@farmsking.in');
       setSaveSuccess(false);
@@ -1616,7 +1618,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                       style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formUpiPayeeName}
                       onChangeText={setFormUpiPayeeName}
-                      placeholder="e.g. Surinder Singh"
+                      placeholder="e.g. FarmsKing Admin"
                     />
                   </View>
                 </View>
@@ -1644,7 +1646,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                       style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formAdminName}
                       onChangeText={setFormAdminName}
-                      placeholder="e.g. Surinder Singh"
+                      placeholder="e.g. FarmsKing Admin"
                     />
                   </View>
                   <View>

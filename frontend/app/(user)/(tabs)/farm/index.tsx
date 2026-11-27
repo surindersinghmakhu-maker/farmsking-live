@@ -867,10 +867,7 @@ export default function FarmListScreen() {
     const planColor = isVipTier ? '#b45309' : plan !== 'FREE' ? '#d97706' : '#16a34a';
     const planBg = isVipTier ? (isDark ? 'rgba(245,158,11,0.22)' : '#fef3c7') : plan !== 'FREE' ? 'rgba(217,119,6,0.18)' : 'rgba(22,163,74,0.18)';
     const planBorder = isVipTier ? '#fde68a' : plan !== 'FREE' ? 'rgba(217,119,6,0.4)' : 'rgba(22,163,74,0.4)';
-    const totalRevenue = salesRecords.reduce((s: number, r: any) => s + (Number(r.totalAmount) || 0), 0);
-    const revenueDisplay = totalRevenue >= 1000
-      ? (totalRevenue / 1000).toFixed(1) + 'K'
-      : totalRevenue.toLocaleString('en-IN');
+
 
     return (
       <LinearGradient
@@ -897,35 +894,7 @@ export default function FarmListScreen() {
           </View>
         </View>
 
-        {/* Row 2: 4-KPI High-Contrast Glass Strip */}
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 6, borderWidth: 1, borderColor: isDark ? 'rgba(16,185,129,0.22)' : 'rgba(22,163,74,0.25)', alignItems: 'center', justifyContent: 'center' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-              <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#10b981' }} />
-              <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#15803d', lineHeight: 17 }}>{activeCropFields.length}</Text>
-            </View>
-            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.7)' : '#374151', textAlign: 'center', marginTop: 1 }}>Active Crops</Text>
-          </View>
 
-          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 6, borderWidth: 1, borderColor: isDark ? 'rgba(16,185,129,0.22)' : 'rgba(22,163,74,0.25)', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? '#34d399' : '#059669', lineHeight: 17 }}>{cropHistory.length}</Text>
-            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.7)' : '#374151', textAlign: 'center', marginTop: 1 }}>Completed</Text>
-          </View>
-
-          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 6, borderWidth: 1, borderColor: isDark ? 'rgba(56,189,248,0.25)' : 'rgba(2,132,199,0.25)', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: activeAdvisor ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#94a3b8' : '#64748b'), lineHeight: 17, textAlign: 'center' }} numberOfLines={1}>
-              {activeAdvisor ? `Dr. ${activeAdvisor.name.split(' ')[0]}` : 'Self-Care'}
-            </Text>
-            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.7)' : '#374151', textAlign: 'center', marginTop: 1 }}>Crop Doctor</Text>
-          </View>
-
-          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 6, borderWidth: 1, borderColor: isDark ? 'rgba(245,158,11,0.25)' : 'rgba(217,119,6,0.25)', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#fbbf24' : '#d97706', lineHeight: 17, textAlign: 'center' }} numberOfLines={1}>
-              ₹{revenueDisplay}
-            </Text>
-            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.7)' : '#374151', textAlign: 'center', marginTop: 1 }}>Total Sales</Text>
-          </View>
-        </View>
 
         {/* Row 3: Sub-Tab Switcher (Compact Segmented Pill) */}
         <View style={[styles.subTabBar, { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.45)' : '#f1f5f9', borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1', borderWidth: 1, maxWidth: 540, width: '100%', alignSelf: 'center', marginTop: 4 }]}>

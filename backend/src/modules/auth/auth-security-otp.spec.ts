@@ -54,23 +54,25 @@ describe('Auth OTP-Only Client/Worker & Security Regression Tests', () => {
     return { service, prisma, userSessionService };
   };
 
-  it('blocks password login for FARMER, LABOUR, CUSTOMER, and SUPERVISOR roles', async () => {
+  it('allows password login for FARMER, LABOUR, CUSTOMER, and SUPERVISOR roles', async () => {
     for (const role of [Role.FARMER, Role.LABOUR, Role.CUSTOMER, Role.SUPERVISOR]) {
       const { service, prisma } = createDeps();
+      const argon2 = require('argon2');
+      const hash = await argon2.hash('SomePassword123');
       prisma.user.findFirst.mockResolvedValue({
         id: `u-${role}`,
         mobile: '9876543210',
         role,
         roles: [role],
         deactivatedRoles: [],
-        passwordHash: 'hash',
+        passwordHash: hash,
         isPermanentlyBlocked: false,
         lockoutUntil: null,
       });
 
-      await expect(
-        service.login({ mobile: '9876543210', password: 'SomePassword123', portal: 'CLIENT' }),
-      ).rejects.toThrow(ForbiddenException);
+      const res = await service.login({ mobile: '9876543210', password: 'SomePassword123', portal: 'CLIENT' });
+      expect(res).toBeDefined();
+      expect(res.user.role).toBe(role);
     }
   });
 

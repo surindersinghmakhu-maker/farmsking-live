@@ -14,6 +14,7 @@ export interface DoctorSettingsResponse {
   enableVideoCall: boolean;
 
   // 2. Consultation Plans & Pricing
+  monthlyPlanEnabled: boolean;
   monthlyFee: number;
   monthlyCallLimit: number;
   monthlyInAppCallLimit: number;
@@ -21,10 +22,30 @@ export interface DoctorSettingsResponse {
   monthlyVideoAllowed: boolean;
   monthlyChatEnabled: boolean;
 
+  // 3-Month Pack
+  plan3MonthsEnabled: boolean;
+  fee3Months: number;
+  callLimit3Months: number;
+  videoAllowed3Months: boolean;
+
+  // 6-Month Pack
+  plan6MonthsEnabled: boolean;
+  fee6Months: number;
+  callLimit6Months: number;
+  videoAllowed6Months: boolean;
+
+  // 12-Month Annual Pack
+  plan12MonthsEnabled: boolean;
+  fee12Months: number;
+  callLimit12Months: number;
+  videoAllowed12Months: boolean;
+
+  cropSeasonPlanEnabled: boolean;
   cropSeasonFee: number;
   cropSeasonCallLimit: number;
   cropSeasonVideoAllowed: boolean;
 
+  singleConsultationPlanEnabled: boolean;
   singleConsultationFee: number;
   allCropsSelected: boolean;
   specializedCrops: string[];

@@ -284,7 +284,7 @@ export default function TermsOfServiceScreen() {
             </Text>
             <View style={[styles.officerBox, isDay ? styles.officerBoxDay : styles.officerBoxNight]}>
               <Text style={[styles.officerName, isDay ? styles.officerNameDay : styles.officerNameNight]}>
-                Grievance Officer: Er. Gagandeep Kaur (Director &amp; Statutory Compliance Officer)
+                Grievance Officer: Designated Grievance Redressal Officer
               </Text>
               <Text style={[styles.officerRole, isDay ? styles.officerRoleDay : styles.officerRoleNight]}>
                 FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C

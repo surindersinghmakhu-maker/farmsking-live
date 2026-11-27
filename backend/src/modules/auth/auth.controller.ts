@@ -335,6 +335,17 @@ export class AuthController {
     return this.authService.verifyPassword(user.id, body?.password ?? '');
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('change-password')
+  changePassword(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { oldPassword?: string; newPassword: string; resetOtp?: string },
+  ) {
+    return this.authService.changePassword(user.id, body);
+  }
+
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('forgot-password/start')

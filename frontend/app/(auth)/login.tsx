@@ -33,6 +33,7 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 import { PartnerSignupModal } from '@/src/components/PartnerSignupModal';
 import { LegalPoliciesModal, PolicyType } from '@/src/components/LegalPoliciesModal';
 import type { PartnerApplicationDto, PartnerUserSummary } from '@/src/api/auth.api';
+import { forgotPasswordStart, forgotPasswordVerify, forgotPasswordReset } from '@/src/api/auth.api';
 import { lookupPincode } from '@/src/api/pincode.api';
 
 const INDIAN_STATES = [
@@ -351,6 +352,130 @@ export default function LoginScreen() {
     }
     setPartnerActionPrompt(null);
     return false;
+  };
+
+  // Client Password Authentication State (Default is OTP)
+  const [clientAuthMethod, setClientAuthMethod] = useState<'OTP' | 'PASSWORD'>('OTP');
+  const [clientPassword, setClientPassword] = useState('');
+  const [showClientPassword, setShowClientPassword] = useState(false);
+  const [welcomeDefaultPassword, setWelcomeDefaultPassword] = useState<string | null>(null);
+  const [welcomeRegisteredUser, setWelcomeRegisteredUser] = useState<any>(null);
+
+  // Forgot Password Modal State
+  const [isFpModalOpen, setIsFpModalOpen] = useState(false);
+  const [fpMobile, setFpMobile] = useState('');
+  const [fpOtp, setFpOtp] = useState('');
+  const [fpNewPassword, setFpNewPassword] = useState('');
+  const [fpConfirmPassword, setFpConfirmPassword] = useState('');
+  const [fpStep, setFpStep] = useState<'MOBILE' | 'OTP' | 'RESET'>('MOBILE');
+  const [fpLoading, setFpLoading] = useState(false);
+  const [fpError, setFpError] = useState<string | null>(null);
+  const [fpDevOtp, setFpDevOtp] = useState<string | null>(null);
+
+  const handleClientPasswordLogin = async () => {
+    setError(null);
+    const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
+    const pass = clientPassword.trim();
+    if (!cleanNum || cleanNum.length !== 10) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!pass) {
+      setError('Please enter your account password.');
+      return;
+    }
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const loggedInUser = await login({ mobile: cleanNum, password: pass, portal: 'CLIENT' });
+      handleSuccessNavigation(false, loggedInUser);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.message ?? 'Login failed. Invalid mobile number or password.';
+      setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenForgotPassword = () => {
+    setFpMobile(mobile.trim().replace(/\D/g, '').slice(-10));
+    setFpOtp('');
+    setFpNewPassword('');
+    setFpConfirmPassword('');
+    setFpError(null);
+    setFpDevOtp(null);
+    setFpStep('MOBILE');
+    setIsFpModalOpen(true);
+  };
+
+  const handleFpSendOtp = async () => {
+    const cleanNum = fpMobile.trim().replace(/\D/g, '').slice(-10);
+    if (!cleanNum || cleanNum.length !== 10) {
+      setFpError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    setFpLoading(true);
+    setFpError(null);
+    try {
+      const res = await forgotPasswordStart({ mobile: cleanNum });
+      if (res.devOtp) {
+        setFpDevOtp(res.devOtp);
+      }
+      setFpStep('OTP');
+    } catch (err: any) {
+      setFpError(err?.response?.data?.message ?? err?.message ?? 'Could not send verification OTP.');
+    } finally {
+      setFpLoading(false);
+    }
+  };
+
+  const handleFpVerifyOtp = async () => {
+    const cleanNum = fpMobile.trim().replace(/\D/g, '').slice(-10);
+    const code = fpOtp.trim();
+    if (!code || code.length < 4) {
+      setFpError('Please enter the 4 to 6-digit OTP code.');
+      return;
+    }
+    setFpLoading(true);
+    setFpError(null);
+    try {
+      await forgotPasswordVerify({ mobile: cleanNum, otp: code });
+      setFpStep('RESET');
+    } catch (err: any) {
+      setFpError(err?.response?.data?.message ?? err?.message ?? 'Invalid or expired OTP code.');
+    } finally {
+      setFpLoading(false);
+    }
+  };
+
+  const handleFpResetPassword = async () => {
+    const cleanNum = fpMobile.trim().replace(/\D/g, '').slice(-10);
+    const newPass = fpNewPassword.trim();
+    if (newPass.length < 8) {
+      setFpError('New password must be at least 8 characters long.');
+      return;
+    }
+    if (newPass !== fpConfirmPassword.trim()) {
+      setFpError('Passwords do not match. Please re-enter.');
+      return;
+    }
+    setFpLoading(true);
+    setFpError(null);
+    try {
+      await forgotPasswordReset({ mobile: cleanNum, otp: fpOtp.trim(), newPassword: newPass });
+      setIsFpModalOpen(false);
+      setClientPassword(newPass);
+      setMobile(cleanNum);
+      setClientAuthMethod('PASSWORD');
+      setError(null);
+      if (Platform.OS === 'web') {
+        alert('Password updated successfully! You can now log in using your new password.');
+      }
+    } catch (err: any) {
+      setFpError(err?.response?.data?.message ?? err?.message ?? 'Failed to update password.');
+    } finally {
+      setFpLoading(false);
+    }
   };
 
   // Guarantee pitch dark body background on Web to eliminate any bottom blank/white gap
@@ -742,7 +867,7 @@ export default function LoginScreen() {
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsCompletingReg(true);
     try {
-      const loggedInUser = await completeOtpRegistration({
+      const loggedInUser: any = await completeOtpRegistration({
         mobile: cleanNum,
         name: trimmedName,
         role: selectedRole,
@@ -754,7 +879,12 @@ export default function LoginScreen() {
         village: newUserVillage.trim() || undefined,
       });
       setIsNewUserModal(false);
-      handleSuccessNavigation(false, loggedInUser);
+      if (loggedInUser?.defaultPassword) {
+        setWelcomeDefaultPassword(loggedInUser.defaultPassword);
+        setWelcomeRegisteredUser(loggedInUser);
+      } else {
+        handleSuccessNavigation(false, loggedInUser);
+      }
     } catch (err: any) {
       setModalError(err?.response?.data?.message ?? err?.message ?? 'Registration failed. Please try again.');
     } finally {
@@ -1301,6 +1431,172 @@ export default function LoginScreen() {
               </View>
             ) : (
               <>
+                {/* ── Client Auth Mode Switcher: Default Fast OTP vs Password Login ── */}
+                {portalMode === 'CLIENT' && (
+                  <View style={styles.authMethodSegmentWrap}>
+                    <TouchableOpacity
+                      style={[
+                        styles.authMethodSegmentBtn,
+                        clientAuthMethod === 'OTP' && styles.authMethodSegmentBtnActive,
+                      ]}
+                      onPress={() => {
+                        setClientAuthMethod('OTP');
+                        setError(null);
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons
+                        name="flash"
+                        size={12}
+                        color={clientAuthMethod === 'OTP' ? '#04160c' : '#94a3b8'}
+                      />
+                      <Text
+                        style={[
+                          styles.authMethodSegmentText,
+                          clientAuthMethod === 'OTP' && styles.authMethodSegmentTextActive,
+                        ]}
+                      >
+                        Mobile OTP (Default)
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.authMethodSegmentBtn,
+                        clientAuthMethod === 'PASSWORD' && styles.authMethodSegmentBtnActive,
+                      ]}
+                      onPress={() => {
+                        setClientAuthMethod('PASSWORD');
+                        setError(null);
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons
+                        name="key"
+                        size={12}
+                        color={clientAuthMethod === 'PASSWORD' ? '#04160c' : '#94a3b8'}
+                      />
+                      <Text
+                        style={[
+                          styles.authMethodSegmentText,
+                          clientAuthMethod === 'PASSWORD' && styles.authMethodSegmentTextActive,
+                        ]}
+                      >
+                        Login with Password
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {portalMode === 'CLIENT' && clientAuthMethod === 'PASSWORD' ? (
+                  /* ── CLIENT PASSWORD SIGN IN VIEW ── */
+                  <View style={{ gap: 14, marginBottom: 12 }}>
+                    <View>
+                      <Text style={styles.fieldLabel}>Your Registered Mobile Number</Text>
+                      <View
+                        style={[
+                          styles.mobileInputWrap,
+                          focusedField === 'mobile' && styles.inputWrapFocused,
+                        ]}
+                      >
+                        <View style={styles.countryCodeBadge}>
+                          <Text style={styles.countryCodeText}>+91</Text>
+                        </View>
+                        <TextInput
+                          style={styles.mobileInput}
+                          keyboardType="phone-pad"
+                          maxLength={10}
+                          placeholder="Enter 10-digit mobile number"
+                          placeholderTextColor="#64748b"
+                          value={mobile}
+                          onChangeText={setMobile}
+                          onFocus={() => setFocusedField('mobile')}
+                          onBlur={() => setFocusedField(null)}
+                          returnKeyType="next"
+                        />
+                      </View>
+                    </View>
+
+                    <View>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                        <Text style={styles.fieldLabel}>Account Password</Text>
+                        <TouchableOpacity
+                          onPress={handleOpenForgotPassword}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#38bdf8' }}>
+                            Forgot Password?
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View
+                        style={[
+                          styles.mobileInputWrap,
+                          focusedField === 'clientPass' && styles.inputWrapFocused,
+                        ]}
+                      >
+                        <View style={styles.countryCodeBadge}>
+                          <Ionicons name="lock-closed" size={16} color="#10b981" />
+                        </View>
+                        <TextInput
+                          style={styles.mobileInput}
+                          placeholder="Enter your 8-digit password"
+                          placeholderTextColor="#64748b"
+                          secureTextEntry={!showClientPassword}
+                          value={clientPassword}
+                          onChangeText={setClientPassword}
+                          onFocus={() => setFocusedField('clientPass')}
+                          onBlur={() => setFocusedField(null)}
+                          returnKeyType="done"
+                          onSubmitEditing={handleClientPasswordLogin}
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowClientPassword((prev) => !prev)}
+                          style={{ paddingHorizontal: 12 }}
+                        >
+                          <Ionicons
+                            name={showClientPassword ? 'eye-off-outline' : 'eye-outline'}
+                            size={18}
+                            color="#94a3b8"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={handleClientPasswordLogin}
+                      disabled={isSubmitting || mobile.trim().replace(/\D/g, '').length !== 10 || !clientPassword.trim()}
+                      activeOpacity={0.88}
+                      style={[
+                        styles.primaryActionBtn,
+                        (mobile.trim().replace(/\D/g, '').length !== 10 || !clientPassword.trim() || isSubmitting) && {
+                          opacity: 0.55,
+                        },
+                      ]}
+                    >
+                      <LinearGradient
+                        colors={['#10b981', '#059669']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.gradientBtn}
+                      >
+                        {isSubmitting ? (
+                          <ActivityIndicator color="#ffffff" size="small" />
+                        ) : (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Ionicons name="log-in" size={16} color="#ffffff" />
+                            <Text style={styles.buttonText}>Sign In with Password</Text>
+                          </View>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    <Text style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 16 }}>
+                      New here? Your default 8-digit password was dispatched via SMS upon signup, or switch to "Mobile OTP" above.
+                    </Text>
+                  </View>
+                ) : (
+                  <>
                 {/* ── STEP 1: Mobile Number Input ── */}
                 <View style={styles.inputSection}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
@@ -1515,6 +1811,8 @@ export default function LoginScreen() {
                       )}
                     </View>
                   </View>
+                )}
+                  </>
                 )}
               </>
             )}
@@ -1931,6 +2229,270 @@ export default function LoginScreen() {
         initialType={legalPolicyType}
         onClose={() => setShowLegalModal(false)}
       />
+
+      {/* ── FORGOT PASSWORD MODAL ── */}
+      <Modal
+        visible={isFpModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsFpModalOpen(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalCard, premiumShadow('#38bdf8', 'lg')]}>
+            <View style={styles.modalHeader}>
+              <View style={[styles.modalBadge, { backgroundColor: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.3)' }]}>
+                <Ionicons name="key" size={11} color="#38bdf8" />
+                <Text style={[styles.modalBadgeText, { color: '#38bdf8' }]}>ACCOUNT SECURITY</Text>
+              </View>
+              <Text style={styles.modalTitle}>Reset Login Password</Text>
+              <Text style={styles.modalSubtitle}>
+                {fpStep === 'MOBILE'
+                  ? 'Enter your registered mobile number to receive a verification OTP code.'
+                  : fpStep === 'OTP'
+                  ? `Enter the verification OTP code sent to +91 ${fpMobile}.`
+                  : 'Create a new secure password (minimum 8 characters) for password login.'}
+              </Text>
+            </View>
+
+            {fpError ? (
+              <View style={[styles.errorBox, { marginBottom: 12 }]}>
+                <Ionicons name="alert-circle" size={16} color="#ef4444" />
+                <Text style={styles.errorText}>{fpError}</Text>
+              </View>
+            ) : null}
+
+            {fpStep === 'MOBILE' && (
+              <View style={{ gap: 14 }}>
+                <View>
+                  <Text style={styles.fieldLabel}>Registered Mobile Number</Text>
+                  <View style={styles.mobileInputWrap}>
+                    <View style={styles.countryCodeBadge}>
+                      <Text style={styles.countryCodeText}>+91</Text>
+                    </View>
+                    <TextInput
+                      style={styles.mobileInput}
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                      placeholder="Enter 10-digit mobile"
+                      placeholderTextColor="#64748b"
+                      value={fpMobile}
+                      onChangeText={setFpMobile}
+                    />
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  onPress={handleFpSendOtp}
+                  disabled={fpLoading || fpMobile.trim().replace(/\D/g, '').length !== 10}
+                  activeOpacity={0.88}
+                  style={[styles.primaryActionBtn, (fpLoading || fpMobile.trim().replace(/\D/g, '').length !== 10) && { opacity: 0.6 }]}
+                >
+                  <LinearGradient
+                    colors={['#38bdf8', '#0284c7']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientBtn}
+                  >
+                    {fpLoading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="paper-plane" size={16} color="#fff" />
+                        <Text style={styles.buttonText}>Send Reset OTP</Text>
+                      </View>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {fpStep === 'OTP' && (
+              <View style={{ gap: 14 }}>
+                <View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                    <Text style={styles.fieldLabel}>Enter Verification OTP</Text>
+                    <TouchableOpacity onPress={() => setFpStep('MOBILE')}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#38bdf8' }}>Change Number</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <TextInput
+                    style={[styles.modalInput, { textAlign: 'center', letterSpacing: 8, fontSize: 18, fontFamily: FONT.bold }]}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    placeholder="------"
+                    placeholderTextColor="#64748b"
+                    value={fpOtp}
+                    onChangeText={setFpOtp}
+                  />
+                  {fpDevOtp ? (
+                    <Text style={{ fontSize: 11, color: '#10b981', textAlign: 'center', marginTop: 4 }}>
+                      Dev OTP: {fpDevOtp}
+                    </Text>
+                  ) : null}
+                </View>
+
+                <TouchableOpacity
+                  onPress={handleFpVerifyOtp}
+                  disabled={fpLoading || fpOtp.trim().length < 4}
+                  activeOpacity={0.88}
+                  style={[styles.primaryActionBtn, (fpLoading || fpOtp.trim().length < 4) && { opacity: 0.6 }]}
+                >
+                  <LinearGradient
+                    colors={['#38bdf8', '#0284c7']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientBtn}
+                  >
+                    {fpLoading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="checkmark-circle" size={16} color="#fff" />
+                        <Text style={styles.buttonText}>Verify OTP Code</Text>
+                      </View>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {fpStep === 'RESET' && (
+              <View style={{ gap: 14 }}>
+                <View>
+                  <Text style={styles.fieldLabel}>New Password (Min 8 characters)</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="Enter new 8-character password"
+                    placeholderTextColor="#64748b"
+                    secureTextEntry
+                    value={fpNewPassword}
+                    onChangeText={setFpNewPassword}
+                  />
+                </View>
+
+                <View>
+                  <Text style={styles.fieldLabel}>Confirm New Password</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="Re-enter new password"
+                    placeholderTextColor="#64748b"
+                    secureTextEntry
+                    value={fpConfirmPassword}
+                    onChangeText={setFpConfirmPassword}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  onPress={handleFpResetPassword}
+                  disabled={fpLoading || fpNewPassword.trim().length < 8 || fpNewPassword.trim() !== fpConfirmPassword.trim()}
+                  activeOpacity={0.88}
+                  style={[
+                    styles.primaryActionBtn,
+                    (fpLoading || fpNewPassword.trim().length < 8 || fpNewPassword.trim() !== fpConfirmPassword.trim()) && {
+                      opacity: 0.6,
+                    },
+                  ]}
+                >
+                  <LinearGradient
+                    colors={['#10b981', '#059669']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientBtn}
+                  >
+                    {fpLoading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="key" size={16} color="#fff" />
+                        <Text style={styles.buttonText}>Update Password & Finish</Text>
+                      </View>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <TouchableOpacity
+              onPress={() => setIsFpModalOpen(false)}
+              style={{ alignItems: 'center', marginTop: 12 }}
+            >
+              <Text style={{ fontSize: 12, color: '#94a3b8', fontFamily: FONT.medium }}>Cancel & Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── FIRST-TIME USER DEFAULT PASSWORD WELCOME POPUP ── */}
+      <Modal
+        visible={!!welcomeDefaultPassword}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalCard, premiumShadow('#10b981', 'lg'), { maxWidth: 440 }]}>
+            <View style={styles.modalHeader}>
+              <View style={[styles.modalBadge, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: 'rgba(16, 185, 129, 0.3)' }]}>
+                <Ionicons name="sparkles" size={11} color="#10b981" />
+                <Text style={[styles.modalBadgeText, { color: '#10b981' }]}>REGISTRATION COMPLETE</Text>
+              </View>
+              <Text style={styles.modalTitle}>Welcome to FarmsKing! 🎉</Text>
+              <Text style={styles.modalSubtitle}>
+                Your account is ready. We have created a secure 8-digit default password for your mobile number:
+              </Text>
+            </View>
+
+            <View style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.08)',
+              borderWidth: 1,
+              borderColor: 'rgba(16, 185, 129, 0.35)',
+              borderRadius: RADIUS.md,
+              padding: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+              gap: 4,
+            }}>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Your Default Login Password
+              </Text>
+              <Text style={{ fontSize: 28, fontFamily: FONT.extraBold, color: '#10b981', letterSpacing: 4 }}>
+                {welcomeDefaultPassword}
+              </Text>
+              <Text style={{ fontSize: 11, color: '#cbd5e1', textAlign: 'center', marginTop: 4 }}>
+                Dispatched to +91 {mobile} via SMS text message.
+              </Text>
+            </View>
+
+            <Text style={{ fontSize: 11.5, color: '#94a3b8', textAlign: 'center', lineHeight: 17, marginBottom: 18 }}>
+              You can now sign in anytime with your mobile and this password without waiting for OTP. You can change this password anytime in your Profile settings.
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => {
+                const target = welcomeRegisteredUser;
+                setWelcomeDefaultPassword(null);
+                setWelcomeRegisteredUser(null);
+                handleSuccessNavigation(false, target);
+              }}
+              activeOpacity={0.88}
+              style={styles.primaryActionBtn}
+            >
+              <LinearGradient
+                colors={['#10b981', '#059669']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientBtn}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={styles.buttonText}>Continue to Dashboard</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#fff" />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -2845,5 +3407,36 @@ const styles = StyleSheet.create({
   stateItemTextActive: {
     color: '#10b981',
     fontFamily: FONT.bold,
+  },
+  authMethodSegmentWrap: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: RADIUS.lg,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 4,
+    marginBottom: 14,
+  },
+  authMethodSegmentBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+  },
+  authMethodSegmentBtnActive: {
+    backgroundColor: '#00ff87',
+  },
+  authMethodSegmentText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+  },
+  authMethodSegmentTextActive: {
+    color: '#04160c',
+    fontFamily: FONT.extraBold,
   },
 });

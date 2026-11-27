@@ -20,6 +20,7 @@ __decorate([
     __metadata("design:type", String)
 ], ForgotPasswordStartDto.prototype, "mobile", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.Matches)(/^\d{6}$/, { message: 'PIN code must be exactly 6 digits.' }),
     __metadata("design:type", String)
 ], ForgotPasswordStartDto.prototype, "pincode", void 0);

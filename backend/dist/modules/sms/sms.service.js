@@ -26,6 +26,12 @@ let SmsService = SmsService_1 = class SmsService {
         const text = `Dear ${name}, your FarmsKing Order #${orderNumber} of Rs ${totalAmount} has been placed successfully! Track order: https://farmsking.in/order-tracking - FarmsKing Technologies`;
         return this.sendTextMessage(mobile, text, 'ORDER_PLACED');
     }
+    async sendDefaultPasswordSms(mobile, customerName, password) {
+        const name = customerName || 'Farmer';
+        const text = `Welcome to FarmsKing, ${name}! Your default account login password is ${password}. You can now sign in without OTP or change your password anytime in Profile. - FarmsKing Technologies`;
+        this.logger.warn(`[Default Password for +91 ${this.format10DigitMobile(mobile)}]: ${password}`);
+        return this.sendTextMessage(mobile, text, 'DEFAULT_PASSWORD');
+    }
     async sendTextMessage(mobile, text, templateKey) {
         const cleanMobile = this.format10DigitMobile(mobile);
         if (cleanMobile.length !== 10) {

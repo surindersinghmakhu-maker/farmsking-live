@@ -22,13 +22,13 @@ import { INITIAL_CROPS_LIST, CROP_CATEGORIES } from '@/constants/cropCategoriesD
 // All Indian crops available across FarmsKing
 const ALL_SYSTEM_CROPS_DEFAULT = INITIAL_CROPS_LIST.map((c) => c.name);
 
-export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ advisorId }) => {
+export const DoctorSettingsConsole: React.FC<{ advisorId?: string; initialTab?: 'PROFILE' | 'PLANS' }> = ({ advisorId, initialTab = 'PLANS' }) => {
   const router = useRouter();
   const { isLight, cardBg, cardBorder, textColor, subTextColor } = useExecutiveTheme();
   const { data: settings, isLoading } = useDoctorSettings(advisorId);
   const updateMutation = useUpdateDoctorSettings(advisorId);
 
-  const [activeCPanelTab, setActiveCPanelTab] = useState<'PROFILE' | 'PLANS'>('PROFILE');
+  const [activeCPanelTab, setActiveCPanelTab] = useState<'PROFILE' | 'PLANS'>(initialTab);
   const [form, setForm] = useState<Partial<DoctorSettingsResponse>>({});
   const [savedNotice, setSavedNotice] = useState(false);
   const [customCropInput, setCustomCropInput] = useState('');
@@ -556,205 +556,524 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
       ) : (
         <>
           {/* SECTION 2: Consultation Plans & Pricing Model */}
-      <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
-        <View style={styles.sectionHeaderRow}>
-          <View style={styles.iconBadgeBlue}>
-            <Ionicons name="pricetags" size={18} color="#3b82f6" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Consultation Plans, Pricing & Entitlements
-            </Text>
-            <Text style={[styles.sectionSub, { color: subTextColor }]}>
-              Configure your fees for monthly retainers, full-season crop care, and SOS prescriptions.
-            </Text>
-          </View>
-        </View>
-
-        {/* 3 Tier Pricing Cards */}
-        <View style={styles.pricingGrid}>
-          {/* Tier 1: Monthly VIP Retainer */}
-          <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: isLight ? '#e2e8f0' : '#1e293b' }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={[styles.planBoxTitle, { color: textColor }]}>1. Monthly Farm Retainer</Text>
-              <View style={styles.planDurationBadge}>
-                <Text style={styles.planDurationText}>30 Days</Text>
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: subTextColor }]}>Monthly Advisory Fee (₹)</Text>
-              <TextInput
-                style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                keyboardType="numeric"
-                value={String(form.monthlyFee ?? 299)}
-                onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyFee: Number(v) || 0 }))}
-              />
-            </View>
-
-            <View style={styles.quotaRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.quotaLabel, { color: subTextColor }]}>Call Quota / mo</Text>
-                <TextInput
-                  style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                  keyboardType="numeric"
-                  value={String(form.monthlyCallLimit ?? 5)}
-                  onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyCallLimit: Number(v) || 0 }))}
-                />
+          <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.iconBadgeBlue}>
+                <Ionicons name="pricetags" size={18} color="#3b82f6" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.quotaLabel, { color: subTextColor }]}>In-App VoIP Calls</Text>
-                <TextInput
-                  style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                  keyboardType="numeric"
-                  value={String(form.monthlyInAppCallLimit ?? 3)}
-                  onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyInAppCallLimit: Number(v) || 0 }))}
-                />
+                <Text style={[styles.sectionTitle, { color: textColor }]}>
+                  Doctor Advisory Packs, Pricing & Master Switches
+                </Text>
+                <Text style={[styles.sectionSub, { color: subTextColor }]}>
+                  Turn plans ON or OFF, customize consultation fees, and set voice/video quotas for farmers.
+                </Text>
               </View>
             </View>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-              <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Calls Allowed</Text>
-              <Switch
-                value={Boolean(form.monthlyVideoAllowed)}
-                onValueChange={() => handleToggle('monthlyVideoAllowed')}
-                trackColor={{ false: '#64748b', true: '#10b981' }}
-                thumbColor="#ffffff"
-              />
-            </View>
-          </View>
+            {/* 6 Comprehensive Tier Pricing Cards */}
+            <View style={styles.pricingGrid}>
+              {/* 1. Monthly Retainer */}
+              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.monthlyPlanEnabled !== false ? (isLight ? '#93c5fd' : '#1e3a8a') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[styles.planBoxTitle, { color: textColor }]}>1. Monthly Retainer</Text>
+                  <View style={styles.planDurationBadge}>
+                    <Text style={styles.planDurationText}>30 Days</Text>
+                  </View>
+                </View>
 
-          {/* Tier 2: Full Season Crop Care */}
-          <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: isLight ? '#e2e8f0' : '#1e293b' }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={[styles.planBoxTitle, { color: textColor }]}>2. Full Season Crop Care</Text>
-              <View style={styles.planDurationBadge}>
-                <Text style={styles.planDurationText}>120 Days</Text>
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: subTextColor }]}>Full Season Fee (₹)</Text>
-              <TextInput
-                style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                keyboardType="numeric"
-                value={String(form.cropSeasonFee ?? 499)}
-                onChangeText={(v) => setForm((prev) => ({ ...prev, cropSeasonFee: Number(v) || 0 }))}
-              />
-            </View>
-
-            <View style={styles.quotaRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.quotaLabel, { color: subTextColor }]}>Season Call Quota</Text>
-                <TextInput
-                  style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                  keyboardType="numeric"
-                  value={String(form.cropSeasonCallLimit ?? 10)}
-                  onChangeText={(v) => setForm((prev) => ({ ...prev, cropSeasonCallLimit: Number(v) || 0 }))}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
-                <View style={{ height: 38, justifyContent: 'center' }}>
+                {/* Plan Master ON/OFF Switch */}
+                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.monthlyPlanEnabled !== false ? (isLight ? '#eff6ff' : 'rgba(59, 130, 246, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                  <Text style={[styles.planMasterSwitchText, { color: form.monthlyPlanEnabled !== false ? '#2563eb' : subTextColor }]}>
+                    {form.monthlyPlanEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
+                  </Text>
                   <Switch
-                    value={Boolean(form.cropSeasonVideoAllowed)}
-                    onValueChange={() => handleToggle('cropSeasonVideoAllowed')}
+                    value={form.monthlyPlanEnabled !== false}
+                    onValueChange={() => handleToggle('monthlyPlanEnabled')}
+                    trackColor={{ false: '#64748b', true: '#3b82f6' }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+
+                {form.monthlyPlanEnabled !== false && (
+                  <>
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Monthly Advisory Fee (₹)</Text>
+                      <TextInput
+                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        keyboardType="numeric"
+                        value={String(form.monthlyFee ?? 299)}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyFee: Number(v) || 0 }))}
+                      />
+                    </View>
+
+                    <View style={styles.quotaRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Call Quota / mo</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.monthlyCallLimit ?? 5)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyCallLimit: Number(v) || 0 }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>In-App VoIP Calls</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.monthlyInAppCallLimit ?? 3)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyInAppCallLimit: Number(v) || 0 }))}
+                        />
+                      </View>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                      <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Calls Allowed</Text>
+                      <Switch
+                        value={Boolean(form.monthlyVideoAllowed)}
+                        onValueChange={() => handleToggle('monthlyVideoAllowed')}
+                        trackColor={{ false: '#64748b', true: '#10b981' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
+                  </>
+                )}
+              </View>
+
+              {/* 2. 3-Month Care Pack */}
+              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan3MonthsEnabled !== false ? (isLight ? '#a7f3d0' : '#065f46') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[styles.planBoxTitle, { color: textColor }]}>2. 3-Month Care Pack</Text>
+                  <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                    <Text style={[styles.planDurationText, { color: '#10b981' }]}>90 Days</Text>
+                  </View>
+                </View>
+
+                {/* Plan Master ON/OFF Switch */}
+                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan3MonthsEnabled !== false ? (isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                  <Text style={[styles.planMasterSwitchText, { color: form.plan3MonthsEnabled !== false ? '#059669' : subTextColor }]}>
+                    {form.plan3MonthsEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
+                  </Text>
+                  <Switch
+                    value={form.plan3MonthsEnabled !== false}
+                    onValueChange={() => handleToggle('plan3MonthsEnabled')}
                     trackColor={{ false: '#64748b', true: '#10b981' }}
                     thumbColor="#ffffff"
                   />
                 </View>
+
+                {form.plan3MonthsEnabled !== false && (
+                  <>
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>3-Month Total Fee (₹)</Text>
+                      <TextInput
+                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        keyboardType="numeric"
+                        value={String(form.fee3Months ?? 799)}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, fee3Months: Number(v) || 0 }))}
+                      />
+                    </View>
+
+                    <View style={styles.quotaRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Total Calls (90 Days)</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.callLimit3Months ?? 15)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit3Months: Number(v) || 0 }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                        <View style={{ height: 38, justifyContent: 'center' }}>
+                          <Switch
+                            value={form.videoAllowed3Months !== false}
+                            onValueChange={() => handleToggle('videoAllowed3Months')}
+                            trackColor={{ false: '#64748b', true: '#10b981' }}
+                            thumbColor="#ffffff"
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  </>
+                )}
               </View>
-            </View>
-          </View>
 
-          {/* Tier 3: Single Prescription Consultation */}
-          <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: isLight ? '#e2e8f0' : '#1e293b' }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={[styles.planBoxTitle, { color: textColor }]}>3. Single Consultation</Text>
-              <View style={styles.planDurationBadge}>
-                <Text style={styles.planDurationText}>1 Visit / SOS</Text>
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: subTextColor }]}>Per Consultation Fee (₹)</Text>
-              <TextInput
-                style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                keyboardType="numeric"
-                value={String(form.singleConsultationFee ?? 150)}
-                onChangeText={(v) => setForm((prev) => ({ ...prev, singleConsultationFee: Number(v) || 0 }))}
-              />
-            </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-              <View style={{ flex: 1, paddingRight: 8 }}>
-                <Text style={[styles.quotaLabel, { color: textColor }]}>First Consultation Free</Text>
-                <Text style={{ fontSize: 9.5, color: subTextColor }}>Offer 1st session free for new farmers</Text>
-              </View>
-              <Switch
-                value={Boolean(form.freeConsultationEnabled)}
-                onValueChange={() => handleToggle('freeConsultationEnabled')}
-                trackColor={{ false: '#64748b', true: '#10b981' }}
-                thumbColor="#ffffff"
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Crops Selection & All-Crops Feature */}
-        <View style={{ marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: isLight ? '#f1f5f9' : '#1e293b', gap: 10 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={[styles.toggleTitle, { color: textColor }]}>
-                Provide Advisory for All Crops (Universal Doctor)
-              </Text>
-              <Text style={[styles.toggleDesc, { color: subTextColor }]}>
-                Enable this if you serve all seasonal grains, cash crops, vegetables, and horticulture crops.
-              </Text>
-            </View>
-            <Switch
-              value={Boolean(form.allCropsSelected)}
-              onValueChange={() => handleToggle('allCropsSelected')}
-              trackColor={{ false: '#64748b', true: '#10b981' }}
-              thumbColor="#ffffff"
-            />
-          </View>
-
-          {/* Specialized Crop Tags */}
-          <View style={{ marginTop: 6, gap: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-              <Text style={[styles.inputLabel, { color: subTextColor, marginBottom: 0 }]}>
-                Selected Crop Specializations ({form.allCropsSelected ? 'All Crops (Universal)' : `${form.specializedCrops?.length ?? 0} of ${masterSystemCrops.length} Selected`}):
-              </Text>
-              {!form.allCropsSelected && (
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  <TouchableOpacity
-                    style={[styles.cropActionBtn, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}
-                    onPress={handleSelectAllFiltered}
-                  >
-                    <Ionicons name="checkmark-done" size={12} color="#10b981" />
-                    <Text style={[styles.cropActionBtnText, { color: '#10b981' }]}>Select Filtered</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.cropActionBtn, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}
-                    onPress={handleClearFiltered}
-                  >
-                    <Ionicons name="close" size={12} color="#ef4444" />
-                    <Text style={[styles.cropActionBtnText, { color: '#ef4444' }]}>Clear Filtered</Text>
-                  </TouchableOpacity>
+              {/* 3. 6-Month Care Pack */}
+              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan6MonthsEnabled !== false ? (isLight ? '#fbcfe8' : '#831843') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[styles.planBoxTitle, { color: textColor }]}>3. 6-Month Care Pack</Text>
+                  <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(236, 72, 153, 0.12)' }]}>
+                    <Text style={[styles.planDurationText, { color: '#ec4899' }]}>180 Days</Text>
+                  </View>
                 </View>
-              )}
+
+                {/* Plan Master ON/OFF Switch */}
+                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan6MonthsEnabled !== false ? (isLight ? '#fdf2f8' : 'rgba(236, 72, 153, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                  <Text style={[styles.planMasterSwitchText, { color: form.plan6MonthsEnabled !== false ? '#db2777' : subTextColor }]}>
+                    {form.plan6MonthsEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
+                  </Text>
+                  <Switch
+                    value={form.plan6MonthsEnabled !== false}
+                    onValueChange={() => handleToggle('plan6MonthsEnabled')}
+                    trackColor={{ false: '#64748b', true: '#ec4899' }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+
+                {form.plan6MonthsEnabled !== false && (
+                  <>
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>6-Month Total Fee (₹)</Text>
+                      <TextInput
+                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        keyboardType="numeric"
+                        value={String(form.fee6Months ?? 1499)}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, fee6Months: Number(v) || 0 }))}
+                      />
+                    </View>
+
+                    <View style={styles.quotaRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Total Calls (180 Days)</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.callLimit6Months ?? 30)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit6Months: Number(v) || 0 }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                        <View style={{ height: 38, justifyContent: 'center' }}>
+                          <Switch
+                            value={form.videoAllowed6Months !== false}
+                            onValueChange={() => handleToggle('videoAllowed6Months')}
+                            trackColor={{ false: '#64748b', true: '#ec4899' }}
+                            thumbColor="#ffffff"
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  </>
+                )}
+              </View>
+
+              {/* 4. 12-Month Annual Pack */}
+              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan12MonthsEnabled !== false ? (isLight ? '#fed7aa' : '#7c2d12') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[styles.planBoxTitle, { color: textColor }]}>4. 12-Month Annual Pack</Text>
+                  <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(249, 115, 22, 0.12)' }]}>
+                    <Text style={[styles.planDurationText, { color: '#f97316' }]}>365 Days (Full Year)</Text>
+                  </View>
+                </View>
+
+                {/* Plan Master ON/OFF Switch */}
+                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan12MonthsEnabled !== false ? (isLight ? '#fff7ed' : 'rgba(249, 115, 22, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                  <Text style={[styles.planMasterSwitchText, { color: form.plan12MonthsEnabled !== false ? '#ea580c' : subTextColor }]}>
+                    {form.plan12MonthsEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
+                  </Text>
+                  <Switch
+                    value={form.plan12MonthsEnabled !== false}
+                    onValueChange={() => handleToggle('plan12MonthsEnabled')}
+                    trackColor={{ false: '#64748b', true: '#f97316' }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+
+                {form.plan12MonthsEnabled !== false && (
+                  <>
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Annual Advisory Fee (₹)</Text>
+                      <TextInput
+                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        keyboardType="numeric"
+                        value={String(form.fee12Months ?? 2699)}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, fee12Months: Number(v) || 0 }))}
+                      />
+                    </View>
+
+                    <View style={styles.quotaRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Total Calls (1 Year)</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.callLimit12Months ?? 60)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit12Months: Number(v) || 0 }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                        <View style={{ height: 38, justifyContent: 'center' }}>
+                          <Switch
+                            value={form.videoAllowed12Months !== false}
+                            onValueChange={() => handleToggle('videoAllowed12Months')}
+                            trackColor={{ false: '#64748b', true: '#f97316' }}
+                            thumbColor="#ffffff"
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  </>
+                )}
+              </View>
+
+              {/* 5. Full Season Crop Care */}
+              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.cropSeasonPlanEnabled !== false ? (isLight ? '#fed7aa' : '#7c2d12') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[styles.planBoxTitle, { color: textColor }]}>5. Full Season Crop Care</Text>
+                  <View style={styles.planDurationBadge}>
+                    <Text style={styles.planDurationText}>120 Days / Sowing to Harvest</Text>
+                  </View>
+                </View>
+
+                {/* Plan Master ON/OFF Switch */}
+                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.cropSeasonPlanEnabled !== false ? (isLight ? '#fff7ed' : 'rgba(249, 115, 22, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                  <Text style={[styles.planMasterSwitchText, { color: form.cropSeasonPlanEnabled !== false ? '#ea580c' : subTextColor }]}>
+                    {form.cropSeasonPlanEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
+                  </Text>
+                  <Switch
+                    value={form.cropSeasonPlanEnabled !== false}
+                    onValueChange={() => handleToggle('cropSeasonPlanEnabled')}
+                    trackColor={{ false: '#64748b', true: '#f97316' }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+
+                {form.cropSeasonPlanEnabled !== false && (
+                  <>
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Full Season Fee (₹)</Text>
+                      <TextInput
+                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        keyboardType="numeric"
+                        value={String(form.cropSeasonFee ?? 499)}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, cropSeasonFee: Number(v) || 0 }))}
+                      />
+                    </View>
+
+                    <View style={styles.quotaRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Season Call Quota</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.cropSeasonCallLimit ?? 10)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, cropSeasonCallLimit: Number(v) || 0 }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                        <View style={{ height: 38, justifyContent: 'center' }}>
+                          <Switch
+                            value={Boolean(form.cropSeasonVideoAllowed)}
+                            onValueChange={() => handleToggle('cropSeasonVideoAllowed')}
+                            trackColor={{ false: '#64748b', true: '#10b981' }}
+                            thumbColor="#ffffff"
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  </>
+                )}
+              </View>
+
+              {/* 6. Single Prescription Consultation */}
+              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.singleConsultationPlanEnabled !== false ? (isLight ? '#ddd6fe' : '#4c1d95') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[styles.planBoxTitle, { color: textColor }]}>6. Single / SOS Consultation</Text>
+                  <View style={styles.planDurationBadge}>
+                    <Text style={styles.planDurationText}>1 Visit / SOS</Text>
+                  </View>
+                </View>
+
+                {/* Plan Master ON/OFF Switch */}
+                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.singleConsultationPlanEnabled !== false ? (isLight ? '#f5f3ff' : 'rgba(139, 92, 246, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                  <Text style={[styles.planMasterSwitchText, { color: form.singleConsultationPlanEnabled !== false ? '#7c3aed' : subTextColor }]}>
+                    {form.singleConsultationPlanEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
+                  </Text>
+                  <Switch
+                    value={form.singleConsultationPlanEnabled !== false}
+                    onValueChange={() => handleToggle('singleConsultationPlanEnabled')}
+                    trackColor={{ false: '#64748b', true: '#8b5cf6' }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+
+                {form.singleConsultationPlanEnabled !== false && (
+                  <>
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Per Consultation Fee (₹)</Text>
+                      <TextInput
+                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        keyboardType="numeric"
+                        value={String(form.singleConsultationFee ?? 150)}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, singleConsultationFee: Number(v) || 0 }))}
+                      />
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
+                      <View style={{ flex: 1, paddingRight: 8 }}>
+                        <Text style={[styles.quotaLabel, { color: textColor }]}>First Consultation Free</Text>
+                        <Text style={{ fontSize: 9.5, color: subTextColor }}>Offer 1st session free for new farmers</Text>
+                      </View>
+                      <Switch
+                        value={Boolean(form.freeConsultationEnabled)}
+                        onValueChange={() => handleToggle('freeConsultationEnabled')}
+                        trackColor={{ false: '#64748b', true: '#10b981' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
+                  </>
+                )}
+              </View>
             </View>
 
-            {!form.allCropsSelected && (
-              <>
-                {/* Search Bar & Filter Options */}
+        {/* Crops Selection & Specialization Feature */}
+        <View style={{ marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: isLight ? '#e2e8f0' : '#1e293b', gap: 12 }}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={[styles.iconBadgeGreen, { backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)' }]}>
+              <Ionicons name="leaf" size={18} color="#10b981" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.sectionTitle, { color: textColor }]}>
+                Doctor Crop Specialization & Advisory Scope
+              </Text>
+              <Text style={[styles.sectionSub, { color: subTextColor }]}>
+                Choose whether you advise on all crops across India or specialize in specific grains, cash crops, and horticulture.
+              </Text>
+            </View>
+          </View>
+
+          {/* Mode Selector Segmented Pill */}
+          <View style={[styles.specializationModeContainer, { backgroundColor: isLight ? '#f1f5f9' : '#070f1a', borderColor: isLight ? '#cbd5e1' : '#1e293b' }]}>
+            <TouchableOpacity
+              style={[
+                styles.specializationModeBtn,
+                !form.allCropsSelected && [styles.specializationModeBtnActive, { backgroundColor: isLight ? '#ffffff' : '#10b981' }]
+              ]}
+              onPress={() => setForm((prev) => ({ ...prev, allCropsSelected: false }))}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="ribbon" size={15} color={!form.allCropsSelected ? (isLight ? '#10b981' : '#04160c') : subTextColor} />
+              <Text style={[
+                styles.specializationModeBtnText,
+                { color: !form.allCropsSelected ? (isLight ? '#0f172a' : '#04160c') : subTextColor }
+              ]}>
+                Specific Crop Specialist ({form.specializedCrops?.length ?? 0} Selected)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.specializationModeBtn,
+                form.allCropsSelected && [styles.specializationModeBtnActive, { backgroundColor: isLight ? '#ffffff' : '#3b82f6' }]
+              ]}
+              onPress={() => setForm((prev) => ({ ...prev, allCropsSelected: true }))}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="globe" size={15} color={form.allCropsSelected ? (isLight ? '#3b82f6' : '#ffffff') : subTextColor} />
+              <Text style={[
+                styles.specializationModeBtnText,
+                { color: form.allCropsSelected ? (isLight ? '#0f172a' : '#ffffff') : subTextColor }
+              ]}>
+                Universal Doctor (All Indian Crops)
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* If Universal Doctor is Selected */}
+          {form.allCropsSelected ? (
+            <View style={{ backgroundColor: isLight ? '#eff6ff' : 'rgba(59, 130, 246, 0.1)', padding: 14, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: isLight ? '#bfdbfe' : 'rgba(59, 130, 246, 0.25)', gap: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="checkmark-circle" size={18} color="#3b82f6" />
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isLight ? '#1e40af' : '#60a5fa' }}>
+                  Universal Advisory Active
+                </Text>
+              </View>
+              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: isLight ? '#3b82f6' : '#93c5fd', lineHeight: 18 }}>
+                Your profile is visible to farmers growing any crop across India. Farmers can consult you for any cereal, vegetable, fruit, cash, or fodder crop.
+              </Text>
+            </View>
+          ) : (
+            <>
+              {/* Active Selected Crops Tag Box with ✕ Remove Buttons */}
+              <View style={[styles.selectedCropsBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: isLight ? '#e2e8f0' : '#1e293b' }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
+                    🌾 Currently Specialized Crops ({(form.specializedCrops || []).length} Crops):
+                  </Text>
+                  {(form.specializedCrops || []).length > 0 && (
+                    <TouchableOpacity
+                      style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: isLight ? '#fee2e2' : 'rgba(239, 68, 68, 0.15)' }}
+                      onPress={() => setForm((prev) => ({ ...prev, specializedCrops: [] }))}
+                    >
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ef4444' }}>Clear All</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {(form.specializedCrops || []).length === 0 ? (
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: subTextColor, fontStyle: 'italic', paddingVertical: 4 }}>
+                    No specialized crops selected yet. Use the catalog below or add custom crops to highlight your agronomic expertise.
+                  </Text>
+                ) : (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingTop: 4 }}>
+                    {(form.specializedCrops || []).map((cropName) => (
+                      <View
+                        key={cropName}
+                        style={[
+                          styles.activeSelectedCropChip,
+                          {
+                            backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)',
+                            borderColor: isLight ? '#a7f3d0' : '#059669',
+                          }
+                        ]}
+                      >
+                        <Ionicons name="leaf" size={11} color="#10b981" />
+                        <Text style={[styles.activeSelectedCropText, { color: isLight ? '#065f46' : '#34d399' }]}>
+                          {cropName}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.removeCropTouch}
+                          onPress={() => handleCropToggle(cropName)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Ionicons name="close-circle" size={14} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Add Custom Crop Input Field */}
+              <View style={styles.customCropRow}>
+                <TextInput
+                  style={[styles.customCropInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                  placeholder="Type any crop name (e.g. Kinnow, Dragon Fruit, Guava)..."
+                  placeholderTextColor={subTextColor}
+                  value={customCropInput}
+                  onChangeText={setCustomCropInput}
+                  onSubmitEditing={handleAddCustomCrop}
+                />
+                <TouchableOpacity style={styles.addCropBtn} onPress={handleAddCustomCrop}>
+                  <Ionicons name="add-circle" size={16} color="#ffffff" />
+                  <Text style={styles.addCropBtnText}>Add Crop</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Catalog Search & Category Filter Section */}
+              <View style={{ gap: 8, marginTop: 4 }}>
                 <View style={styles.cropSearchRow}>
                   <View style={[styles.cropSearchInputWrapper, { backgroundColor: isLight ? '#ffffff' : '#0f172a', borderColor: isLight ? '#cbd5e1' : '#334155' }]}>
                     <Ionicons name="search" size={14} color={subTextColor} />
                     <TextInput
                       style={[styles.cropSearchInput, { color: textColor }]}
-                      placeholder="Search system crops (e.g. Wheat, Basmati, Potato, Marigold)..."
+                      placeholder="Search Indian crops catalog (e.g. Wheat, Basmati, Potato, Cotton)..."
                       placeholderTextColor={subTextColor}
                       value={cropSearchQuery}
                       onChangeText={setCropSearchQuery}
@@ -775,7 +1094,7 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
                   >
                     <Ionicons name={showSelectedOnly ? "checkbox" : "square-outline"} size={14} color={showSelectedOnly ? "#10b981" : subTextColor} />
                     <Text style={[styles.selectedOnlyText, { color: showSelectedOnly ? '#10b981' : textColor }]}>
-                      Selected ({form.specializedCrops?.length ?? 0})
+                      Selected ({(form.specializedCrops || []).length})
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -816,15 +1135,31 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
                   })}
                 </ScrollView>
 
-                {/* Active Filter Summary Bar */}
+                {/* Quick Select / Clear Filtered Action Bar */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 2 }}>
                   <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
-                    Showing {filteredSystemCrops.length} of {masterSystemCrops.length} Crops:
+                    Showing {filteredSystemCrops.length} of {masterSystemCrops.length} Catalog Crops:
                   </Text>
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <TouchableOpacity
+                      style={[styles.cropActionBtn, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}
+                      onPress={handleSelectAllFiltered}
+                    >
+                      <Ionicons name="checkmark-done" size={12} color="#10b981" />
+                      <Text style={[styles.cropActionBtnText, { color: '#10b981' }]}>Select Filtered</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.cropActionBtn, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}
+                      onPress={handleClearFiltered}
+                    >
+                      <Ionicons name="close" size={12} color="#ef4444" />
+                      <Text style={[styles.cropActionBtnText, { color: '#ef4444' }]}>Clear Filtered</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Crops Grid */}
-                <View style={[styles.cropChipsRow, { maxHeight: 300 }]}>
+                <View style={[styles.cropChipsRow, { maxHeight: 260 }]}>
                   <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={true} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingBottom: 6 }}>
                     {filteredSystemCrops.map((crop) => {
                       const isSelected = (form.specializedCrops || []).includes(crop.name);
@@ -862,25 +1197,9 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string }> = ({ adviso
                     })}
                   </ScrollView>
                 </View>
-              </>
-            )}
-
-            {/* Custom Crop Add Field */}
-            {!form.allCropsSelected && (
-              <View style={styles.customCropRow}>
-                <TextInput
-                  style={[styles.customCropInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                  placeholder="Add another crop (e.g. Kinnow, Dragon Fruit)..."
-                  placeholderTextColor={subTextColor}
-                  value={customCropInput}
-                  onChangeText={setCustomCropInput}
-                />
-                <TouchableOpacity style={styles.addCropBtn} onPress={handleAddCustomCrop}>
-                  <Text style={styles.addCropBtnText}>Add Crop</Text>
-                </TouchableOpacity>
               </View>
-            )}
-          </View>
+            </>
+          )}
         </View>
       </View>
         </>
@@ -1350,5 +1669,65 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontFamily: FONT.bold,
+  },
+  planMasterSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  planMasterSwitchText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+  },
+  specializationModeContainer: {
+    flexDirection: 'row',
+    borderRadius: RADIUS.lg,
+    padding: 4,
+    borderWidth: 1,
+    gap: 6,
+  },
+  specializationModeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+  },
+  specializationModeBtnActive: {
+    ...premiumShadow('#000000', 'sm'),
+  },
+  specializationModeBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  selectedCropsBox: {
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderWidth: 1,
+    gap: 6,
+  },
+  activeSelectedCropChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  activeSelectedCropText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  removeCropTouch: {
+    padding: 2,
+    marginLeft: 2,
   },
 });

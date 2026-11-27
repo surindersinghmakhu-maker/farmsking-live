@@ -33,6 +33,20 @@ export class SmsService {
   }
 
   /**
+   * Default Account Password SMS Dispatcher for First-Time Users
+   */
+  async sendDefaultPasswordSms(
+    mobile: string,
+    customerName: string,
+    password: string,
+  ): Promise<SmsSendResult> {
+    const name = customerName || 'Farmer';
+    const text = `Welcome to FarmsKing, ${name}! Your default account login password is ${password}. You can now sign in without OTP or change your password anytime in Profile. - FarmsKing Technologies`;
+    this.logger.warn(`[Default Password for +91 ${this.format10DigitMobile(mobile)}]: ${password}`);
+    return this.sendTextMessage(mobile, text, 'DEFAULT_PASSWORD');
+  }
+
+  /**
    * General Text SMS Dispatcher honoring Admin System Integration Settings
    */
   async sendTextMessage(mobile: string, text: string, templateKey?: string): Promise<SmsSendResult> {

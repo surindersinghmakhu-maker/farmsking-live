@@ -26,7 +26,7 @@ import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
 import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress, useSetDefaultAddress } from '@/src/hooks/useAddresses';
-import { verifyAccountPassword, sendEmailVerificationApi, sendUpiUpdateOtpApi, verifyUpiUpdateOtpApi } from '@/src/api/auth.api';
+import { verifyAccountPassword, sendEmailVerificationApi, sendUpiUpdateOtpApi, verifyUpiUpdateOtpApi, changePasswordApi, forgotPasswordStart } from '@/src/api/auth.api';
 import type { CustomerAddress } from '@/src/api/addresses.api';
 import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
 import { uploadPhoto } from '@/src/api/uploads.api';
@@ -56,7 +56,7 @@ const getCleanMobile = (mobile?: string | null) => {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ tab?: string }>();
+  const params = useLocalSearchParams<{ tab?: string; openPassword?: string }>();
   const { user, updateUser, refreshUser, linkGoogle, unlinkGoogle, sendMobileLinkOtp, verifyMobileLinkOtp } = useAuth();
   const { role } = useRole();
   const updateAddress = useUpdateMyAddress();
@@ -75,39 +75,74 @@ export default function ProfileScreen() {
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordChangeMode, setPasswordChangeMode] = useState<'PASSWORD' | 'OTP'>('PASSWORD');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordOtpCode, setPasswordOtpCode] = useState('');
+  const [isSendingPassOtp, setIsSendingPassOtp] = useState(false);
+  const [passOtpSent, setPassOtpSent] = useState(false);
+  const [passDevOtp, setPassDevOtp] = useState<string | null>(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
+  const handleSendPasswordResetOtp = async () => {
+    const num = userMobile.replace(/\D/g, '').slice(-10);
+    if (num.length !== 10) {
+      setPasswordError('Please enter a valid 10-digit registered mobile number.');
+      return;
+    }
+    setIsSendingPassOtp(true);
+    setPasswordError(null);
+    setPassDevOtp(null);
+    try {
+      const res = await forgotPasswordStart({ mobile: num });
+      setPassOtpSent(true);
+      if (res.devOtp) setPassDevOtp(res.devOtp);
+      Alert.alert('📱 OTP Sent', 'A verification OTP has been sent to your registered mobile number via SMS.');
+    } catch (err: any) {
+      setPasswordError(err?.response?.data?.message || err?.message || 'Could not send verification OTP.');
+    } finally {
+      setIsSendingPassOtp(false);
+    }
+  };
+
   const handleChangePassword = async () => {
-    if (!oldPassword.trim()) {
-      setPasswordError('Please enter your old password.');
+    const newPass = newPassword.trim();
+    if (newPass.length < 8) {
+      setPasswordError('New password must be at least 8 characters long.');
       return;
     }
-    if (!newPassword.trim() || newPassword.trim().length < 4) {
-      setPasswordError('New password must be at least 4 characters.');
-      return;
-    }
-    if (newPassword.trim() !== confirmNewPassword.trim()) {
+    if (newPass !== confirmNewPassword.trim()) {
       setPasswordError('New passwords do not match.');
       return;
     }
+
+    if (passwordChangeMode === 'PASSWORD' && !oldPassword.trim()) {
+      setPasswordError('Please enter your current password, or switch to "Verify via OTP" below.');
+      return;
+    }
+    if (passwordChangeMode === 'OTP' && (!passwordOtpCode.trim() || passwordOtpCode.trim().length < 4)) {
+      setPasswordError('Please enter the 4 to 6-digit OTP code sent to your mobile.');
+      return;
+    }
+
     setIsChangingPassword(true);
     setPasswordError(null);
     try {
-      // 1. Verify old password
-      await verifyAccountPassword(oldPassword.trim(), userMobile);
-      
-      // 2. Update to new password
-      await updateAddress.mutateAsync({ password: newPassword.trim() } as any);
-      
+      if (passwordChangeMode === 'OTP') {
+        await changePasswordApi({ resetOtp: passwordOtpCode.trim(), newPassword: newPass });
+      } else {
+        await changePasswordApi({ oldPassword: oldPassword.trim(), newPassword: newPass });
+      }
+
       setIsPasswordModalOpen(false);
       setOldPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
-      Alert.alert('✅ Success', 'Password updated successfully!');
+      setPasswordOtpCode('');
+      setPassOtpSent(false);
+      Alert.alert('✅ Success', 'Password updated successfully! You can now log in using your new password.');
     } catch (err: any) {
       setPasswordError(err?.response?.data?.message || err?.message || 'Failed to update password.');
     } finally {
@@ -415,7 +450,10 @@ export default function ProfileScreen() {
     } else if (params.tab === 'PROFILE') {
       setActiveTab('PROFILE');
     }
-  }, [params.tab]);
+    if (params.openPassword === 'true') {
+      setIsPasswordModalOpen(true);
+    }
+  }, [params.tab, params.openPassword]);
 
   // This screen is the single canonical profile for the account — one per mobile number, shared across
   // every role the account holds. Name/email/photo/address all write to the same User row on save.
@@ -1321,6 +1359,60 @@ export default function ProfileScreen() {
                     </>
                   )}
                 </View>
+
+                {/* ── Security & Account Login Password Card ── */}
+                <View style={{ marginTop: 10, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="key" size={17} color="#059669" />
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+                        Account Login Password
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 }}>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                        ACTIVE
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', lineHeight: 16 }}>
+                    You can sign in with your mobile number & password without waiting for OTP. You can change your password anytime or reset it via mobile OTP.
+                  </Text>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155', letterSpacing: 3 }}>
+                      ••••••••
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        backgroundColor: '#10b981',
+                        paddingHorizontal: 12,
+                        paddingVertical: 7,
+                        borderRadius: RADIUS.sm,
+                      }}
+                      onPress={() => {
+                        setPasswordChangeMode('PASSWORD');
+                        setOldPassword('');
+                        setNewPassword('');
+                        setConfirmNewPassword('');
+                        setPasswordError(null);
+                        setPasswordOtpCode('');
+                        setPassOtpSent(false);
+                        setIsPasswordModalOpen(true);
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="create-outline" size={14} color="#ffffff" />
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>
+                        Change Password
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
 
 
@@ -1529,7 +1621,7 @@ export default function ProfileScreen() {
             </View>
           </Modal>
 
-          {/* 🔒 Password Change Modal */}
+          {/* 🔒 Password Change & Reset Modal */}
           <Modal
             visible={isPasswordModalOpen}
             animationType="fade"
@@ -1539,50 +1631,193 @@ export default function ProfileScreen() {
               setOldPassword('');
               setNewPassword('');
               setConfirmNewPassword('');
+              setPasswordOtpCode('');
+              setPassOtpSent(false);
               setPasswordError(null);
             }}
           >
             <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
+              <View style={[styles.modalContent, { maxWidth: 440 }]}>
                 <View style={styles.modalHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="key" size={20} color="#dc2626" />
-                    <Text style={styles.modalTitle}>Change Password</Text>
+                    <Ionicons name="key" size={20} color="#10b981" />
+                    <Text style={styles.modalTitle}>Update Login Password</Text>
                   </View>
                   <TouchableOpacity onPress={() => {
                     setIsPasswordModalOpen(false);
                     setOldPassword('');
                     setNewPassword('');
                     setConfirmNewPassword('');
+                    setPasswordOtpCode('');
+                    setPassOtpSent(false);
                     setPasswordError(null);
                   }}>
                     <Ionicons name="close" size={20} color="#64748b" />
                   </TouchableOpacity>
                 </View>
 
-                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>Current Password *</Text>
-                <TextInput
-                  style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
-                  value={oldPassword}
-                  onChangeText={setOldPassword}
-                  placeholder="Enter old password"
-                  placeholderTextColor="#cbd5e1"
-                  secureTextEntry
-                />
+                {/* Mode Selector */}
+                <View style={{
+                  flexDirection: 'row',
+                  backgroundColor: '#f1f5f9',
+                  borderRadius: RADIUS.md,
+                  padding: 3,
+                  gap: 4,
+                  marginBottom: 14,
+                }}>
+                  <TouchableOpacity
+                    style={[{
+                      flex: 1,
+                      paddingVertical: 7,
+                      borderRadius: RADIUS.sm,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }, passwordChangeMode === 'PASSWORD' && { backgroundColor: '#10b981' }]}
+                    onPress={() => {
+                      setPasswordChangeMode('PASSWORD');
+                      setPasswordError(null);
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[{
+                      fontSize: 11.5,
+                      fontFamily: FONT.bold,
+                      color: '#64748b',
+                    }, passwordChangeMode === 'PASSWORD' && { color: '#ffffff' }]}>
+                      Using Current Password
+                    </Text>
+                  </TouchableOpacity>
 
-                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 10 }]}>New Password *</Text>
+                  <TouchableOpacity
+                    style={[{
+                      flex: 1,
+                      paddingVertical: 7,
+                      borderRadius: RADIUS.sm,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }, passwordChangeMode === 'OTP' && { backgroundColor: '#10b981' }]}
+                    onPress={() => {
+                      setPasswordChangeMode('OTP');
+                      setPasswordError(null);
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[{
+                      fontSize: 11.5,
+                      fontFamily: FONT.bold,
+                      color: '#64748b',
+                    }, passwordChangeMode === 'OTP' && { color: '#ffffff' }]}>
+                      Forgot? Verify via OTP
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {passwordChangeMode === 'PASSWORD' ? (
+                  <>
+                    <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>Current Password *</Text>
+                    <TextInput
+                      style={[styles.modalInput, { fontSize: 13, fontFamily: FONT.bold }]}
+                      value={oldPassword}
+                      onChangeText={setOldPassword}
+                      placeholder="Enter your current password"
+                      placeholderTextColor="#cbd5e1"
+                      secureTextEntry
+                    />
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setPasswordChangeMode('OTP');
+                        setPasswordError(null);
+                        handleSendPasswordResetOtp();
+                      }}
+                      style={{ alignSelf: 'flex-end', marginTop: 4, marginBottom: 8 }}
+                    >
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0284c7' }}>
+                        Forgot current password? Verify via OTP →
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <View style={{ marginBottom: 10, gap: 10 }}>
+                    <View style={{
+                      backgroundColor: '#f0fdf4',
+                      borderWidth: 1,
+                      borderColor: '#bbf7d0',
+                      borderRadius: RADIUS.sm,
+                      padding: 10,
+                      gap: 4,
+                    }}>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#166534' }}>
+                        OTP Verification for +91 {userMobile}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: '#475569', lineHeight: 15 }}>
+                        An SMS verification OTP code will be sent to your registered mobile number to authenticate.
+                      </Text>
+                    </View>
+
+                    {!passOtpSent ? (
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#0284c7',
+                          paddingVertical: 9,
+                          borderRadius: RADIUS.sm,
+                          alignItems: 'center',
+                        }}
+                        onPress={handleSendPasswordResetOtp}
+                        disabled={isSendingPassOtp}
+                      >
+                        {isSendingPassOtp ? (
+                          <ActivityIndicator size="small" color="#ffffff" />
+                        ) : (
+                          <Text style={{ color: '#ffffff', fontSize: 12, fontFamily: FONT.bold }}>
+                            Send OTP via SMS
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 11, color: '#16a34a', fontFamily: FONT.bold }}>
+                          ✓ OTP Dispatched via SMS
+                        </Text>
+                        <TouchableOpacity
+                          onPress={handleSendPasswordResetOtp}
+                          disabled={isSendingPassOtp}
+                        >
+                          <Text style={{ fontSize: 11, color: '#0284c7', fontFamily: FONT.bold }}>
+                            {isSendingPassOtp ? 'Resending...' : 'Resend OTP'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+
+                    <View>
+                      <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>Enter 4-6 Digit OTP *</Text>
+                      <TextInput
+                        style={[styles.modalInput, { fontSize: 16, fontFamily: FONT.bold, letterSpacing: 4, textAlign: 'center' }]}
+                        value={passwordOtpCode}
+                        onChangeText={setPasswordOtpCode}
+                        placeholder="------"
+                        placeholderTextColor="#cbd5e1"
+                        keyboardType="number-pad"
+                        maxLength={6}
+                      />
+                    </View>
+                  </View>
+                )}
+
+                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 4 }]}>New Password (Min 8 characters) *</Text>
                 <TextInput
-                  style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
+                  style={[styles.modalInput, { fontSize: 13, fontFamily: FONT.bold }]}
                   value={newPassword}
                   onChangeText={setNewPassword}
-                  placeholder="Enter new password"
+                  placeholder="Enter new 8-character password"
                   placeholderTextColor="#cbd5e1"
                   secureTextEntry
                 />
 
                 <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 10 }]}>Confirm New Password *</Text>
                 <TextInput
-                  style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
+                  style={[styles.modalInput, { fontSize: 13, fontFamily: FONT.bold }]}
                   value={confirmNewPassword}
                   onChangeText={setConfirmNewPassword}
                   placeholder="Re-enter new password"
@@ -1595,14 +1830,14 @@ export default function ProfileScreen() {
                 ) : null}
 
                 <TouchableOpacity
-                  style={[styles.modalSubmitBtn, { backgroundColor: '#dc2626', marginTop: 16 }]}
+                  style={[styles.modalSubmitBtn, { backgroundColor: '#10b981', marginTop: 16 }]}
                   onPress={handleChangePassword}
                   disabled={isChangingPassword}
                 >
                   {isChangingPassword ? (
                     <ActivityIndicator color="#ffffff" />
                   ) : (
-                    <Text style={styles.modalSubmitText}>Update Password</Text>
+                    <Text style={styles.modalSubmitText}>Save New Password</Text>
                   )}
                 </TouchableOpacity>
               </View>

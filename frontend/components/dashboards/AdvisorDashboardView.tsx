@@ -39,6 +39,7 @@ import { DoctorMessengerModal } from '@/src/components/chat/DoctorMessengerModal
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyWallet } from '@/src/hooks/useWallet';
+import { useDoctorSettings } from '@/src/hooks/useDoctorSettings';
 
 type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS';
 
@@ -244,6 +245,7 @@ export const AdvisorDashboardView: React.FC = () => {
   const resolvedProblems = (assignedProblems ?? []).filter((p) => p.status !== 'REPORTED' && p.status !== 'UNDER_REVIEW');
 
   const isGroupVoiceCallEnabled = (appSettings as any)?.groupVoiceCallEnabled ?? true;
+  const { data: doctorSettings } = useDoctorSettings(user?.id);
 
   const voiceCallHook = useGroupVoiceCall();
   const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
@@ -746,6 +748,115 @@ export const AdvisorDashboardView: React.FC = () => {
             onClose={() => setIsMessengerOpen(false)}
             onOpenGroupCall={() => setShowVoiceCallModal(true)}
           />
+
+          {/* Executive Doctor Advisory Plans & Crop Specialization Console Banner */}
+          <View
+            style={{
+              backgroundColor: isLight ? '#ffffff' : cardBg,
+              borderRadius: RADIUS.lg,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: isLight ? '#e2e8f0' : cardBorder,
+              gap: 10,
+              marginBottom: 10,
+              ...premiumShadow('#000000', 'xs'),
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: isLight ? '#eff6ff' : 'rgba(59, 130, 246, 0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="pricetags" size={17} color="#3b82f6" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: textColor }}>
+                    Doctor Advisory Packs &amp; Crop Specialization
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                    {doctorSettings?.allCropsSelected
+                      ? '🌐 Universal Doctor · All Indian Crops'
+                      : `🌾 ${(doctorSettings?.specializedCrops || []).length} Specialized Crops Active`}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.15)',
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderRadius: RADIUS.pill,
+                  borderWidth: 1,
+                  borderColor: isLight ? '#bbf7d0' : '#059669',
+                }}
+                onPress={() => router.push('/(partner)/(tabs)/settings' as never)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="options" size={13} color="#10b981" />
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isLight ? '#15803d' : '#34d399' }}>
+                  Manage in C-Panel →
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 6 Plan Status Badges Strip */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingTop: 2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.monthlyPlanEnabled !== false ? (isLight ? '#eff6ff' : 'rgba(59, 130, 246, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#bfdbfe' : '#1e3a8a' }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.monthlyPlanEnabled !== false ? '#2563eb' : subTextColor }}>
+                  {doctorSettings?.monthlyPlanEnabled !== false ? '🟢' : '⚪'} Monthly: ₹{doctorSettings?.monthlyFee ?? 299}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.plan3MonthsEnabled !== false ? (isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#a7f3d0' : '#065f46' }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.plan3MonthsEnabled !== false ? '#10b981' : subTextColor }}>
+                  {doctorSettings?.plan3MonthsEnabled !== false ? '🟢' : '⚪'} 3-Mo Pack: ₹{doctorSettings?.fee3Months ?? 799}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.plan6MonthsEnabled !== false ? (isLight ? '#fdf2f8' : 'rgba(236, 72, 153, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#fbcfe8' : '#831843' }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.plan6MonthsEnabled !== false ? '#ec4899' : subTextColor }}>
+                  {doctorSettings?.plan6MonthsEnabled !== false ? '🟢' : '⚪'} 6-Mo Pack: ₹{doctorSettings?.fee6Months ?? 1499}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.plan12MonthsEnabled !== false ? (isLight ? '#fff7ed' : 'rgba(249, 115, 22, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#fed7aa' : '#7c2d12' }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.plan12MonthsEnabled !== false ? '#f97316' : subTextColor }}>
+                  {doctorSettings?.plan12MonthsEnabled !== false ? '🟢' : '⚪'} 12-Mo Annual: ₹{doctorSettings?.fee12Months ?? 2699}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.cropSeasonPlanEnabled !== false ? (isLight ? '#fff7ed' : 'rgba(249, 115, 22, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#fed7aa' : '#7c2d12' }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.cropSeasonPlanEnabled !== false ? '#ea580c' : subTextColor }}>
+                  {doctorSettings?.cropSeasonPlanEnabled !== false ? '🟢' : '⚪'} Season: ₹{doctorSettings?.cropSeasonFee ?? 499}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.singleConsultationPlanEnabled !== false ? (isLight ? '#f5f3ff' : 'rgba(139, 92, 246, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#ddd6fe' : '#4c1d95' }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.singleConsultationPlanEnabled !== false ? '#7c3aed' : subTextColor }}>
+                  {doctorSettings?.singleConsultationPlanEnabled !== false ? '🟢' : '⚪'} SOS Visit: ₹{doctorSettings?.singleConsultationFee ?? 150}
+                </Text>
+              </View>
+            </View>
+
+            {/* Specialized Crop Chips Preview */}
+            {!doctorSettings?.allCropsSelected && (doctorSettings?.specializedCrops || []).length > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap', paddingTop: 2 }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: subTextColor }}>Specialist In:</Text>
+                {(doctorSettings?.specializedCrops || []).slice(0, 10).map((crop: string) => (
+                  <View key={crop} style={{ backgroundColor: isLight ? '#f1f5f9' : '#0f172a', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155' }}>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.semiBold, color: textColor }}>{crop}</Text>
+                  </View>
+                ))}
+                {(doctorSettings?.specializedCrops || []).length > 10 && (
+                  <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: subTextColor }}>
+                    +{(doctorSettings?.specializedCrops || []).length - 10} more
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
 
           {/* Single tabbed card replaces 4 stacked sections — one clear focus at a time */}
           <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, shadowColor: tConfig.shadowColor || '#00ff87' }]}>

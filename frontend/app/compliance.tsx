@@ -911,7 +911,7 @@ export default function ComplianceScreen() {
                     isDay ? styles.officerNameDay : styles.officerNameNight,
                   ]}
                 >
-                  Er. Gagandeep Kaur (Designated Grievance Redressal Officer &amp; Director)
+                  Designated Grievance Redressal Officer
                 </Text>
                 <Text
                   style={[

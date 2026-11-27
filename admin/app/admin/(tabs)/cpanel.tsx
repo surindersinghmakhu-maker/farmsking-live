@@ -649,7 +649,7 @@ function AboutSettingsSection({
               label="Grievance Officer Name"
               value={data.grievanceOfficerName}
               onChangeText={(val) => onChange({ ...data, grievanceOfficerName: val })}
-              placeholder="Surinder Singh"
+              placeholder="Grievance Redressal Officer"
             />
           </View>
           <View style={styles.colHalf}>

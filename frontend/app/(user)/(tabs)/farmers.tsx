@@ -31,7 +31,7 @@ export default function AdvisorDashboardScreen() {
 
   const adoptionRequests = isGarden
     ? [
-        { id: '1', name: 'My Balcony Garden', client: 'Surinder Singh', location: 'Chandigarh', metric: '12 Plants' },
+        { id: '1', name: 'My Balcony Garden', client: 'Simranjit Singh', location: 'Chandigarh', metric: '12 Plants' },
         { id: '2', name: 'Backyard Veggies', client: 'Amanpreet', location: 'Ludhiana', metric: '5 Plants' },
       ]
     : [

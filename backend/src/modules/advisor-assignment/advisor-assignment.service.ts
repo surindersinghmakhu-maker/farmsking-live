@@ -1296,6 +1296,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       enableVideoCall: storedDoctorSettings.enableVideoCall ?? true,
 
       // 2. Plans & Pricing
+      monthlyPlanEnabled: storedDoctorSettings.monthlyPlanEnabled ?? true,
       monthlyFee: storedDoctorSettings.monthlyFee ?? Number(advisor.feeVipMonthly ?? 299),
       monthlyCallLimit: storedDoctorSettings.monthlyCallLimit ?? 5,
       monthlyInAppCallLimit: storedDoctorSettings.monthlyInAppCallLimit ?? 3,
@@ -1303,13 +1304,35 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       monthlyVideoAllowed: storedDoctorSettings.monthlyVideoAllowed ?? true,
       monthlyChatEnabled: storedDoctorSettings.monthlyChatEnabled ?? true,
 
+      // 3-Month Pack
+      plan3MonthsEnabled: storedDoctorSettings.plan3MonthsEnabled ?? true,
+      fee3Months: storedDoctorSettings.fee3Months ?? (Math.round(Number(advisor.feeVipMonthly ?? 299) * 2.7)),
+      callLimit3Months: storedDoctorSettings.callLimit3Months ?? 15,
+      videoAllowed3Months: storedDoctorSettings.videoAllowed3Months ?? true,
+
+      // 6-Month Pack
+      plan6MonthsEnabled: storedDoctorSettings.plan6MonthsEnabled ?? true,
+      fee6Months: storedDoctorSettings.fee6Months ?? (Math.round(Number(advisor.feeVipMonthly ?? 299) * 5.0)),
+      callLimit6Months: storedDoctorSettings.callLimit6Months ?? 30,
+      videoAllowed6Months: storedDoctorSettings.videoAllowed6Months ?? true,
+
+      // 12-Month Annual Pack
+      plan12MonthsEnabled: storedDoctorSettings.plan12MonthsEnabled ?? true,
+      fee12Months: storedDoctorSettings.fee12Months ?? (Math.round(Number(advisor.feeVipMonthly ?? 299) * 9.0)),
+      callLimit12Months: storedDoctorSettings.callLimit12Months ?? 60,
+      videoAllowed12Months: storedDoctorSettings.videoAllowed12Months ?? true,
+
+      // Full Season Crop Care
+      cropSeasonPlanEnabled: storedDoctorSettings.cropSeasonPlanEnabled ?? true,
       cropSeasonFee: storedDoctorSettings.cropSeasonFee ?? Number(advisor.feePerCropSeason ?? 499),
       cropSeasonCallLimit: storedDoctorSettings.cropSeasonCallLimit ?? 10,
       cropSeasonVideoAllowed: storedDoctorSettings.cropSeasonVideoAllowed ?? true,
 
+      // Single Consultation / SOS
+      singleConsultationPlanEnabled: storedDoctorSettings.singleConsultationPlanEnabled ?? true,
       singleConsultationFee: storedDoctorSettings.singleConsultationFee ?? Number(advisor.feePerConsultation ?? 150),
-      allCropsSelected: storedDoctorSettings.allCropsSelected ?? true,
-      specializedCrops: storedDoctorSettings.specializedCrops ?? advisor.specializedCrops ?? ['Wheat', 'Paddy', 'Cotton', 'Mustard', 'Vegetables'],
+      allCropsSelected: storedDoctorSettings.allCropsSelected ?? false,
+      specializedCrops: storedDoctorSettings.specializedCrops ?? advisor.specializedCrops ?? ['Wheat', 'Paddy / Rice', 'Basmati', 'Cotton', 'Mustard', 'Potato', 'Tomato'],
       freeConsultationEnabled: storedDoctorSettings.freeConsultationEnabled ?? false,
 
       // 3. Availability & Practice Timings

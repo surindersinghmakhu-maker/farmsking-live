@@ -1185,8 +1185,8 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
       setFormTagline(appSettings?.tagline || 'Agricultural & Farm Management Master Platform');
       setFormLogoUrl(appSettings?.logoUrl || '');
       setFormUpiId(appSettings?.upiId || 'surindersinghmakhu-5@oksbi');
-      setFormUpiPayeeName(appSettings?.upiPayeeName || 'Surinder Singh');
-      setFormAdminName((appSettings as any)?.adminName || contact?.name || 'Surinder Singh (Super Admin)');
+      setFormUpiPayeeName(appSettings?.upiPayeeName || 'FARMSKING TECHNOLOGIES');
+      setFormAdminName((appSettings as any)?.adminName || contact?.name || 'FarmsKing Super Admin');
       setFormAdminMobile((appSettings as any)?.adminMobile || contact?.mobile || user?.mobile || '9577622000');
       setFormAdminEmail((appSettings as any)?.adminEmail || contact?.email || 'support@farmsking.in');
       setSaveSuccess(false);
@@ -1368,7 +1368,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                       style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formUpiPayeeName}
                       onChangeText={setFormUpiPayeeName}
-                      placeholder="e.g. Surinder Singh"
+                      placeholder="e.g. FarmsKing Admin"
                     />
                   </View>
                 </View>
@@ -1396,7 +1396,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                       style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formAdminName}
                       onChangeText={setFormAdminName}
-                      placeholder="e.g. Surinder Singh"
+                      placeholder="e.g. FarmsKing Admin"
                     />
                   </View>
                   <View>

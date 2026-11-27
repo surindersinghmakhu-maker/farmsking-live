@@ -11,5 +11,6 @@ export declare class SmsService {
     constructor(appSettingsService: AppSettingsService);
     format10DigitMobile(mobile: string): string;
     sendOrderPlacedSms(mobile: string, customerName: string, orderNumber: string, totalAmount: number): Promise<SmsSendResult>;
+    sendDefaultPasswordSms(mobile: string, customerName: string, password: string): Promise<SmsSendResult>;
     sendTextMessage(mobile: string, text: string, templateKey?: string): Promise<SmsSendResult>;
 }

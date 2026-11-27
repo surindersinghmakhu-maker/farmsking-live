@@ -17,7 +17,7 @@ export const FARMSKING_CORPORATE_IDENTITY = {
   nodalEmail: 'nodal@farmsking.in',
   helplinePhone: '+91 95776 22000',
   whatsappHelpline: '+91 95776 22000',
-  grievanceOfficerName: 'Surinder Singh',
+  grievanceOfficerName: 'Grievance Redressal Officer',
   workingHours: 'Monday - Saturday: 9:00 AM - 7:00 PM IST',
   officialDomain: 'https://farmsking.in',
   brandLogoUrl: 'https://farmsking.in/brand_logo.png',

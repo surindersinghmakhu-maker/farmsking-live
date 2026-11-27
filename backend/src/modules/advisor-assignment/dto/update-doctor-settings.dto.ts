@@ -24,6 +24,10 @@ export class UpdateDoctorSettingsDto {
 
   // 2. Consultation Plans & Pricing
   @IsOptional()
+  @IsBoolean()
+  monthlyPlanEnabled?: boolean;
+
+  @IsOptional()
   @IsNumber()
   @Min(0)
   monthlyFee?: number;
@@ -51,6 +55,68 @@ export class UpdateDoctorSettingsDto {
   @IsBoolean()
   monthlyChatEnabled?: boolean;
 
+  // 3-Month Plan Pack
+  @IsOptional()
+  @IsBoolean()
+  plan3MonthsEnabled?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  fee3Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  callLimit3Months?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  videoAllowed3Months?: boolean;
+
+  // 6-Month Plan Pack
+  @IsOptional()
+  @IsBoolean()
+  plan6MonthsEnabled?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  fee6Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  callLimit6Months?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  videoAllowed6Months?: boolean;
+
+  // 12-Month (Annual) Plan Pack
+  @IsOptional()
+  @IsBoolean()
+  plan12MonthsEnabled?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  fee12Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  callLimit12Months?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  videoAllowed12Months?: boolean;
+
+  // Full Season Crop Care
+  @IsOptional()
+  @IsBoolean()
+  cropSeasonPlanEnabled?: boolean;
+
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -64,6 +130,11 @@ export class UpdateDoctorSettingsDto {
   @IsOptional()
   @IsBoolean()
   cropSeasonVideoAllowed?: boolean;
+
+  // Single Consultation / SOS
+  @IsOptional()
+  @IsBoolean()
+  singleConsultationPlanEnabled?: boolean;
 
   @IsOptional()
   @IsNumber()

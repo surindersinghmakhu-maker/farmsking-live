@@ -422,6 +422,7 @@ export declare class AuthService {
     forgotPasswordStart(dto: ForgotPasswordStartDto): Promise<{
         success: boolean;
         mobile: string;
+        devOtp: string | undefined;
         message: string;
     }>;
     forgotPasswordVerify(dto: ForgotPasswordVerifyDto): Promise<{
@@ -447,6 +448,14 @@ export declare class AuthService {
         loggedOutCount: number;
     }>;
     verifyPassword(userId: string, password: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    changePassword(userId: string, dto: {
+        oldPassword?: string;
+        newPassword: string;
+        resetOtp?: string;
+    }): Promise<{
         success: boolean;
         message: string;
     }>;
@@ -514,6 +523,22 @@ export declare class AuthService {
             evictedOldest: boolean;
         };
         isNewUser: boolean;
+    } | {
+        accessToken: string;
+        user: {
+            id: string;
+            mobile: string;
+            role: Role;
+        } & Record<string, unknown>;
+        sessionMeta: {
+            sessionId: string;
+            totalActiveSessions: number;
+            hasMultipleLogins: boolean;
+            warningMessage: string | undefined;
+            evictedOldest: boolean;
+        };
+        isNewUser: boolean;
+        defaultPassword: string;
     }>;
     firebaseLogin(idToken: string, portal?: 'CLIENT' | 'PARTNER', meta?: {
         ipAddress?: string;

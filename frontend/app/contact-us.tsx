@@ -320,10 +320,10 @@ export default function ContactUsPage() {
                   <Text style={styles.grievanceSlaBadge}>15-DAY STATUTORY RESOLUTION SLA</Text>
                 </View>
                 <Text style={[styles.grievanceOfficerName, isDay ? styles.grievanceOfficerNameDay : styles.grievanceOfficerNameNight]}>
-                  Er. Gagandeep Kaur
+                  Statutory Grievance Redressal Officer
                 </Text>
                 <Text style={styles.grievanceOfficerRole}>
-                  Designated Grievance Redressal Officer & Statutory Director
+                  Office of Grievance Redressal &amp; Statutory Compliance
                 </Text>
                 <Text style={[styles.grievanceMandate, isDay ? styles.grievanceMandateDay : styles.grievanceMandateNight]}>
                   Appointed under the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021 and Consumer Protection (E-Commerce) Rules, 2020. Dedicated to resolving cultivator inquiries, consumer grievances, and data protection concerns.

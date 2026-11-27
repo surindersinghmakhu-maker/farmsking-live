@@ -241,6 +241,22 @@ export declare class AuthController {
             evictedOldest: boolean;
         };
         isNewUser: boolean;
+    } | {
+        accessToken: string;
+        user: {
+            id: string;
+            mobile: string;
+            role: import(".prisma/client").Role;
+        } & Record<string, unknown>;
+        sessionMeta: {
+            sessionId: string;
+            totalActiveSessions: number;
+            hasMultipleLogins: boolean;
+            warningMessage: string | undefined;
+            evictedOldest: boolean;
+        };
+        isNewUser: boolean;
+        defaultPassword: string;
     }>;
     sendEmailOtp(body: SendEmailOtpDto): Promise<{
         success: boolean;
@@ -523,9 +539,18 @@ export declare class AuthController {
         success: boolean;
         message: string;
     }>;
+    changePassword(user: AuthUser, body: {
+        oldPassword?: string;
+        newPassword: string;
+        resetOtp?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+    }>;
     forgotPasswordStart(dto: ForgotPasswordStartDto): Promise<{
         success: boolean;
         mobile: string;
+        devOtp: string | undefined;
         message: string;
     }>;
     forgotPasswordVerify(dto: ForgotPasswordVerifyDto): Promise<{

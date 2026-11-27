@@ -368,6 +368,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN') {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
+        if ((response as any).defaultPassword) {
+          (response.user as any).defaultPassword = (response as any).defaultPassword;
+        }
         assertPortalAccessMatch(response.user, payload.portal);
         await persistSession(response.accessToken, response.user, payload.portal ?? 'CLIENT');
         return response.user;

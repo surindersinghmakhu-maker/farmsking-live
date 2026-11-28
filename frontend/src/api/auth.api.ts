@@ -171,6 +171,7 @@ export interface CompleteOtpRegistrationPayload {
   gpsLat?: number;
   gpsLng?: number;
   gpsLocationName?: string;
+  password?: string;
 }
 
 export async function completeOtpRegistrationApi(

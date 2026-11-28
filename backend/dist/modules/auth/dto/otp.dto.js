@@ -220,6 +220,12 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CompleteOtpRegistrationDto.prototype, "gpsLocationName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'User chosen login password (min 8 characters)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "password", void 0);
 class SendMobileOtpDto {
 }
 exports.SendMobileOtpDto = SendMobileOtpDto;

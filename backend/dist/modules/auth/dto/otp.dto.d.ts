@@ -43,6 +43,7 @@ export declare class CompleteOtpRegistrationDto {
     gpsLat?: number;
     gpsLng?: number;
     gpsLocationName?: string;
+    password?: string;
 }
 export declare class SendMobileOtpDto {
     mobile: string;

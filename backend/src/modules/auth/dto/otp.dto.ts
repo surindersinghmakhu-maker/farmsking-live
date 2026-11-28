@@ -169,6 +169,11 @@ export class CompleteOtpRegistrationDto {
   @IsOptional()
   @IsString()
   gpsLocationName?: string;
+
+  @ApiPropertyOptional({ description: 'User chosen login password (min 8 characters)' })
+  @IsOptional()
+  @IsString()
+  password?: string;
 }
 
 export class SendMobileOtpDto {

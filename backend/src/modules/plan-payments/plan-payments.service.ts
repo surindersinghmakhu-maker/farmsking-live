@@ -137,7 +137,9 @@ export class PlanPaymentsService {
 
     const integrations = await this.appSettingsService.getIntegrations();
     const activeGateway = integrations?.gateway?.routing?.advisorBookingGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT';
-    const isTestPayment = activeGateway === 'TEST_MODE' || dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
+    const isTestPayment =
+      (process.env.NODE_ENV !== 'production' || process.env.ALLOW_TEST_PAYMENTS === 'true') &&
+      (activeGateway === 'TEST_MODE' || Boolean(integrations?.gateway?.providers?.testMode?.autoConfirmOnSubmit));
     if (isTestPayment) {
       const actualAdmin = await this.prisma.user.findFirst({ where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] }, deletedAt: null }, select: { id: true } });
       const adminId = actualAdmin?.id || user.id;

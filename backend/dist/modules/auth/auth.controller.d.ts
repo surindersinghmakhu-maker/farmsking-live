@@ -256,7 +256,7 @@ export declare class AuthController {
             evictedOldest: boolean;
         };
         isNewUser: boolean;
-        defaultPassword: string;
+        defaultPassword: string | undefined;
     }>;
     sendEmailOtp(body: SendEmailOtpDto): Promise<{
         success: boolean;

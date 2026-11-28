@@ -45,6 +45,7 @@ export declare class AuthService {
         success: import("../whatsapp/whatsapp.service").WhatsAppMessageResult;
         message: string;
     }>;
+    isOwnerOrTestMobile(mobile: string): boolean;
     protected normalizeIndianMobile(raw: string): string;
     protected issueMobileOtpChallenge(store: Map<string, {
         otp: string;
@@ -508,6 +509,7 @@ export declare class AuthService {
         gpsLat?: number;
         gpsLng?: number;
         gpsLocationName?: string;
+        password?: string;
     }): Promise<{
         accessToken: string;
         user: {
@@ -538,7 +540,7 @@ export declare class AuthService {
             evictedOldest: boolean;
         };
         isNewUser: boolean;
-        defaultPassword: string;
+        defaultPassword: string | undefined;
     }>;
     firebaseLogin(idToken: string, portal?: 'CLIENT' | 'PARTNER', meta?: {
         ipAddress?: string;

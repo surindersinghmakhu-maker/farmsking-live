@@ -289,6 +289,9 @@ export default function LoginScreen() {
   const [isNewUserModal, setIsNewUserModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('FARMER');
   const [newUserName, setNewUserName] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserConfirmPassword, setNewUserConfirmPassword] = useState('');
+  const [showNewUserPassword, setShowNewUserPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState(false);
   const [legalPolicyType, setLegalPolicyType] = useState<PolicyType>('TERMS_OF_SERVICE');
@@ -856,6 +859,20 @@ export default function LoginScreen() {
       setModalError('Postal PIN Code must be exactly 6 digits.');
       return;
     }
+    const pass = newUserPassword.trim();
+    const confirmPass = newUserConfirmPassword.trim();
+    if (!pass) {
+      setModalError('Please create a secure password for your account.');
+      return;
+    }
+    if (pass.length < 8) {
+      setModalError('Password must be at least 8 characters long.');
+      return;
+    }
+    if (pass !== confirmPass) {
+      setModalError('Passwords do not match. Please re-enter your password.');
+      return;
+    }
     if (!termsAccepted) {
       setModalError('Please accept the Terms of Service, Privacy & Refund Policies to continue.');
       return;
@@ -873,6 +890,7 @@ export default function LoginScreen() {
         state: newUserState.trim() || undefined,
         district: newUserDistrict.trim() || undefined,
         village: newUserVillage.trim() || undefined,
+        password: pass,
       });
       setIsNewUserModal(false);
       if (loggedInUser?.defaultPassword) {
@@ -2003,6 +2021,54 @@ export default function LoginScreen() {
               )}
             </View>
 
+            {/* User Custom Password Creation */}
+            <View style={{ marginBottom: 14 }}>
+              <Text style={styles.fieldLabel}>
+                Create Password (Min 8 chars) <Text style={{ color: '#ef4444' }}>*</Text>
+              </Text>
+              <View style={{ position: 'relative' }}>
+                <TextInput
+                  style={[styles.modalInput, { paddingRight: 42 }]}
+                  placeholder="Set your account password"
+                  placeholderTextColor="#64748b"
+                  secureTextEntry={!showNewUserPassword}
+                  value={newUserPassword}
+                  onChangeText={(t) => {
+                    setNewUserPassword(t);
+                    if (modalError) setModalError(null);
+                  }}
+                />
+                <TouchableOpacity
+                  style={{ position: 'absolute', right: 12, top: 11 }}
+                  onPress={() => setShowNewUserPassword(!showNewUserPassword)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons
+                    name={showNewUserPassword ? 'eye-off' : 'eye'}
+                    size={18}
+                    color="#94a3b8"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={{ marginBottom: 14 }}>
+              <Text style={styles.fieldLabel}>
+                Confirm Password <Text style={{ color: '#ef4444' }}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Re-enter your password"
+                placeholderTextColor="#64748b"
+                secureTextEntry={!showNewUserPassword}
+                value={newUserConfirmPassword}
+                onChangeText={(t) => {
+                  setNewUserConfirmPassword(t);
+                  if (modalError) setModalError(null);
+                }}
+              />
+            </View>
+
             {/* Compact Data-Driven Role Selection Cards */}
             <View style={{ gap: 9, marginBottom: 18 }}>
               {ONBOARDING_ROLE_CARDS.map((card) => {
@@ -2147,9 +2213,14 @@ export default function LoginScreen() {
             {/* Confirm & Launch Dashboard */}
             <TouchableOpacity
               onPress={handleCompleteRegistration}
-              disabled={isCompletingReg || !newUserName.trim() || !termsAccepted}
+              disabled={isCompletingReg || !newUserName.trim() || !termsAccepted || !newUserPassword.trim() || !newUserConfirmPassword.trim()}
               activeOpacity={0.88}
-              style={[styles.primaryActionBtn, (isCompletingReg || !newUserName.trim() || !termsAccepted) && { opacity: 0.6 }]}
+              style={[
+                styles.primaryActionBtn,
+                (isCompletingReg || !newUserName.trim() || !termsAccepted || !newUserPassword.trim() || !newUserConfirmPassword.trim()) && {
+                  opacity: 0.6,
+                },
+              ]}
             >
               <LinearGradient
                 colors={['#10b981', '#059669']}

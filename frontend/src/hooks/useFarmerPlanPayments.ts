@@ -25,6 +25,7 @@ export function useInitiateFarmerPlanPayment() {
       useWalletPoints,
       pointsToDeduct,
       customAmount,
+      cropCycleId,
     }: {
       targetPlan: FarmerPlanType;
       billingPeriodDays?: number;
@@ -38,6 +39,7 @@ export function useInitiateFarmerPlanPayment() {
       useWalletPoints?: boolean;
       pointsToDeduct?: number;
       customAmount?: number;
+      cropCycleId?: string;
     }) =>
       api.initiateFarmerPlanPayment(
         targetPlan,
@@ -52,6 +54,7 @@ export function useInitiateFarmerPlanPayment() {
         useWalletPoints,
         pointsToDeduct,
         customAmount,
+        cropCycleId,
       ),
   });
 }

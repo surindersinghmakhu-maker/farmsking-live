@@ -93,7 +93,7 @@ export default function GardenDoctorStudioScreen() {
     tap();
     setProcessingAssignId(assignmentId);
     try {
-      await rejectAssignment.mutateAsync({ assignmentId, reason: 'Doctor schedule currently at capacity.' });
+      await rejectAssignment.mutateAsync({ id: assignmentId, reason: 'Doctor schedule currently at capacity.' });
       const msg = 'Hire request rejected.';
       if (Platform.OS === 'web') alert(msg);
       else Alert.alert('Declined', msg);

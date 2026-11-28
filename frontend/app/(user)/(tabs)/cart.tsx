@@ -476,7 +476,7 @@ export default function CartScreen() {
 
             {/* 💳 Payment Method Box */}
             {(() => {
-              const isStoreCodEnabled = (settings?.featureFlags as any)?.storeCodEnabled ?? true;
+              const isStoreCodEnabled = ((settings as any)?.featureFlags as any)?.storeCodEnabled ?? true;
               return (
                 <View style={styles.card}>
                   <View style={styles.sectionHeader}>

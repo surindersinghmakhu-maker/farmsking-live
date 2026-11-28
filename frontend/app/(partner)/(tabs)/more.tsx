@@ -177,7 +177,7 @@ export default function MoreScreen() {
           {
             key: 'tabGardenDoctorStudio' as any,
             label: 'Garden Doctor Studio',
-            icon: 'medical-outline',
+            icon: 'medical-outline' as const,
             href: '/(partner)/garden-doctor',
           },
         ]
@@ -187,13 +187,13 @@ export default function MoreScreen() {
           {
             key: 'tabAdvisorWallet' as any,
             label: 'Advisor Wallet & Payouts',
-            icon: 'wallet-outline',
+            icon: 'wallet-outline' as const,
             href: '/(partner)/(tabs)/wallet',
           },
           {
             key: 'advisorProfile' as any,
             label: role === 'GARDEN_ADVISOR' ? 'Garden Advisor Profile' : 'Crop Doctor Profile',
-            icon: 'briefcase-outline',
+            icon: 'briefcase-outline' as const,
             href: '/advisor-profile',
           },
         ]

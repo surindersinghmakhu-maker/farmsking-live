@@ -80,11 +80,11 @@ export default function AdvisorProfileScreen() {
   }, [user?.id]);
 
   const eligibilityDate = React.useMemo(() => {
-    const raw = certifiedDate || (user as any)?.certifiedAt || (user as any)?.testPassedAt || user?.createdAt;
-    if (!raw) return '15 August 2026';
+    const raw = certifiedDate || (user as any)?.certifiedAt || (user as any)?.testPassedAt || (user as any)?.testPassedDate;
+    if (!raw) return 'Verification Pending (Test Required)';
     const d = new Date(raw);
     return isNaN(d.getTime())
-      ? '15 August 2026'
+      ? 'Verification Pending (Test Required)'
       : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
   }, [certifiedDate, user]);
 

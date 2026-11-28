@@ -236,6 +236,9 @@ export interface UpdateAdvisorProfilePayload {
   feePerConsultation?: number;
   feePerCropSeason?: number;
   feeVipMonthly?: number;
+  monthlyIncludedCrops?: number;
+  feeAdditionalCropMonthly?: number;
+  specializedCategories?: string[];
   specializedCrops?: string[];
 }
 

@@ -3578,7 +3578,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
             <TouchableOpacity
               style={[styles.modalSubmitBtn, { width: '100%', backgroundColor: '#0d9488' }]}
               disabled={createOrder.isPending}
-              onPress={handlePlaceOrderDirect}
+              onPress={() => handlePlaceOrderDirect()}
             >
               {createOrder.isPending ? (
                 <ActivityIndicator color="#ffffff" />

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -6,6 +6,8 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useFarmerDetail, useAcceptAssignment, useRejectAssignment } from '@/src/hooks/useAdvisorAssignments';
 import { resolveMediaUrl } from '@/src/api/client';
+import { CropActivitiesModal } from '@/components/CropActivitiesModal';
+import type { RegisteredCropField } from '@/src/store/crops-context';
 
 const theme = RoleThemes.FARM_ADVISOR;
 
@@ -59,6 +61,7 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
   const { data: detail, isLoading, isError } = useFarmerDetail(visible && farmerId ? farmerId : undefined);
   const acceptAssignment = useAcceptAssignment();
   const rejectAssignment = useRejectAssignment();
+  const [selectedCropForActivities, setSelectedCropForActivities] = useState<RegisteredCropField | null>(null);
 
   const farmer = detail?.farmer;
   const assignment = detail?.assignment;
@@ -77,6 +80,7 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
       variety: string;
       area: string;
       status: string;
+      cropObj: RegisteredCropField;
     }[] = [];
 
     let cropCounter = 1;
@@ -109,6 +113,17 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
             variety: cycle.variety ?? '—',
             area: areaText,
             status: statusLabel,
+            cropObj: {
+              id: cycle.id,
+              cropName: cycle.cropName,
+              variety: cycle.variety ?? '',
+              fieldName: plot.name,
+              sowingDate: cycle.sowingDate ? new Date(cycle.sowingDate).toLocaleDateString('en-IN') : undefined,
+              farmerName: farmer.name,
+              status: 'ACTIVE',
+              area: cycle.area || plot.area,
+              areaUnit: plot.areaUnit || 'Acre',
+            } as any,
           });
         });
       });
@@ -282,18 +297,27 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
 
                     {/* Table Rows */}
                     {activeCrops.map((c) => (
-                      <View key={c.id} style={styles.tableTr}>
+                      <TouchableOpacity
+                        key={c.id}
+                        style={[styles.tableTr, { cursor: 'pointer' } as any]}
+                        activeOpacity={0.75}
+                        onPress={() => {
+                          tap();
+                          setSelectedCropForActivities(c.cropObj);
+                        }}
+                      >
                         <Text style={[styles.cropNoText, { flex: 1.2 }]} numberOfLines={1}>{c.cropNo}</Text>
                         <Text style={[styles.tableTd, { flex: 1.5, fontFamily: FONT.bold, color: '#0f172a' }]} numberOfLines={1}>{c.subcategory}</Text>
                         <Text style={[styles.tableTd, { flex: 1.3 }]} numberOfLines={1}>{c.variety}</Text>
                         <Text style={[styles.tableTd, { flex: 1.1 }]} numberOfLines={1}>{c.area}</Text>
-                        <View style={{ flex: 1, alignItems: 'flex-start' }}>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <View style={[styles.activeStatusBadge, c.status === 'Adopted' ? { backgroundColor: '#dcfce7' } : c.status === 'Pending Review' ? { backgroundColor: '#fffbeb' } : { backgroundColor: '#f1f5f9' }]}>
                             <View style={[styles.greenDot, c.status === 'Adopted' ? { backgroundColor: '#16a34a' } : c.status === 'Pending Review' ? { backgroundColor: '#d97706' } : { backgroundColor: '#64748b' }]} />
                             <Text style={[styles.activeStatusText, c.status === 'Adopted' ? { color: '#15803d' } : c.status === 'Pending Review' ? { color: '#b45309' } : { color: '#475569' }]}>{c.status}</Text>
                           </View>
+                          <Ionicons name="chevron-forward" size={12} color="#94a3b8" />
                         </View>
-                      </View>
+                      </TouchableOpacity>
                     ))}
                   </View>
                 )}
@@ -302,6 +326,16 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
           )}
         </View>
       </View>
+
+      {/* Agronomic Crop Activities Detail Modal for Doctor (Financial Accounts Strictly Excluded) */}
+      {selectedCropForActivities ? (
+        <CropActivitiesModal
+          visible={!!selectedCropForActivities}
+          crop={selectedCropForActivities}
+          isAdvisorView={true}
+          onClose={() => setSelectedCropForActivities(null)}
+        />
+      ) : null}
     </Modal>
   );
 }

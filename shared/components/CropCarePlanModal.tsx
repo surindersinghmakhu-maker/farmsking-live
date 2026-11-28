@@ -980,7 +980,7 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                       </View>
                     </View>
                     <Text style={[styles.serviceTypeTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>
-                      One-Time Consultation
+                      Single Consultation
                     </Text>
                     <Text style={styles.serviceTypeSub}>
                       Quick 1-time crop photo diagnosis, disease detection & expert spray prescription.

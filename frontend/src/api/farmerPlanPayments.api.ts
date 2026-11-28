@@ -54,6 +54,7 @@ export async function initiateFarmerPlanPayment(
   useWalletPoints?: boolean,
   pointsToDeduct?: number,
   customAmount?: number,
+  cropCycleId?: string,
 ): Promise<InitiateFarmerPlanPaymentResponse> {
   const { data } = await apiClient.post<InitiateFarmerPlanPaymentResponse>(
     '/farmer-plan-payments',
@@ -69,6 +70,7 @@ export async function initiateFarmerPlanPayment(
       useWalletPoints,
       pointsToDeduct,
       customAmount,
+      cropCycleId,
     },
     { params: farmerId ? { farmerId } : {} },
   );

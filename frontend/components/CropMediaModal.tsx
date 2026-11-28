@@ -2845,7 +2845,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
   },
-  videoPlayCircle: {
+  videoPlayCircleCompact: {
     width: 34,
     height: 34,
     borderRadius: 17,

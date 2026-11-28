@@ -150,9 +150,11 @@ export default function PartnerLoginScreen() {
     isSubmitting,
     setIsSubmitting,
     resendTimer,
+    setResendTimer,
     error,
     setError,
     confirmationResult,
+    setConfirmationResult,
     isFallback,
     otpCellRefs,
     sendOtp,
@@ -160,6 +162,7 @@ export default function PartnerLoginScreen() {
     handleDigitChange: hookDigitChange,
     handleKeyPress: hookKeyPress,
     resetOtp,
+    autoSubmittedCodeRef,
   } = useFirebasePhoneAuth({
     hostId: 'fk-recaptcha-partner-login-host',
     verifierGlobalKey: 'recaptchaVerifierPartner',
@@ -336,13 +339,6 @@ export default function PartnerLoginScreen() {
       cancelAnimationFrame(animId);
     };
   }, [isDesktop]);
-
-  // Timer countdown for OTP resend
-  useEffect(() => {
-    if (resendTimer <= 0) return;
-    const t = setTimeout(() => setResendTimer((v) => v - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendTimer]);
 
   // Google OAuth setup
   const redirectUri = AuthSession.makeRedirectUri({ scheme: 'farmsking' });

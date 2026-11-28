@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useCrops, RegisteredCropField, CropActivityItem, CropActivityType } from '@/src/store/crops-context';
 import { useAuth } from '@/src/store/auth-context';
+import { useRateCropAdvisor } from '@/src/hooks/useCrops';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { CropVideoPlayer } from '@/components/CropVideoPlayer';
@@ -79,6 +80,35 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
   // Selected crop GPS data & permanent Media Store archive for photos, video, audio & remarks
   const [backendBatches, setBackendBatches] = useState<CropMediaHistoryBatch[]>([]);
   const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
+
+  // Activity Completion & Doctor Rating Loop
+  const rateAdvisorMutation = useRateCropAdvisor();
+  const [completedActivityIds, setCompletedActivityIds] = useState<Record<string, boolean>>({});
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [doctorRatingVal, setDoctorRatingVal] = useState(5);
+  const [doctorFeedbackVal, setDoctorFeedbackVal] = useState('');
+  const [completedActivityTitle, setCompletedActivityTitle] = useState('');
+
+  const assignedDoc = (crop as any)?.assignedAdvisor || null;
+  const hasAssignedDoctor = Boolean(
+    assignedDoc ||
+    (crop as any)?.assignedAdvisorId ||
+    (crop as any)?.advisorReviewStatus === 'ACCEPTED'
+  );
+
+  const handleMarkActivityComplete = (act: CropActivityItem) => {
+    setCompletedActivityIds((prev) => ({ ...prev, [act.id]: true }));
+    setCompletedActivityTitle(act.title);
+    if (hasAssignedDoctor && !isAdvisor) {
+      setDoctorRatingVal(5);
+      setDoctorFeedbackVal('');
+      setShowRatingModal(true);
+    } else {
+      const msg = `✅ Activity marked as completed!\n"${act.title}" has been moved to your completed farm history.`;
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Activity Completed', msg);
+    }
+  };
 
   useEffect(() => {
     if (!visible || !crop?.id) {
@@ -714,6 +744,42 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
                                 {act.notes}
                               </Text>
                             ) : null}
+
+                            {/* Activity Completion Status & Rating Trigger */}
+                            {(() => {
+                              const isDone = completedActivityIds[act.id] || (act as any).status === 'COMPLETED';
+                              return (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: cardBorder, flexWrap: 'wrap', gap: 6 }}>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isDone ? '#16a34a' : '#f59e0b' }} />
+                                    <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDone ? '#16a34a' : '#d97706' }}>
+                                      {isDone ? 'Completed ✅' : 'Pending Action ⏳'}
+                                    </Text>
+                                  </View>
+
+                                  {!isAdvisor && !isDone && (
+                                    <TouchableOpacity
+                                      style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 4,
+                                        backgroundColor: '#16a34a',
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 4,
+                                        borderRadius: RADIUS.pill,
+                                      }}
+                                      activeOpacity={0.8}
+                                      onPress={() => handleMarkActivityComplete(act)}
+                                    >
+                                      <Ionicons name="checkmark-done" size={12} color="#ffffff" />
+                                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                                        Mark as Done
+                                      </Text>
+                                    </TouchableOpacity>
+                                  )}
+                                </View>
+                              );
+                            })()}
                           </View>
                         </View>
                       </View>
@@ -725,6 +791,104 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
           </ScrollView>
         </View>
       </View>
+
+      {/* DOCTOR RATING & CONSULTATION EVALUATION MODAL */}
+      <Modal visible={showRatingModal} transparent animationType="fade" onRequestClose={() => setShowRatingModal(false)}>
+        <View style={styles.ratingOverlay}>
+          <View style={[styles.ratingCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="star" size={18} color="#eab308" />
+                </View>
+                <View>
+                  <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: textColor }}>
+                    Rate Doctor Consultation
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                    Dr. {assignedDoc?.name || 'Assigned Crop Doctor'}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setShowRatingModal(false)}>
+                <Ionicons name="close" size={20} color={subTextColor} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ backgroundColor: innerBg, padding: 10, borderRadius: 8, marginVertical: 8 }}>
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: textColor }}>
+                Completed Activity: <Text style={{ fontFamily: FONT.bold }}>{completedActivityTitle}</Text>
+              </Text>
+              <Text style={{ fontSize: 10.5, fontFamily: FONT.regular, color: subTextColor, marginTop: 2 }}>
+                Please rate your doctor's agronomic solution to maintain their professional quality score.
+              </Text>
+            </View>
+
+            {/* Stars row */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginVertical: 6 }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity key={star} activeOpacity={0.7} onPress={() => setDoctorRatingVal(star)}>
+                  <Ionicons
+                    name={star <= doctorRatingVal ? 'star' : 'star-outline'}
+                    size={32}
+                    color={star <= doctorRatingVal ? '#eab308' : '#cbd5e1'}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Optional Feedback */}
+            <TextInput
+              style={[styles.input, { color: textColor, borderColor: cardBorder, minHeight: 48, textAlignVertical: 'top' }]}
+              placeholder="Doctor advice feedback or results (e.g. Disease cured after spray)..."
+              placeholderTextColor={subTextColor}
+              value={doctorFeedbackVal}
+              onChangeText={setDoctorFeedbackVal}
+              multiline
+            />
+
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              <TouchableOpacity
+                style={[styles.cancelBtn, { borderColor: cardBorder }]}
+                onPress={() => setShowRatingModal(false)}
+              >
+                <Text style={{ color: subTextColor, fontSize: 12, fontFamily: FONT.bold }}>Skip</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.submitRatingBtn, { flex: 1 }]}
+                disabled={rateAdvisorMutation.isPending}
+                onPress={async () => {
+                  if (!crop?.id) return;
+                  try {
+                    await rateAdvisorMutation.mutateAsync({
+                      id: crop.id,
+                      rating: doctorRatingVal,
+                      feedback: doctorFeedbackVal.trim() || undefined,
+                    });
+                    setShowRatingModal(false);
+                    const msg = `⭐ Thank you! Your ${doctorRatingVal}-star rating for Dr. ${assignedDoc?.name || 'Doctor'} has been submitted.`;
+                    if (Platform.OS === 'web') alert(msg);
+                    else Alert.alert('Rating Submitted', msg);
+                  } catch (err: any) {
+                    const msg = err?.response?.data?.message || 'Could not submit rating.';
+                    if (Platform.OS === 'web') alert(msg);
+                    else Alert.alert('Notice', msg);
+                    setShowRatingModal(false);
+                  }
+                }}
+              >
+                {rateAdvisorMutation.isPending ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text style={{ color: '#ffffff', fontSize: 12, fontFamily: FONT.bold }}>
+                    Submit Rating ⭐
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {previewPhotoUrl ? (
         <Modal visible={true} transparent animationType="fade" onRequestClose={() => setPreviewPhotoUrl(null)}>
@@ -1006,6 +1170,37 @@ const styles = StyleSheet.create({
     fontFamily: FONT.regular,
     marginTop: 4,
     lineHeight: 15,
+  },
+  ratingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  ratingCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+    gap: 8,
+  },
+  cancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitRatingBtn: {
+    backgroundColor: '#16a34a',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

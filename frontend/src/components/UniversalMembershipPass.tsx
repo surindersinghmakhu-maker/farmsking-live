@@ -350,28 +350,28 @@ export default function UniversalMembershipPass({
             </View>
           </View>
 
-          {/* Section Tabs Switcher */}
-          <View style={styles.tabBar}>
-            <TouchableOpacity
-              style={[styles.tabItem, activeTab === 'FARMER_SOFTWARE' && styles.tabItemActive]}
-              onPress={() => { tap(); setActiveTab('FARMER_SOFTWARE'); }}
-            >
-              <Ionicons name="book-outline" size={15} color={activeTab === 'FARMER_SOFTWARE' ? '#ffffff' : '#94a3b8'} />
-              <Text style={[styles.tabText, activeTab === 'FARMER_SOFTWARE' && styles.tabTextActive]}>
-                Farmer Plan (Records & Accounts)
-              </Text>
-            </TouchableOpacity>
+            {/* Section Tabs Switcher */}
+            <View style={styles.tabBar}>
+              <TouchableOpacity
+                style={[styles.tabItem, activeTab === 'FARMER_SOFTWARE' && styles.tabItemActive]}
+                onPress={() => { tap(); setActiveTab('FARMER_SOFTWARE'); }}
+              >
+                <Ionicons name="book-outline" size={15} color={activeTab === 'FARMER_SOFTWARE' ? '#ffffff' : '#94a3b8'} />
+                <Text style={[styles.tabText, activeTab === 'FARMER_SOFTWARE' && styles.tabTextActive]}>
+                  Farmer Plan (Farm Records & Accounts)
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.tabItem, activeTab === 'CROP_CARE' && styles.tabItemActive]}
-              onPress={() => { tap(); setActiveTab('CROP_CARE'); }}
-            >
-              <Ionicons name="medkit-outline" size={15} color={activeTab === 'CROP_CARE' ? '#ffffff' : '#94a3b8'} />
-              <Text style={[styles.tabText, activeTab === 'CROP_CARE' && styles.tabTextActive]}>
-                Crop Care (Doctor Consultation)
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={[styles.tabItem, activeTab === 'CROP_CARE' && styles.tabItemActive]}
+                onPress={() => { tap(); setActiveTab('CROP_CARE'); }}
+              >
+                <Ionicons name="medkit-outline" size={15} color={activeTab === 'CROP_CARE' ? '#ffffff' : '#94a3b8'} />
+                <Text style={[styles.tabText, activeTab === 'CROP_CARE' && styles.tabTextActive]}>
+                  Crop Care Plan (Doctor & Advisor Consultation)
+                </Text>
+              </TouchableOpacity>
+            </View>
         </View>
       </LinearGradient>
 
@@ -712,34 +712,37 @@ export default function UniversalMembershipPass({
               )
             ) : null}
 
-            {/* ⚡ Instant 1-on-1 Doctor Consultation (Pay-Per-Consultation / Single Appointment) */}
-            <View style={[styles.planCard, { borderColor: '#f59e0b', borderWidth: 1.5, backgroundColor: isDark ? 'rgba(245, 158, 11, 0.05)' : '#fffbeb' }, premiumShadow('#f59e0b', 'sm')]}>
+            {/* ⚡ Instant 1-on-1 Doctor Consultation (Compact Single Appointment Card) */}
+            <View style={[styles.planCard, { borderColor: '#f59e0b', borderWidth: 1.2, backgroundColor: isDark ? 'rgba(245, 158, 11, 0.05)' : '#fffbeb', padding: 12, gap: 6 }, premiumShadow('#f59e0b', 'sm')]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
-                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>⚡ PARALLEL SERVICE · ANYTIME ACCESS</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="flash" size={15} color="#d97706" />
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a' }}>
+                    Single Consultation (Instant 1-on-1 SOS)
+                  </Text>
                 </View>
-                <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#b45309' }}>₹100 - ₹200 <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#92400e' }}>/ Call</Text></Text>
+                <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#fde68a' }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#b45309' }}>₹100 - ₹200 / call</Text>
+                </View>
               </View>
 
-              <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 6 }}>
-                ⚡ Instant 1-on-1 Doctor Consultation
-              </Text>
-              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#475569', lineHeight: 17, marginTop: 2 }}>
-                Need emergency crop diagnosis or a second opinion? Connect directly with any Agri-Doctor anytime — runs in parallel whether you already have a regular advisor or not.
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#475569', lineHeight: 16 }}>
+                Direct VOIP consultation with certified crop doctors for emergency diagnosis and spray prescriptions.
               </Text>
 
-              <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
-                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ 100% In-App Private VOIP Call</Text>
-                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Crop-Specific Permission</Text>
-                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Multiple Specialists</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Private In-App Call</Text>
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Leaf Scan Review</Text>
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Digital Prescription</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.upgradeBtn, { backgroundColor: '#f59e0b', paddingVertical: 7, paddingHorizontal: 14, minHeight: 32 }]}
+                  onPress={() => handleInitiateInstantCall()}
+                >
+                  <Text style={[styles.upgradeBtnText, { fontSize: 11.5 }]}>Book Instant Call ⚡</Text>
+                </TouchableOpacity>
               </View>
-
-              <TouchableOpacity
-                style={[styles.upgradeBtn, { backgroundColor: '#f59e0b', marginTop: 8 }]}
-                onPress={() => handleInitiateInstantCall()}
-              >
-                <Text style={styles.upgradeBtnText}>Book Instant Consultation ⚡</Text>
-              </TouchableOpacity>
             </View>
 
             {/* Active Doctor Status Card */}

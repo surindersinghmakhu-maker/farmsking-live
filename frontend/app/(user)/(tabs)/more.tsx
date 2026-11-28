@@ -214,7 +214,7 @@ export default function MoreScreen() {
           {
             key: 'tabAdvisorWallet' as any,
             label: 'Advisor Wallet & Payouts',
-            icon: 'wallet-outline',
+            icon: 'wallet-outline' as const,
             href: '/(partner)/(tabs)/wallet',
           },
           ADVISOR_PROFILE_ITEM,

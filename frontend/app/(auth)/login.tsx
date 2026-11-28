@@ -261,9 +261,11 @@ export default function LoginScreen() {
     isSubmitting,
     setIsSubmitting,
     resendTimer,
+    setResendTimer,
     error,
     setError,
     confirmationResult,
+    setConfirmationResult,
     isFallback,
     otpCellRefs,
     sendOtp,
@@ -271,6 +273,7 @@ export default function LoginScreen() {
     handleDigitChange: hookDigitChange,
     handleKeyPress: hookKeyPress,
     resetOtp,
+    autoSubmittedCodeRef,
   } = useFirebasePhoneAuth({
     hostId: 'fk-recaptcha-login-host',
     verifierGlobalKey: 'recaptchaVerifierLogin',
@@ -279,7 +282,7 @@ export default function LoginScreen() {
     fallbackVerifyOtp: (p) => otpLogin({ mobile: p.mobile, otp: p.otp, portal: portalModeRef.current }),
   });
 
-  const [focusedField, setFocusedField] = useState<'mobile' | 'otp' | 'name' | 'partnerId' | 'partnerPass' | null>(null);
+  const [focusedField, setFocusedField] = useState<'mobile' | 'otp' | 'name' | 'partnerId' | 'partnerPass' | 'clientPass' | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   // New User Role Selection State
@@ -554,13 +557,6 @@ export default function LoginScreen() {
       cancelAnimationFrame(animId);
     };
   }, [isDesktop]);
-
-  // Timer countdown for OTP resend
-  useEffect(() => {
-    if (resendTimer <= 0) return;
-    const t = setTimeout(() => setResendTimer((v) => v - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendTimer]);
 
   // Google OAuth setup
   const redirectUri = AuthSession.makeRedirectUri({ scheme: 'farmsking' });

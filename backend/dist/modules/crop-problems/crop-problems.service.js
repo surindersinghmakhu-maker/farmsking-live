@@ -37,18 +37,19 @@ let CropProblemsService = class CropProblemsService {
             where: { farmerId: user.id, status: { in: ['ACTIVE', 'PENDING'] }, deletedAt: null },
             orderBy: { startDate: 'desc' },
         });
+        const targetAdvisorId = cropCycle.assignedAdvisorId || activeAssignment?.advisorId || null;
         const { photoUrls, ...rest } = dto;
         const problem = await this.prisma.cropProblem.create({
             data: {
                 ...rest,
                 reportedById: user.id,
-                assignedAdvisorId: activeAssignment?.advisorId,
+                assignedAdvisorId: targetAdvisorId,
                 photos: photoUrls?.length ? { create: photoUrls.map((photoUrl) => ({ photoUrl })) } : undefined,
             },
             include: DETAIL_INCLUDE,
         });
-        if (activeAssignment?.advisorId) {
-            await this.notificationsService.create(activeAssignment.advisorId, client_1.NotificationType.CROP_PROBLEM_UPDATE, 'New problem reported', `${user.name} reported a problem on ${cropCycle.cropName}: "${dto.title}".`, { cropProblemId: problem.id, cropCycleId: dto.cropCycleId });
+        if (targetAdvisorId) {
+            await this.notificationsService.create(targetAdvisorId, client_1.NotificationType.CROP_PROBLEM_UPDATE, '⚡ Instant SOS Alert Received', `${user.name} reported an Instant SOS problem on adopted crop "${cropCycle.cropName}": "${dto.title}". Priority diagnosis requested.`, { cropProblemId: problem.id, cropCycleId: dto.cropCycleId, isEmergencySos: true });
         }
         return problem;
     }

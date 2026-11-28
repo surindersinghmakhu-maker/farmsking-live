@@ -530,7 +530,7 @@ export function DoctorBotanicalInspectionModal({
                           activeOpacity={0.75}
                         >
                           <Ionicons name="medical-outline" size={15} color="#a855f7" />
-                          <Text style={styles.applyRemedyBtnText}>Adopt as Doctor Prescription</Text>
+                          <Text style={styles.applyRemedyBtnText}>Add as Doctor Prescription</Text>
                         </TouchableOpacity>
                       </View>
                     ))

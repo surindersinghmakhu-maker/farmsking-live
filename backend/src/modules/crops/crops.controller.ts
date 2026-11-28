@@ -73,6 +73,18 @@ export class CropsController {
     return this.cropsService.cancelSubmission(user, id);
   }
 
+  @Roles(Role.FARMER)
+  @Post(':id/withdraw-from-advisor')
+  withdrawFromAdvisor(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.cropsService.withdrawFromAdvisor(user, id);
+  }
+
+  @Roles(Role.FARMER)
+  @Post(':id/resume-care')
+  resumeCare(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.cropsService.resumeCare(user, id);
+  }
+
   @Roles(Role.ADVISOR)
   @Post(':id/accept')
   acceptByAdvisor(

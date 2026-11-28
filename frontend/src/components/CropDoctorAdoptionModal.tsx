@@ -204,9 +204,13 @@ export function CropDoctorAdoptionModal({
       const found = list?.find((a) => a.id === selectedDoctorId);
       if (found) return found;
     }
-    // Pick first doctor who is not already assigned to this crop
+    // Pick first doctor who is not already assigned to this crop and not permanently withdrawn
     const firstAvailable = list?.find(
-      (a) => !((a as any).isAlreadyAssignedToThisCrop || (crop?.assignedAdvisorId === a.id && crop?.advisorReviewStatus !== 'NONE')),
+      (a) =>
+        !((a as any).isAlreadyAssignedToThisCrop ||
+          (a as any).isWithdrawnLocked ||
+          crop?.notes?.includes(`[WITHDRAWN_FROM_DOCTOR:${a.id}]`) ||
+          (crop?.assignedAdvisorId === a.id && crop?.advisorReviewStatus !== 'NONE')),
     );
     return firstAvailable || list[0];
   }, [displayedDoctors, selectedDoctorId, crop]);
@@ -338,7 +342,7 @@ export function CropDoctorAdoptionModal({
     if (!ensureGalleryComplete()) return;
 
     if (!farmerComment.trim()) {
-      const msg = '⚠️ Please write a brief message or describe symptoms for the doctor before submitting adoption.';
+      const msg = '⚠️ Please write a brief message or describe symptoms for the doctor before submitting request.';
       Platform.OS === 'web' ? alert(msg) : Alert.alert('Farmer Note Required', msg);
       return;
     }
@@ -418,12 +422,12 @@ export function CropDoctorAdoptionModal({
         },
       });
 
-      const message = `Adoption request and your crop notes sent to Dr. ${selectedDoctor.name}! You will be notified as soon as they review your crop.`;
+      const message = `Doctor Care request and your crop notes sent to Dr. ${selectedDoctor.name}! You will be notified as soon as they review your crop.`;
       if (Platform.OS === 'web') alert(message);
       else Alert.alert('Request Sent 🤝', message);
       onClose();
     } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Could not send adoption request. Please try again.';
+      const msg = err?.response?.data?.message || 'Could not send Doctor Care request. Please try again.';
       if (Platform.OS === 'web') alert(msg);
       else Alert.alert('Error', msg);
     } finally {
@@ -460,13 +464,13 @@ export function CropDoctorAdoptionModal({
         payload: {
           advisorId: selectedDoctor.id,
           hiringModel,
-          notes: farmerComment.trim() || 'Paid consultation adoption request',
+          notes: farmerComment.trim() || 'Paid Doctor Care request',
         },
       });
 
-      const msg = `✅ Payment verified with UTR ${utrInput.trim()}! Adoption request sent to Dr. ${selectedDoctor.name}.`;
+      const msg = `✅ Payment verified with UTR ${utrInput.trim()}! Doctor Care request sent to Dr. ${selectedDoctor.name}.`;
       if (Platform.OS === 'web') alert(msg);
-      else Alert.alert('Payment & Adoption Sent 🤝', msg);
+      else Alert.alert('Payment & Request Sent 🤝', msg);
       onClose();
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Could not verify payment UTR. Please check the reference number.';
@@ -514,7 +518,7 @@ export function CropDoctorAdoptionModal({
               <View style={styles.headerTextCol}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <Text style={styles.headerTitle}>
-                    {isSecondOpinion ? 'Get Second Opinion' : 'Adopt Certified Crop Doctor'}
+                    {isSecondOpinion ? 'Get Second Opinion' : 'Add to Doctor Care'}
                   </Text>
                   {isSecondOpinion ? (
                     <View style={styles.secondOpinionPill}>
@@ -906,7 +910,7 @@ export function CropDoctorAdoptionModal({
                         </View>
                         <Text style={styles.noHiredTitle}>No Hired Doctor Found</Text>
                         <Text style={styles.noHiredSub}>
-                          Hire a dedicated Crop Doctor first under Crop Doctor Care to adopt this crop under direct supervision.
+                          Hire a dedicated Crop Doctor first under Crop Doctor Care to add this crop under direct supervision.
                         </Text>
                         <TouchableOpacity
                           style={styles.hireDoctorCtaBtn}
@@ -936,6 +940,11 @@ export function CropDoctorAdoptionModal({
                             (advisor as any).isAlreadyAssignedToThisCrop ||
                             (crop?.assignedAdvisorId === advisor.id && crop?.advisorReviewStatus !== 'NONE'),
                           );
+                          const isWithdrawnLocked = Boolean(
+                            (advisor as any).isWithdrawnLocked ||
+                            crop?.notes?.includes(`[WITHDRAWN_FROM_DOCTOR:${advisor.id}]`)
+                          );
+                          const isCardDisabled = isAlreadyAssigned || isWithdrawnLocked;
                           const isSelected = selectedDoctor?.id === advisor.id;
                           const avatar = resolveMediaUrl(advisor.photoUrl) || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=120';
                           const quota = advisor.quota;
@@ -946,9 +955,9 @@ export function CropDoctorAdoptionModal({
                               style={[
                                 styles.doctorCard,
                                 isSelected && styles.doctorCardSelected,
-                                isAlreadyAssigned && styles.doctorCardDisabled,
+                                isCardDisabled && styles.doctorCardDisabled,
                               ]}
-                              disabled={isAlreadyAssigned}
+                              disabled={isCardDisabled}
                               onPress={() => {
                                 tap();
                                 setSelectedDoctorId(advisor.id);
@@ -980,7 +989,12 @@ export function CropDoctorAdoptionModal({
                                   </View>
                                 </View>
 
-                                {isAlreadyAssigned ? (
+                                {isWithdrawnLocked ? (
+                                  <View style={[styles.alreadyAssignedBadge, { backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgba(239, 68, 68, 0.4)' }]}>
+                                    <Ionicons name="ban" size={12} color="#f87171" />
+                                    <Text style={[styles.alreadyAssignedText, { color: '#f87171' }]}>Previously Withdrawn</Text>
+                                  </View>
+                                ) : isAlreadyAssigned ? (
                                   <View style={styles.alreadyAssignedBadge}>
                                     <Ionicons name="shield-checkmark" size={12} color="#f59e0b" />
                                     <Text style={styles.alreadyAssignedText}>Assigned</Text>
@@ -1528,8 +1542,8 @@ export function CropDoctorAdoptionModal({
                         <Ionicons name="shield-checkmark" size={16} color="#090e17" />
                         <Text style={styles.submitBtnText}>
                           {pricingBreakdown.totalPayable === 0
-                            ? 'Activate Free Adoption (₹0)'
-                            : `Pay & Adopt via Payment Gateway • ₹${pricingBreakdown.totalPayable}`}
+                            ? 'Activate Free Doctor Care (₹0)'
+                            : `Pay & Add to Doctor Care • ₹${pricingBreakdown.totalPayable}`}
                         </Text>
                       </>
                     )}

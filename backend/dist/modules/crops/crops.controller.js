@@ -45,6 +45,12 @@ let CropsController = class CropsController {
     cancelSubmission(user, id) {
         return this.cropsService.cancelSubmission(user, id);
     }
+    withdrawFromAdvisor(user, id) {
+        return this.cropsService.withdrawFromAdvisor(user, id);
+    }
+    resumeCare(user, id) {
+        return this.cropsService.resumeCare(user, id);
+    }
     acceptByAdvisor(user, id, dto) {
         return this.cropsService.acceptByAdvisor(user, id, dto);
     }
@@ -124,6 +130,24 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], CropsController.prototype, "cancelSubmission", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER),
+    (0, common_1.Post)(':id/withdraw-from-advisor'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], CropsController.prototype, "withdrawFromAdvisor", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER),
+    (0, common_1.Post)(':id/resume-care'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], CropsController.prototype, "resumeCare", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR),
     (0, common_1.Post)(':id/accept'),

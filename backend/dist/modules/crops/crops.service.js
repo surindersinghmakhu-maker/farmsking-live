@@ -310,10 +310,49 @@ let CropsService = class CropsService {
                 ...rest,
                 status: dto.status ?? (dto.stage ? statusForStage(dto.stage) : undefined),
                 ...toDateFields(dto),
+                ...(isNowCompleted
+                    ? {
+                        advisorReviewStatus: client_1.CropAdvisorReviewStatus.NONE,
+                        assignedAdvisorId: null,
+                    }
+                    : {}),
             },
         });
         if (isNowCompleted) {
             await this.purgeCropVideos(id);
+            if (cropCycle.assignedAdvisorId) {
+                const remainingActiveCrops = await this.prisma.cropCycle.count({
+                    where: {
+                        plot: { farm: { ownerId: user.id, deletedAt: null } },
+                        assignedAdvisorId: cropCycle.assignedAdvisorId,
+                        status: { notIn: [client_1.CropStatus.COMPLETED, client_1.CropStatus.DEACTIVE, client_1.CropStatus.FAILED] },
+                        deletedAt: null,
+                        id: { not: id },
+                    },
+                });
+                if (remainingActiveCrops === 0) {
+                    const activeSub = await this.prisma.advisorSubscription.findFirst({
+                        where: {
+                            farmerId: user.id,
+                            status: client_1.SubscriptionPlanStatus.ACTIVE,
+                            endDate: { gt: new Date() },
+                            advisorAssignment: { advisorId: cropCycle.assignedAdvisorId },
+                        },
+                    });
+                    if (activeSub && activeSub.endDate) {
+                        const now = new Date();
+                        const remainingDays = Math.max(0, Math.ceil((activeSub.endDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+                        const pauseTag = `\n[SLEEP_MODE:${now.toISOString()}|${remainingDays}]`;
+                        await this.prisma.advisorSubscription.update({
+                            where: { id: activeSub.id },
+                            data: {
+                                notes: (activeSub.notes || '') + pauseTag,
+                            },
+                        });
+                        await this.notificationsService.create(user.id, client_1.NotificationType.SYSTEM, 'Doctor Care Paused (Sleep Mode)', `All crops completed! Your ${remainingDays} remaining doctor care days are paused. Add your next crop within 15 days to resume.`, { subscriptionId: activeSub.id });
+                    }
+                }
+            }
         }
         return updated;
     }
@@ -421,6 +460,18 @@ let CropsService = class CropsService {
                 throw new common_1.BadRequestException(`Crop Gallery incomplete! For one-time consultation, your crop must have the complete current cycle media records:\n• ${missingList.join('\n• ')}\nPlease upload missing media in Crop Gallery first.`);
             }
         }
+        if (cropCycle.notes?.includes(`[WITHDRAWN_FROM_DOCTOR:${targetAdvisorId}]`)) {
+            throw new common_1.ForbiddenException(`This crop was previously withdrawn from Dr. ${advisor.name} and cannot be re-added to the same doctor. Please select another doctor.`);
+        }
+        const pendingWithdrawnMatch = cropCycle.notes?.match(new RegExp(`\\[WITHDRAWAL_PENDING:${targetAdvisorId}\\|[^|]+\\|([^\\]]+)\\]`));
+        if (pendingWithdrawnMatch) {
+            const expiresUndo = new Date(pendingWithdrawnMatch[1]);
+            if (new Date() > expiresUndo) {
+                const finalizedNotes = (cropCycle.notes || '').replace(pendingWithdrawnMatch[0], `[WITHDRAWN_FROM_DOCTOR:${targetAdvisorId}]`);
+                await this.prisma.cropCycle.update({ where: { id }, data: { notes: finalizedNotes } });
+                throw new common_1.ForbiddenException(`This crop was previously withdrawn from Dr. ${advisor.name} and the 7-day safety window has expired. It cannot be re-added to the same doctor. Please select another doctor.`);
+            }
+        }
         const advisorPlanRec = await this.prisma.advisorTierPlan.findUnique({
             where: { advisorId: targetAdvisorId },
         });
@@ -446,6 +497,22 @@ let CropsService = class CropsService {
             },
             select: { id: true },
         });
+        if (activeSub) {
+            const subRec = await this.prisma.advisorSubscription.findUnique({ where: { id: activeSub.id } });
+            const sleepMatch = subRec?.notes?.match(/\[SLEEP_MODE:([^|]+)\|(\d+)\]/);
+            if (sleepMatch) {
+                const pausedDays = parseInt(sleepMatch[2], 10);
+                const newEndDate = new Date(Date.now() + pausedDays * 24 * 60 * 60 * 1000);
+                const cleanNotes = subRec.notes.replace(sleepMatch[0], '').trim();
+                await this.prisma.advisorSubscription.update({
+                    where: { id: activeSub.id },
+                    data: {
+                        endDate: newEndDate,
+                        notes: cleanNotes,
+                    },
+                });
+            }
+        }
         const updated = await this.prisma.cropCycle.update({
             where: { id },
             data: {
@@ -478,6 +545,51 @@ let CropsService = class CropsService {
                 advisorAcceptedAt: null,
             },
         });
+    }
+    async withdrawFromAdvisor(user, id) {
+        const cropCycle = await this.findOneOrThrow(user, id);
+        if (cropCycle.advisorReviewStatus !== client_1.CropAdvisorReviewStatus.ACCEPTED || !cropCycle.assignedAdvisorId) {
+            throw new common_1.BadRequestException('Only active crops currently under Doctor Care can be withdrawn.');
+        }
+        const previousAdvisorId = cropCycle.assignedAdvisorId;
+        const now = new Date();
+        const expiresUndoAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const withdrawalTag = `\n[WITHDRAWAL_PENDING:${previousAdvisorId}|${now.toISOString()}|${expiresUndoAt.toISOString()}]`;
+        const updated = await this.prisma.cropCycle.update({
+            where: { id },
+            data: {
+                advisorReviewStatus: client_1.CropAdvisorReviewStatus.NONE,
+                assignedAdvisorId: null,
+                notes: (cropCycle.notes || '') + withdrawalTag,
+            },
+        });
+        await this.notificationsService.create(previousAdvisorId, client_1.NotificationType.SYSTEM, 'Crop Withdrawn from Care', `${user.name} withdrew "${cropCycle.cropName}" from doctor care.`, { cropCycleId: id, farmerId: user.id });
+        return updated;
+    }
+    async resumeCare(user, id) {
+        const cropCycle = await this.findOneOrThrow(user, id);
+        const match = cropCycle.notes?.match(/\[WITHDRAWAL_PENDING:([^|]+)\|([^|]+)\|([^\]]+)\]/);
+        if (!match) {
+            throw new common_1.BadRequestException('No pending withdrawal found for this crop.');
+        }
+        const [fullTag, advisorId, , expiresUndoAtStr] = match;
+        const expiresUndoAt = new Date(expiresUndoAtStr);
+        if (new Date() > expiresUndoAt) {
+            const finalizedNotes = (cropCycle.notes || '').replace(fullTag, `[WITHDRAWN_FROM_DOCTOR:${advisorId}]`);
+            await this.prisma.cropCycle.update({ where: { id }, data: { notes: finalizedNotes } });
+            throw new common_1.BadRequestException('The 7-day safety window to resume care has expired. This crop cannot be re-added to this doctor.');
+        }
+        const cleanNotes = (cropCycle.notes || '').replace(fullTag, '').trim();
+        const updated = await this.prisma.cropCycle.update({
+            where: { id },
+            data: {
+                assignedAdvisorId: advisorId,
+                advisorReviewStatus: client_1.CropAdvisorReviewStatus.ACCEPTED,
+                notes: cleanNotes,
+            },
+        });
+        await this.notificationsService.create(advisorId, client_1.NotificationType.SYSTEM, 'Crop Care Resumed', `${user.name} resumed doctor care for "${cropCycle.cropName}".`, { cropCycleId: id, farmerId: user.id });
+        return updated;
     }
     async acceptByAdvisor(user, id, dto) {
         const cropCycle = await this.prisma.cropCycle.findFirst({
@@ -738,6 +850,7 @@ let CropsService = class CropsService {
         return this.prisma.cropCycle.findMany({
             where: {
                 deletedAt: null,
+                status: { notIn: [client_1.CropStatus.COMPLETED, client_1.CropStatus.DEACTIVE] },
                 advisorReviewStatus: client_1.CropAdvisorReviewStatus.PENDING,
                 OR: [
                     { assignedAdvisorId: user.id },
@@ -781,6 +894,7 @@ let CropsService = class CropsService {
         return this.prisma.cropCycle.findMany({
             where: {
                 deletedAt: null,
+                status: { notIn: [client_1.CropStatus.COMPLETED, client_1.CropStatus.DEACTIVE] },
                 advisorReviewStatus: client_1.CropAdvisorReviewStatus.ACCEPTED,
                 OR: [
                     { assignedAdvisorId: user.id },

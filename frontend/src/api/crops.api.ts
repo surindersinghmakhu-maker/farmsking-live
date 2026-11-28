@@ -98,6 +98,18 @@ export async function cancelCropSubmission(id: string): Promise<CropCycle> {
   return data;
 }
 
+/** Farmer: withdraw an active crop from Doctor Care (instant hide with 7-day undo window). */
+export async function withdrawCropFromAdvisor(id: string): Promise<CropCycle> {
+  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/withdraw-from-advisor`);
+  return data;
+}
+
+/** Farmer: resume care for a withdrawn crop within 7-day safety window. */
+export async function resumeCropCare(id: string): Promise<CropCycle> {
+  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/resume-care`);
+  return data;
+}
+
 /** Advisor: crops submitted by their assigned farmers, awaiting review. */
 export async function listPendingCropsForAdvisor(): Promise<AdvisorReviewCropCycle[]> {
   const { data } = await apiClient.get<AdvisorReviewCropCycle[]>('/crops/advisor/pending');

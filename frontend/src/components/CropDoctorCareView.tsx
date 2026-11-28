@@ -24,7 +24,7 @@ import { useCrops, RegisteredCropField } from '@/src/store/crops-context';
 import { SOIL_TYPE_OPTIONS, WATER_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { useSubscriptionStatus } from '@/src/hooks/useSubscriptionStatus';
 import { useMyAdvisor, useAvailableAdvisors, useMyPendingRequest, useCancelPendingRequest } from '@/src/hooks/useAdvisorAssignments';
-import { useMyCrops, useSubmitCropToAdvisor, useCancelCropSubmission, useRateCropAdvisor } from '@/src/hooks/useCrops';
+import { useMyCrops, useSubmitCropToAdvisor, useCancelCropSubmission, useRateCropAdvisor, useWithdrawCropFromAdvisor, useResumeCropCare } from '@/src/hooks/useCrops';
 import { useCreateCropProblem, useMyCropProblems, useRateCropProblem } from '@/src/hooks/useCropProblems';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { RenewModal } from '@/src/components/RenewPlanCard';
@@ -65,7 +65,16 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
   const { data: myAdvisor } = useMyAdvisor();
   const { data: myPendingRequest } = useMyPendingRequest();
   const { data: rawCrops } = useMyCrops();
-  const myCrops = useMemo(() => (Array.isArray(rawCrops) ? rawCrops : []), [rawCrops]);
+  const isCropCompleted = (c: any) =>
+    c?.status === 'COMPLETED' ||
+    c?.status === 'DEACTIVE' ||
+    c?.status === 'FAILED' ||
+    c?.stage === 'COMPLETED';
+
+  const myCrops = useMemo(
+    () => (Array.isArray(rawCrops) ? rawCrops.filter((c) => !isCropCompleted(c)) : []),
+    [rawCrops]
+  );
   const cancelPendingRequest = useCancelPendingRequest();
   const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -292,8 +301,87 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
 
   const submitCropToAdvisor = useSubmitCropToAdvisor();
   const cancelCropSubmission = useCancelCropSubmission();
+  const withdrawCropMutation = useWithdrawCropFromAdvisor();
+  const resumeCareMutation = useResumeCropCare();
   const [submittingCropId, setSubmittingCropId] = useState<string | null>(null);
   const [cancellingCropId, setCancellingCropId] = useState<string | null>(null);
+  const [withdrawingCropId, setWithdrawingCropId] = useState<string | null>(null);
+  const [resumingCropId, setResumingCropId] = useState<string | null>(null);
+
+  const withdrawnCrops = useMemo(() => {
+    return (Array.isArray(rawCrops) ? rawCrops : []).filter((c) => {
+      if (!c.notes?.includes('[WITHDRAWAL_PENDING:')) return false;
+      const match = c.notes.match(/\[WITHDRAWAL_PENDING:([^|]+)\|([^|]+)\|([^\]]+)\]/);
+      if (!match) return false;
+      const expiresUndo = new Date(match[3]);
+      return new Date() <= expiresUndo;
+    });
+  }, [rawCrops]);
+
+  const isSleepMode = useMemo(() => {
+    return Boolean(subscription?.notes?.includes('[SLEEP_MODE:'));
+  }, [subscription]);
+
+  const sleepModeDaysPreserved = useMemo(() => {
+    if (!subscription?.notes) return 0;
+    const m = subscription.notes.match(/\[SLEEP_MODE:[^|]+\|(\d+)\]/);
+    return m ? parseInt(m[1], 10) : 0;
+  }, [subscription]);
+
+  const isGracePeriod = useMemo(() => {
+    if (!subscription?.endDate) return false;
+    const end = new Date(subscription.endDate);
+    const now = new Date();
+    return now > end && now.getTime() <= end.getTime() + 7 * 86400000;
+  }, [subscription]);
+
+  const graceDaysRemaining = useMemo(() => {
+    if (!subscription?.endDate) return 0;
+    const end = new Date(subscription.endDate);
+    return Math.max(0, Math.ceil((end.getTime() + 7 * 86400000 - Date.now()) / 86400000));
+  }, [subscription]);
+
+  const handleWithdrawCrop = (cropId: string, cropName: string) => {
+    tap();
+    const promptMsg = `Withdraw "${cropName}" from Doctor Care?\n\n• Immediately removed from doctor's active supervision.\n• 7 days safety window to resume care if done by mistake.\n• STRICT RULE: Once 7 days pass, this crop can NEVER be assigned to this same doctor again.`;
+    const proceed = async () => {
+      setWithdrawingCropId(cropId);
+      try {
+        await withdrawCropMutation.mutateAsync(cropId);
+        const msg = `"${cropName}" has been withdrawn from Doctor Care.\nYou have 7 days to resume care if withdrawn by mistake.`;
+        Platform.OS === 'web' ? alert(msg) : Alert.alert('Withdrawn', msg);
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || 'Could not withdraw crop.';
+        Platform.OS === 'web' ? alert(msg) : Alert.alert('Error', msg);
+      } finally {
+        setWithdrawingCropId(null);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm(promptMsg)) proceed();
+    } else {
+      Alert.alert('Withdraw Crop from Care?', promptMsg, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Withdraw', style: 'destructive', onPress: proceed },
+      ]);
+    }
+  };
+
+  const handleResumeCare = async (cropId: string, cropName: string) => {
+    tap();
+    setResumingCropId(cropId);
+    try {
+      await resumeCareMutation.mutateAsync(cropId);
+      const msg = `✅ Doctor Care resumed successfully for "${cropName}"!`;
+      Platform.OS === 'web' ? alert(msg) : Alert.alert('Care Resumed', msg);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Could not resume care.';
+      Platform.OS === 'web' ? alert(msg) : Alert.alert('Error', msg);
+    } finally {
+      setResumingCropId(null);
+    }
+  };
 
   const shareableCrops = useMemo(
     () => (myCrops ?? []).filter((c) => c.status !== 'COMPLETED' && c.status !== 'FAILED' && c.advisorReviewStatus !== 'ACCEPTED'),
@@ -314,7 +402,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
         id: cropId,
         payload: targetAdvisorId ? { advisorId: targetAdvisorId } : undefined,
       });
-      const message = `${label} adopted successfully under doctor supervision!`;
+      const message = `${label} added to Doctor Care successfully!`;
       Platform.OS === 'web' ? alert(`🤝 ${message}`) : Alert.alert('Request Sent 🤝', message);
     } catch (err: any) {
       const message = err?.response?.data?.message ?? 'Could not send this request. Please try again.';
@@ -447,11 +535,11 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
     }
 
     setIsProblemTreatmentModalOpen(false);
-    const message = `Your advisor has been notified about your problem and will respond soon.`;
+    const message = `Instant SOS alert sent directly to your assigned crop doctor for free emergency diagnosis. Your doctor will respond shortly.`;
     if (Platform.OS === 'web') {
-      alert(`✅ Problem Request Sent!\n${message}`);
+      alert(`⚡ Instant SOS Alert Sent!\n\n${message}`);
     } else {
-      Alert.alert('Advisor Notified ✅', message);
+      Alert.alert('Instant SOS Sent ⚡', message);
     }
   };
 
@@ -506,7 +594,111 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
             </TouchableOpacity>
           </View>
 
-          {/* If farmer has crops, display their crops with 1-click Adopt Doctor button */}
+          {/* SLEEP MODE (SEASONAL AUTO-PAUSED DAYS) BANNER */}
+          {isSleepMode && (
+            <View style={{
+              marginHorizontal: SPACING.lg,
+              marginTop: 12,
+              backgroundColor: isDark ? 'rgba(56, 189, 248, 0.12)' : '#e0f2fe',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(56, 189, 248, 0.35)' : '#bae6fd',
+              borderRadius: RADIUS.md,
+              padding: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}>
+              <Ionicons name="pause-circle" size={24} color="#0284c7" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
+                  ⏸️ Doctor Care Paused (Seasonal Sleep Mode)
+                </Text>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#0c4a6e', marginTop: 2 }}>
+                  All crops completed! Your {sleepModeDaysPreserved} remaining doctor days are frozen. Add your next crop within 15 days to auto-resume your days.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* GRACE PERIOD ACTIVE WARNING BANNER */}
+          {isGracePeriod && (
+            <View style={{
+              marginHorizontal: SPACING.lg,
+              marginTop: 12,
+              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#fef2f2',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(239, 68, 68, 0.35)' : '#fecaca',
+              borderRadius: RADIUS.md,
+              padding: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}>
+              <Ionicons name="alert-circle" size={24} color="#dc2626" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isDark ? '#f87171' : '#991b1b' }}>
+                  ⚠️ Grace Period Active ({graceDaysRemaining} Days Left)
+                </Text>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#7f1d1d', marginTop: 2 }}>
+                  Full doctor care is active. Continuous Billing: Renewing now extends validity from your previous expiry date.
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#dc2626',
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: RADIUS.sm,
+                }}
+                onPress={() => setIsRenewModalOpen(true)}
+              >
+                <Text style={{ color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold }}>Renew</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* MANDATORY 0-CROP GATE */}
+          {(myCrops ?? []).length === 0 && (
+            <View style={{
+              marginHorizontal: SPACING.lg,
+              marginTop: 16,
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+              borderRadius: RADIUS.lg,
+              padding: 20,
+              alignItems: 'center',
+              gap: 10,
+            }}>
+              <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="leaf" size={26} color="#10b981" />
+              </View>
+              <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: colors.text }}>
+                Register a Crop First to Access Doctor Care
+              </Text>
+              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: colors.textMuted, textAlign: 'center', maxWidth: 400 }}>
+                Doctor Care plans require at least 1 registered crop plot in your farm. Register your crop in the Farm tab to unlock verified specialist consultation.
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: colors.primary,
+                  paddingHorizontal: 18,
+                  paddingVertical: 9,
+                  borderRadius: RADIUS.md,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginTop: 4,
+                }}
+                onPress={() => router.push('/farm' as any)}
+              >
+                <Ionicons name="add-circle" size={16} color="#ffffff" />
+                <Text style={{ color: '#ffffff', fontSize: 13, fontFamily: FONT.bold }}>Register Crop in Farm Tab</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* If farmer has crops, display their crops with 1-click Add to Doctor Care button */}
           {(myCrops ?? []).length > 0 && (
             <View style={{ paddingHorizontal: SPACING.lg, marginTop: 12 }}>
               <Text style={[styles.progressTitle, { color: colors.text, marginBottom: 12 }]}>Your Registered Crops ({myCrops?.length ?? 0})</Text>
@@ -619,6 +811,29 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                               Second Opinion (Other Doctor)
                             </Text>
                           </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={[
+                              styles.shareBtn,
+                              {
+                                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#fee2e2',
+                                borderWidth: 1,
+                                borderColor: isDark ? 'rgba(239, 68, 68, 0.35)' : '#fca5a5',
+                              },
+                            ]}
+                            disabled={withdrawingCropId === crop.id}
+                            activeOpacity={0.85}
+                            onPress={() => handleWithdrawCrop(crop.id, crop.cropName)}
+                          >
+                            {withdrawingCropId === crop.id ? (
+                              <ActivityIndicator size="small" color="#dc2626" />
+                            ) : (
+                              <>
+                                <Ionicons name="log-out-outline" size={13} color="#dc2626" />
+                                <Text style={[styles.shareBtnText, { color: '#dc2626' }]}>Withdraw</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
                         </>
                       ) : crop.advisorReviewStatus === 'PENDING' ? (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -654,7 +869,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                             >
                               <Ionicons name="sparkles" size={13} color="#ffffff" />
                               <Text style={styles.shareBtnText}>
-                                Adopt Free ({activeAdvisors[0].freeSlotsRemaining} left)
+                                Add to Care (Free - {activeAdvisors[0].freeSlotsRemaining} left)
                               </Text>
                             </TouchableOpacity>
                           ) : activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) <= 0 ? (
@@ -712,12 +927,79 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                             >
                               {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
                                 ? 'Send to Other Doctor'
-                                : 'Adopt Doctor'}
+                                : 'Add to Doctor Care'}
                             </Text>
                           </TouchableOpacity>
                         </>
                       )}
                     </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Withdrawn Crops Section (7-Day Safety Net) */}
+          {withdrawnCrops.length > 0 && (
+            <View style={{ marginTop: SPACING.md, paddingHorizontal: SPACING.lg }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="time" size={16} color="#d97706" />
+                  <Text style={[styles.sectionTitle, { fontSize: 14, color: isDark ? '#fbbf24' : '#b45309' }]}>
+                    Withdrawn Crops (7-Day Safety Net)
+                  </Text>
+                </View>
+                <View style={{ backgroundColor: isDark ? 'rgba(217, 119, 6, 0.2)' : '#fef3c7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#d97706' }}>
+                    {withdrawnCrops.length} {withdrawnCrops.length === 1 ? 'Crop' : 'Crops'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: colors.textMuted, marginBottom: 8 }}>
+                Withdrawn crops are removed from doctor view. You have 7 days to resume doctor care for free. After 7 days, this crop cannot be re-added to the same doctor.
+              </Text>
+
+              <View style={{ gap: 8 }}>
+                {withdrawnCrops.map((wc) => (
+                  <View
+                    key={wc.id}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: isDark ? 'rgba(30, 41, 59, 0.7)' : '#f8fafc',
+                      borderColor: isDark ? 'rgba(217, 119, 6, 0.3)' : '#fde68a',
+                      borderWidth: 1,
+                      borderRadius: RADIUS.md,
+                      padding: 10,
+                    }}
+                  >
+                    <View style={{ flex: 1, marginRight: 8 }}>
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: colors.text }}>
+                        {wc.cropName} {wc.variety ? `(${wc.variety})` : ''}
+                      </Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#d97706', marginTop: 2 }}>
+                        ⏳ Safety window: {wc.daysLeft} day{wc.daysLeft === 1 ? '' : 's'} remaining to undo
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                        backgroundColor: '#10b981',
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: RADIUS.sm,
+                      }}
+                      activeOpacity={0.8}
+                      onPress={() => handleResumeCare(wc.id, wc.cropName)}
+                    >
+                      <Ionicons name="refresh" size={13} color="#ffffff" />
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                        Resume Care
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 ))}
               </View>
@@ -1258,54 +1540,74 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                             </Text>
                           </View>
 
-                          {(() => {
-                            const activeProb = activeProblemByCropId.get(crop.id);
-                            const unratedSolvedProb = unratedSolvedProblemByCropId.get(crop.id);
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            {(() => {
+                              const activeProb = activeProblemByCropId.get(crop.id);
+                              const unratedSolvedProb = unratedSolvedProblemByCropId.get(crop.id);
 
-                            return (
-                              <TouchableOpacity
-                                style={[
-                                  styles.problemReportChip,
-                                  activeProb && styles.problemReportChipWaiting,
-                                  unratedSolvedProb && styles.problemReportChipSolved,
-                                ]}
-                                activeOpacity={0.85}
-                                onPress={() => {
-                                  tap();
-                                  if (activeProb) {
-                                    setViewingProblem(activeProb);
-                                    return;
-                                  }
-                                  if (unratedSolvedProb) {
-                                    setViewingProblem(unratedSolvedProb);
-                                    return;
-                                  }
-                                  setSelectedCropForProblem(crop.id);
-                                  setProblemHeading('');
-                                  setProblemPhotoUris([]);
-                                  setProblemPhotoUrls([]);
-                                  setProblemDescription('');
-                                  setSelectedRealCropId(crop.id);
-                                  setIsProblemTreatmentModalOpen(true);
-                                }}
-                              >
-                                <Ionicons
-                                  name={activeProb ? 'time-outline' : unratedSolvedProb ? 'checkmark-circle' : 'medical-outline'}
-                                  size={12}
-                                  color={activeProb ? '#b45309' : unratedSolvedProb ? '#15803d' : '#dc2626'}
-                                />
-                                <Text
+                              return (
+                                <TouchableOpacity
                                   style={[
-                                    styles.problemReportChipText,
-                                    activeProb && styles.problemReportChipTextWaiting,
-                                    unratedSolvedProb && styles.problemReportChipTextSolved,
+                                    styles.problemReportChip,
+                                    activeProb && styles.problemReportChipWaiting,
+                                    unratedSolvedProb && styles.problemReportChipSolved,
                                   ]}
+                                  activeOpacity={0.85}
+                                  onPress={() => {
+                                    tap();
+                                    if (activeProb) {
+                                      setViewingProblem(activeProb);
+                                      return;
+                                    }
+                                    if (unratedSolvedProb) {
+                                      setViewingProblem(unratedSolvedProb);
+                                      return;
+                                    }
+                                    setSelectedCropForProblem(crop.id);
+                                    setProblemHeading('');
+                                    setProblemPhotoUris([]);
+                                    setProblemPhotoUrls([]);
+                                    setProblemDescription('');
+                                    setSelectedRealCropId(crop.id);
+                                    setIsProblemTreatmentModalOpen(true);
+                                  }}
                                 >
-                                  {activeProb ? 'Waiting Solution' : unratedSolvedProb ? '✅ Solved (Click to Rate)' : 'Problem Report'}
-                                </Text>
-                              </TouchableOpacity>
-                            );
-                          })()}
+                                  <Ionicons
+                                    name={activeProb ? 'time-outline' : unratedSolvedProb ? 'checkmark-circle' : 'flash'}
+                                    size={12}
+                                    color={activeProb ? '#b45309' : unratedSolvedProb ? '#15803d' : '#dc2626'}
+                                  />
+                                  <Text
+                                    style={[
+                                      styles.problemReportChipText,
+                                      activeProb && styles.problemReportChipTextWaiting,
+                                      unratedSolvedProb && styles.problemReportChipTextSolved,
+                                    ]}
+                                  >
+                                    {activeProb ? 'Waiting Solution ⏳' : unratedSolvedProb ? '✅ Solved (Click to Rate)' : 'Instant SOS ⚡'}
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })()}
+
+                            <TouchableOpacity
+                              style={[
+                                styles.problemReportChip,
+                                {
+                                  borderColor: isDark ? 'rgba(239, 68, 68, 0.4)' : '#fca5a5',
+                                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2',
+                                },
+                              ]}
+                              activeOpacity={0.85}
+                              disabled={withdrawingCropId === crop.id}
+                              onPress={() => handleWithdrawCrop(crop.id, crop.cropName)}
+                            >
+                              <Ionicons name="exit-outline" size={12} color="#ef4444" />
+                              <Text style={[styles.problemReportChipText, { color: '#ef4444' }]}>
+                                {withdrawingCropId === crop.id ? 'Withdrawing...' : 'Withdraw'}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
                         </View>
 
                         {/* Doctor Solution / Prescription History Banner */}
@@ -1485,7 +1787,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                                       <>
                                         <Ionicons name="sparkles" size={13} color="#ffffff" />
                                         <Text style={styles.shareBtnText}>
-                                          Adopt with Dr. {activeAdvisors[0].name} (Free Quota)
+                                          Add to Dr. {activeAdvisors[0].name} Care (Free Quota)
                                         </Text>
                                       </>
                                     )}
@@ -1545,7 +1847,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                                   >
                                     {activeAdvisors.length > 0 && (activeAdvisors[0].freeSlotsRemaining ?? 0) > 0
                                       ? 'Send to Another Doctor'
-                                      : 'Adopt Doctor'}
+                                      : 'Add to Doctor Care'}
                                   </Text>
                                 </TouchableOpacity>
 
@@ -1684,11 +1986,38 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
           <View style={[styles.modalCard, { maxHeight: '90%', backgroundColor: isDark ? '#061a0e' : '#ffffff', borderColor: isDark ? 'rgba(0, 255, 135, 0.25)' : '#cbd5e1', borderWidth: 1 }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🚨 New Disease</Text>
+                <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>⚡ Instant Crop SOS</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? '#94a3b8' : '#64748b' }}>
+                  Priority Emergency Diagnosis for Supervised Crop
+                </Text>
               </View>
               <TouchableOpacity style={[styles.closeBtn, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9' }]} onPress={() => setIsProblemTreatmentModalOpen(false)}>
                 <Ionicons name="close" size={20} color="#475569" />
               </TouchableOpacity>
+            </View>
+
+            {/* Continuous Care Free SOS Banner */}
+            <View style={{
+              backgroundColor: isDark ? 'rgba(16, 185, 129, 0.12)' : '#ecfdf5',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(52, 211, 153, 0.35)' : '#a7f3d0',
+              borderRadius: RADIUS.md,
+              padding: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              marginTop: 4,
+              marginBottom: 4,
+            }}>
+              <Ionicons name="shield-checkmark" size={20} color="#10b981" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#34d399' : '#065f46' }}>
+                  100% Free Instant SOS Under Doctor Care
+                </Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? '#94a3b8' : '#047857' }}>
+                  Emergency diagnosis for this crop in doctor care is routed directly to your assigned doctor at no extra charge.
+                </Text>
+              </View>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingVertical: 8 }}>
@@ -1859,7 +2188,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                 <Ionicons name="send" size={16} color="#ffffff" />
               )}
               <Text style={styles.modalSubmitBtnText}>
-                {createCropProblem.isPending ? 'Sending...' : 'Send Problem Request & Alert Advisor'}
+                {createCropProblem.isPending ? 'Sending Instant SOS...' : 'Send Instant SOS Alert ⚡'}
               </Text>
             </TouchableOpacity>
           </View>

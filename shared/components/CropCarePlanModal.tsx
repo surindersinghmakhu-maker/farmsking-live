@@ -474,6 +474,10 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
       setStatusMessage(`⚠️ Dr. ${selectedAdv?.name} does not provide care for your registered crops. Please switch doctor.`);
       return;
     }
+    if (realCropsList.length === 0) {
+      setStatusMessage('🌾 Please register at least one crop on your farm before selecting Doctor Care.');
+      return;
+    }
     if (realCropsList.length > 0 && !selectedCropId) {
       setStatusMessage('⚠️ Please select a crop from your farm to proceed.');
       return;
@@ -1057,10 +1061,35 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                 {isLoadingCrops ? (
                   <ActivityIndicator size="small" color="#16a34a" />
                 ) : realCropsList.length === 0 ? (
-                  <View style={[styles.emptyNoticeBox, { backgroundColor: isDark ? '#1e293b' : '#f8fafc' }]}>
-                    <Text style={[styles.emptyNoticeText, { color: isDark ? '#cbd5e1' : '#475569' }]}>
-                      No crops registered on your account. Please register a crop first.
+                  <View style={[styles.emptyNoticeBox, { backgroundColor: isDark ? '#1e293b' : '#f8fafc', padding: 20, alignItems: 'center', gap: 10 }]}>
+                    <Ionicons name="leaf-outline" size={36} color="#16a34a" />
+                    <Text style={{ fontSize: 15, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a', textAlign: 'center' }}>
+                      🌾 Register a Crop First to Access Doctor Care
                     </Text>
+                    <Text style={[styles.emptyNoticeText, { color: isDark ? '#cbd5e1' : '#475569', textAlign: 'center' }]}>
+                      Doctor Care requires an active crop plot for plant health monitoring and personalized spray schedules. Please add your crop in the Farm tab before purchasing or hiring a doctor.
+                    </Text>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#16a34a',
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                        borderRadius: RADIUS.md,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        marginTop: 4,
+                      }}
+                      onPress={() => {
+                        onClose();
+                        router.push('/(tabs)/farm');
+                      }}
+                    >
+                      <Ionicons name="add-circle" size={16} color="#ffffff" />
+                      <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>
+                        Go to Farm & Add Crop
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 ) : consultationType === 'HIRE_DOCTOR' && eligibleSeasonCrops.length === 0 ? (
                   <View style={[styles.emptyNoticeBox, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.12)' : '#fffbeb', borderColor: '#fde68a' }]}>
@@ -1203,11 +1232,17 @@ export function CropCarePlanModal({ visible, onClose, initialCropId }: CropCareP
                   <Text style={[styles.secondaryBackBtnText, { color: isDark ? '#cbd5e1' : '#475569' }]}>Close</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.primarySubmitBtnFlex}
+                  style={[
+                    styles.primarySubmitBtnFlex,
+                    realCropsList.length === 0 && { opacity: 0.5, backgroundColor: '#94a3b8' },
+                  ]}
+                  disabled={realCropsList.length === 0}
                   onPress={handleContinueToDoctorAndPlan}
                   activeOpacity={0.88}
                 >
-                  <Text style={styles.primarySubmitBtnText}>Proceed to Choose Doctor & Plans ➔</Text>
+                  <Text style={styles.primarySubmitBtnText}>
+                    {realCropsList.length === 0 ? 'Register Crop First' : 'Proceed to Choose Doctor & Plans ➔'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>

@@ -368,10 +368,13 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
                 where: {
                     farmerId: user.id,
                     status: client_1.SubscriptionPlanStatus.ACTIVE,
-                    endDate: { gt: new Date() },
+                    OR: [
+                        { endDate: { gt: new Date() } },
+                        { endDate: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+                    ],
                     advisorAssignment: { advisorId: advisor.id },
                 },
-                select: { id: true, endDate: true },
+                select: { id: true, endDate: true, notes: true },
             });
             let quotaStatus = 'NOT_SUBSCRIBED';
             let freeSlotsRemaining = 0;
@@ -390,17 +393,33 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             }
             const isAlreadyAssigned = Boolean(cropCycle.assignedAdvisorId === advisor.id &&
                 cropCycle.advisorReviewStatus !== client_1.CropAdvisorReviewStatus.NONE);
+            const isWithdrawnLocked = Boolean(cropCycle.notes?.includes(`[WITHDRAWN_FROM_DOCTOR:${advisor.id}]`) ||
+                (cropCycle.notes?.includes(`[WITHDRAWAL_PENDING:${advisor.id}|`) &&
+                    (() => {
+                        const m = cropCycle.notes.match(new RegExp(`\\[WITHDRAWAL_PENDING:${advisor.id}\\|[^|]+\\|([^\\]]+)\\]`));
+                        return m ? new Date() > new Date(m[1]) : false;
+                    })()));
+            const isGracePeriod = Boolean(activeSub?.endDate &&
+                activeSub.endDate < new Date() &&
+                Date.now() <= activeSub.endDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const isSleepMode = Boolean(activeSub?.notes?.includes('[SLEEP_MODE:'));
             return {
                 ...advisor,
                 activeFarmerCount: _count.advisorAssignmentsAsAdvisor,
                 ...rStats,
                 isAlreadyAssignedToThisCrop: isAlreadyAssigned,
+                isWithdrawnLocked,
                 assignedCropReviewStatus: isAlreadyAssigned ? cropCycle.advisorReviewStatus : null,
                 activeHiringModelForCrop: isAlreadyAssigned ? cropCycle.hiringModel : null,
                 quota: {
                     hasActiveMonthlySubscription: !!activeSub,
                     activeSubscriptionId: activeSub?.id ?? null,
                     subscriptionEndDate: activeSub?.endDate ?? null,
+                    isGracePeriod,
+                    isSleepMode,
+                    graceDaysRemaining: isGracePeriod && activeSub?.endDate
+                        ? Math.max(0, Math.ceil((activeSub.endDate.getTime() + 7 * 86400000 - Date.now()) / 86400000))
+                        : 0,
                     quotaStatus,
                     monthlyIncludedCrops: maxIncluded,
                     activeCropsUnderAdvisor,

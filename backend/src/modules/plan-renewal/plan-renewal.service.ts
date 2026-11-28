@@ -20,12 +20,46 @@ function generateCode(): string {
 function computeExtension(subscription: AdvisorSubscription, daysGranted: number, applyBonus: boolean) {
   const now = new Date();
   const currentEndDate = subscription.endDate;
-  const isPending = !!currentEndDate && currentEndDate.getTime() > now.getTime();
-  const bonusDayApplied = applyBonus && isPending;
-  const baseDate = isPending ? currentEndDate! : now;
-  const totalDays = daysGranted + (bonusDayApplied ? 1 : 0);
-  const newEndDate = new Date(baseDate.getTime() + totalDays * DAY_MS);
-  return { bonusDayApplied, newEndDate };
+
+  if (!currentEndDate) {
+    const newEndDate = new Date(now.getTime() + daysGranted * DAY_MS);
+    return { bonusDayApplied: false, newEndDate, elapsedDaysDeducted: 0 };
+  }
+
+  const isStillActive = currentEndDate.getTime() > now.getTime();
+  if (isStillActive) {
+    const bonusDayApplied = applyBonus;
+    const totalDays = daysGranted + (bonusDayApplied ? 1 : 0);
+    const newEndDate = new Date(currentEndDate.getTime() + totalDays * DAY_MS);
+    return { bonusDayApplied, newEndDate, elapsedDaysDeducted: 0 };
+  }
+
+  // Renewal during 7-day Grace Period OR post-expiry:
+  // Continuous coverage billing: base date is currentEndDate (elapsed gap days are deducted from new plan!)
+  const elapsedDays = Math.ceil((now.getTime() - currentEndDate.getTime()) / DAY_MS);
+
+  // Inactivity gap rules:
+  if (elapsedDays > 60) {
+    throw new BadRequestException(
+      'Doctor care service is suspended because your previous plan expired more than 60 days ago. Please re-subscribe with a fresh doctor onboarding.',
+    );
+  }
+  if (elapsedDays > 30 && daysGranted < 90) {
+    throw new BadRequestException(
+      `Re-engaging your doctor after ${elapsedDays} days of expiry requires a minimum 90-day seasonal renewal plan. Please select a 90-day, 180-day, or 365-day plan.`,
+    );
+  }
+
+  const newEndDate = new Date(currentEndDate.getTime() + daysGranted * DAY_MS);
+
+  // Safeguard: recharge must extend past current moment
+  if (newEndDate.getTime() <= now.getTime()) {
+    throw new BadRequestException(
+      `Your recharge of ${daysGranted} days is less than your expired gap of ${elapsedDays} days. Please select a plan with at least ${elapsedDays + 1} days.`,
+    );
+  }
+
+  return { bonusDayApplied: false, newEndDate, elapsedDaysDeducted: elapsedDays };
 }
 
 @Injectable()

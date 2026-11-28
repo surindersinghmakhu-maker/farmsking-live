@@ -90,6 +90,13 @@ export function RenewModal({ visible, onClose, farmerId }: { visible: boolean; o
             </TouchableOpacity>
           </View>
 
+          <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', padding: 8, borderRadius: RADIUS.sm, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="shield-checkmark" size={15} color="#16a34a" />
+            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#166534', flex: 1 }}>
+              Continuous Coverage: Renewing extends your validity directly from your previous expiry date.
+            </Text>
+          </View>
+
           {mode === 'upi' ? <UpiPaymentFlow farmerId={farmerId} onDone={closeAndReset} /> : <CodeRedeemFlow farmerId={farmerId} onDone={closeAndReset} />}
         </View>
       </View>

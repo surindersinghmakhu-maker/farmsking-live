@@ -317,8 +317,8 @@ export const AdvisorDashboardView: React.FC = () => {
         onSuccess: () => {
           setCropToAcceptConfirm(null);
           if (selectedReviewCrop?.id === id) setSelectedReviewCrop(null);
-          const msg = `✅ Crop Adoption Confirmed!\nNumber of plants (${parsedPlants ?? 'Standard'}) and Stage (${acceptStage}) have been calibrated and locked. The farmer has been notified.`;
-          Platform.OS === 'web' ? alert(msg) : Alert.alert('Adoption Accepted', msg);
+          const msg = `✅ Crop Added to Doctor Care!\nNumber of plants (${parsedPlants ?? 'Standard'}) and Stage (${acceptStage}) have been calibrated and locked. The farmer has been notified.`;
+          Platform.OS === 'web' ? alert(msg) : Alert.alert('Doctor Care Accepted', msg);
         },
       }
     );
@@ -2128,7 +2128,7 @@ export const AdvisorDashboardView: React.FC = () => {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                 <Ionicons name="shield-checkmark" size={18} color="#00ff87" />
                 <View>
-                  <Text style={styles.proModalTitle}>Calibrate & Accept Adoption</Text>
+                  <Text style={styles.proModalTitle}>Calibrate & Accept Doctor Care</Text>
                   <Text style={styles.proModalSubtitle}>
                     {cropToAcceptConfirm?.cropName} · {cropToAcceptConfirm?.plot?.farm?.owner?.name || 'Farmer'}
                   </Text>
@@ -2144,7 +2144,7 @@ export const AdvisorDashboardView: React.FC = () => {
                 <Ionicons name="lock-closed" size={15} color="#f59e0b" style={{ marginTop: 1 }} />
                 <Text style={{ flex: 1, fontSize: 11.5, fontFamily: FONT.medium, color: isLight ? '#92400e' : '#fde68a', lineHeight: 16 }}>
                   <Text style={{ fontFamily: FONT.bold }}>One-Time Calibration: </Text>
-                  Review and adjust the plant count and current growth stage. These values will be permanently locked once you accept this adoption.
+                  Review and adjust the plant count and current growth stage. These values will be permanently locked once you accept this crop into doctor care.
                 </Text>
               </View>
 
@@ -2238,7 +2238,7 @@ export const AdvisorDashboardView: React.FC = () => {
                   ) : (
                     <>
                       <Ionicons name="checkmark-done-circle" size={16} color="#ffffff" />
-                      <Text style={styles.proAcceptBtnText}>Confirm & Lock Adoption</Text>
+                      <Text style={styles.proAcceptBtnText}>Confirm & Accept Care</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -2333,7 +2333,7 @@ export const AdvisorDashboardView: React.FC = () => {
 
               <View style={{ backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.08)', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: isLight ? '#bbf7d0' : 'rgba(16, 185, 129, 0.2)' }}>
                 <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isLight ? '#15803d' : '#4ade80', lineHeight: 16 }}>
-                  ℹ️ Once submitted, this prescription will appear as a Pending Activity in the farmer's calendar. The Single Consultation adoption will be permanently locked on your side.
+                  ℹ️ Once submitted, this prescription will appear as a Pending Activity in the farmer's calendar. The Single Consultation care will be permanently locked on your side.
                 </Text>
               </View>
 

@@ -55,8 +55,8 @@ const PARTNER_BENEFITS: ShowcaseBenefit[] = [
   {
     icon: 'people',
     color: '#fbbf24',
-    title: 'Manage Adopted Farmers',
-    desc: 'Guide assigned farms and monitor active crop plots',
+    title: 'Manage Doctor Care Farmers',
+    desc: 'Guide assigned farms and monitor crops under doctor care',
   },
   {
     icon: 'medkit',

@@ -98,6 +98,30 @@ export function useCancelCropSubmission() {
   });
 }
 
+/** Farmer: withdraw crop from Doctor Care (instant hide with 7-day undo window). */
+export function useWithdrawCropFromAdvisor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => cropsApi.withdrawCropFromAdvisor(id),
+    onSuccess: (crop) => {
+      queryClient.invalidateQueries({ queryKey: ['crops'] });
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+    },
+  });
+}
+
+/** Farmer: resume care for a withdrawn crop within 7-day safety window. */
+export function useResumeCropCare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => cropsApi.resumeCropCare(id),
+    onSuccess: (crop) => {
+      queryClient.invalidateQueries({ queryKey: ['crops'] });
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+    },
+  });
+}
+
 /** Advisor: crops submitted by their assigned farmers, awaiting review. */
 export function usePendingCropsForAdvisor() {
   return useQuery({

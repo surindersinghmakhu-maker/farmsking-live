@@ -167,9 +167,9 @@ export default function FarmListScreen() {
     tap();
     if (!activeAdvisor) {
       if (Platform.OS === 'web') {
-        alert('🩺 Please choose and assign a Crop Doctor first before submitting crops for Crop Care Plan adoption.');
+        alert('🩺 Please choose and assign a Crop Doctor first before adding crops to Doctor Care.');
       } else {
-        Alert.alert('Assign Doctor First', 'Please choose and assign a Crop Doctor first before submitting crops for Crop Care Plan adoption.');
+        Alert.alert('Assign Doctor First', 'Please choose and assign a Crop Doctor first before adding crops to Doctor Care.');
       }
       setIsChoosingAdvisor(true);
       return;
@@ -177,10 +177,10 @@ export default function FarmListScreen() {
     setSubmittingCropId(cropId);
     try {
       await submitCropToAdvisor.mutateAsync(cropId);
-      if (Platform.OS === 'web') alert(`✅ Request sent to ${activeAdvisor.name} to adopt "${cropName}" under Crop Care Plan!`);
-      else Alert.alert('Request Sent', `Request sent to ${activeAdvisor.name} to adopt "${cropName}" under Crop Care Plan!`);
+      if (Platform.OS === 'web') alert(`✅ Request sent to ${activeAdvisor.name} to add "${cropName}" to Doctor Care!`);
+      else Alert.alert('Request Sent', `Request sent to ${activeAdvisor.name} to add "${cropName}" to Doctor Care!`);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Could not submit crop for adoption.';
+      const msg = err?.response?.data?.message || 'Could not submit crop to Doctor Care.';
       if (Platform.OS === 'web') alert(msg);
       else Alert.alert('Error', msg);
     } finally {
@@ -193,8 +193,8 @@ export default function FarmListScreen() {
     setSubmittingCropId(cropId);
     try {
       await cancelCropSubmission.mutateAsync(cropId);
-      if (Platform.OS === 'web') alert(`✅ Adoption request for "${cropName}" cancelled.`);
-      else Alert.alert('Cancelled', `Adoption request for "${cropName}" cancelled.`);
+      if (Platform.OS === 'web') alert(`✅ Doctor Care request for "${cropName}" cancelled.`);
+      else Alert.alert('Cancelled', `Doctor Care request for "${cropName}" cancelled.`);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Could not cancel request.';
       if (Platform.OS === 'web') alert(msg);
@@ -235,7 +235,7 @@ export default function FarmListScreen() {
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [editingCrop, setEditingCrop] = useState<RegisteredCropField | null>(null);
-  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(true);
   const [isCropAdoptionExpanded, setIsCropAdoptionExpanded] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showLocationProfileModal, setShowLocationProfileModal] = useState(false);

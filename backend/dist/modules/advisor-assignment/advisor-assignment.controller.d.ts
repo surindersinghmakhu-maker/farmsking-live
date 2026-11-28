@@ -255,12 +255,16 @@ export declare class AdvisorAssignmentController {
     }[]>;
     listAvailableAdvisorsForCrop(user: AuthUser, cropCycleId: string): Promise<{
         isAlreadyAssignedToThisCrop: boolean;
+        isWithdrawnLocked: boolean;
         assignedCropReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus | null;
         activeHiringModelForCrop: import(".prisma/client").$Enums.HiringModelType | null;
         quota: {
             hasActiveMonthlySubscription: boolean;
             activeSubscriptionId: string | null;
             subscriptionEndDate: Date | null;
+            isGracePeriod: boolean;
+            isSleepMode: boolean;
+            graceDaysRemaining: number;
             quotaStatus: "INCLUDED_FREE" | "ADDITIONAL_CROP_FEE" | "NOT_SUBSCRIBED";
             monthlyIncludedCrops: number;
             activeCropsUnderAdvisor: number;

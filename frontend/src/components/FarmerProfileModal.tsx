@@ -104,7 +104,7 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
             : `${plot.area} ${plot.areaUnit ?? 'Acre'}`;
 
           const reviewStatus = (cycle as any).advisorReviewStatus || 'NONE';
-          const statusLabel = reviewStatus === 'ACCEPTED' ? 'Adopted' : reviewStatus === 'PENDING' ? 'Pending Review' : 'Active';
+          const statusLabel = reviewStatus === 'ACCEPTED' ? 'In Doctor Care' : reviewStatus === 'PENDING' ? 'Pending Review' : 'Active';
 
           crops.push({
             id: cycle.id,
@@ -311,9 +311,9 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
                         <Text style={[styles.tableTd, { flex: 1.3 }]} numberOfLines={1}>{c.variety}</Text>
                         <Text style={[styles.tableTd, { flex: 1.1 }]} numberOfLines={1}>{c.area}</Text>
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <View style={[styles.activeStatusBadge, c.status === 'Adopted' ? { backgroundColor: '#dcfce7' } : c.status === 'Pending Review' ? { backgroundColor: '#fffbeb' } : { backgroundColor: '#f1f5f9' }]}>
-                            <View style={[styles.greenDot, c.status === 'Adopted' ? { backgroundColor: '#16a34a' } : c.status === 'Pending Review' ? { backgroundColor: '#d97706' } : { backgroundColor: '#64748b' }]} />
-                            <Text style={[styles.activeStatusText, c.status === 'Adopted' ? { color: '#15803d' } : c.status === 'Pending Review' ? { color: '#b45309' } : { color: '#475569' }]}>{c.status}</Text>
+                          <View style={[styles.activeStatusBadge, c.status === 'In Doctor Care' ? { backgroundColor: '#dcfce7' } : c.status === 'Pending Review' ? { backgroundColor: '#fffbeb' } : { backgroundColor: '#f1f5f9' }]}>
+                            <View style={[styles.greenDot, c.status === 'In Doctor Care' ? { backgroundColor: '#16a34a' } : c.status === 'Pending Review' ? { backgroundColor: '#d97706' } : { backgroundColor: '#64748b' }]} />
+                            <Text style={[styles.activeStatusText, c.status === 'In Doctor Care' ? { color: '#15803d' } : c.status === 'Pending Review' ? { color: '#b45309' } : { color: '#475569' }]}>{c.status}</Text>
                           </View>
                           <Ionicons name="chevron-forward" size={12} color="#94a3b8" />
                         </View>

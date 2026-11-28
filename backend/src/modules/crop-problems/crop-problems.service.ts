@@ -35,24 +35,26 @@ export class CropProblemsService {
       orderBy: { startDate: 'desc' },
     });
 
+    const targetAdvisorId = cropCycle.assignedAdvisorId || activeAssignment?.advisorId || null;
+
     const { photoUrls, ...rest } = dto;
     const problem = await this.prisma.cropProblem.create({
       data: {
         ...rest,
         reportedById: user.id,
-        assignedAdvisorId: activeAssignment?.advisorId,
+        assignedAdvisorId: targetAdvisorId,
         photos: photoUrls?.length ? { create: photoUrls.map((photoUrl) => ({ photoUrl })) } : undefined,
       },
       include: DETAIL_INCLUDE,
     });
 
-    if (activeAssignment?.advisorId) {
+    if (targetAdvisorId) {
       await this.notificationsService.create(
-        activeAssignment.advisorId,
+        targetAdvisorId,
         NotificationType.CROP_PROBLEM_UPDATE,
-        'New problem reported',
-        `${user.name} reported a problem on ${cropCycle.cropName}: "${dto.title}".`,
-        { cropProblemId: problem.id, cropCycleId: dto.cropCycleId },
+        '⚡ Instant SOS Alert Received',
+        `${user.name} reported an Instant SOS problem on adopted crop "${cropCycle.cropName}": "${dto.title}". Priority diagnosis requested.`,
+        { cropProblemId: problem.id, cropCycleId: dto.cropCycleId, isEmergencySos: true },
       );
     }
 

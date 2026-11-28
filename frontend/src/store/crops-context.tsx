@@ -560,11 +560,11 @@ export function useCrops(): CropsContextValue {
   );
 
   const activeCrops = useMemo(
-    () => myCrops.filter((c) => c.stage !== 'COMPLETED' && c.status !== 'COMPLETED' && c.status !== 'FAILED'),
+    () => myCrops.filter((c) => c.stage !== 'COMPLETED' && c.status !== 'COMPLETED' && c.status !== 'FAILED' && c.status !== 'DEACTIVE'),
     [myCrops]
   );
   const completedCrops = useMemo(
-    () => myCrops.filter((c) => c.stage === 'COMPLETED' || c.status === 'COMPLETED'),
+    () => myCrops.filter((c) => c.stage === 'COMPLETED' || c.status === 'COMPLETED' || c.status === 'DEACTIVE'),
     [myCrops]
   );
 

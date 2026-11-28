@@ -55,7 +55,7 @@ function getPlanLabel(plan: SelectedPlanType): string {
     case 'ADDITIONAL_CROP':
       return 'Additional Crop Monthly Care';
     case 'PER_CROP':
-      return 'Per Crop Season (120-Day Cycle)';
+      return 'Crop Season Care (1 Advance Payment · Full Cycle Scheduling)';
     case 'MONTHLY_SUBSCRIPTION':
       return 'Monthly Care Retainer';
     case 'PAY_PER_CONSULTATION':
@@ -1244,25 +1244,26 @@ export function CropDoctorAdoptionModal({
                             >
                               <View style={styles.planBadgeBlue}>
                                 <Text style={styles.planBadgeTextBlue}>
-                                  {runningPlanRank >= 2 ? 'ACTIVE' : 'POPULAR'}
+                                  {runningPlanRank >= 2 ? 'ACTIVE' : '1 ADVANCE PAYMENT'}
                                 </Text>
                               </View>
-                              <Text style={styles.planGridTitle}>Season Care</Text>
+                              <Text style={styles.planGridTitle}>Crop Season Care</Text>
                               <Text style={styles.planGridDesc} numberOfLines={2}>
-                                Full 120-day cycle supervision from sowing to harvest.
+                                Advance 1-time payment for single crop. Continuous doctor spray & activity schedules until harvest.
                               </Text>
                               <View style={{ marginTop: 'auto', paddingTop: 4 }}>
                                 <Text style={styles.planGridPrice}>
                                   {isExplicitlyFree(selectedDoctor.feePerCropSeason) ? '₹0 (FREE)' : `₹${parsePlanFee(selectedDoctor.feePerCropSeason, 499)}`}
                                 </Text>
-                                <Text style={styles.planGridSub}>per crop cycle · 120 days</Text>
+                                <Text style={styles.planGridSub}>1 advance payment · full season schedule</Text>
                               </View>
                             </TouchableOpacity>
 
-                            {/* 3. One-Time Consultation (Rank 1) */}
+                            {/* 3. One-Time Consultation (Rank 1 - Compact) */}
                             <TouchableOpacity
                               style={[
                                 styles.planGridCard,
+                                { padding: 8, minHeight: 125 },
                                 selectedPlanModel === 'PAY_PER_CONSULTATION' && styles.planCardActive,
                                 (runningPlanRank >= 1 || selectedDoctor.singleConsultationPlanEnabled === false) && styles.planCardDisabled,
                               ]}
@@ -1272,28 +1273,32 @@ export function CropDoctorAdoptionModal({
                                 setSelectedPlanModel('PAY_PER_CONSULTATION');
                               }}
                             >
-                              <View style={styles.planBadgeAmber}>
-                                <Text style={styles.planBadgeTextAmber}>
-                                  {runningPlanRank >= 1 ? 'CLOSED' : 'ONE-TIME SOS'}
-                                </Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                                <View style={[styles.planBadgeAmber, { paddingVertical: 1, paddingHorizontal: 5 }]}>
+                                  <Text style={[styles.planBadgeTextAmber, { fontSize: 8.5 }]}>
+                                    {runningPlanRank >= 1 ? 'CLOSED' : 'ONE-TIME SOS'}
+                                  </Text>
+                                </View>
+                                <Ionicons name="flash" size={11} color="#f59e0b" />
                               </View>
-                              <Text style={styles.planGridTitle}>SOS / Single Visit</Text>
-                              <Text style={styles.planGridDesc} numberOfLines={2}>
-                                Instant diagnosis, prescription chart &amp; direct voice consult.
+                              <Text style={[styles.planGridTitle, { fontSize: 12.5, lineHeight: 16 }]}>Single Visit / SOS</Text>
+                              <Text style={[styles.planGridDesc, { fontSize: 10, lineHeight: 13 }]} numberOfLines={2}>
+                                Instant leaf diagnosis & 1 prescription.
                               </Text>
-                              <View style={{ marginTop: 'auto', paddingTop: 4 }}>
-                                <Text style={styles.planGridPrice}>
+                              <View style={{ marginTop: 'auto', paddingTop: 2 }}>
+                                <Text style={[styles.planGridPrice, { fontSize: 13.5 }]}>
                                   {isExplicitlyFree(selectedDoctor.feePerConsultation) ? '₹0 (FREE)' : `₹${parsePlanFee(selectedDoctor.feePerConsultation, 99)}`}
                                 </Text>
-                                <Text style={styles.planGridSub}>single visit · 1 visit</Text>
+                                <Text style={[styles.planGridSub, { fontSize: 9.5 }]}>1 consultation</Text>
                               </View>
                             </TouchableOpacity>
                           </View>
                         ) : (
-                          /* Second Opinion Mode: Single Consultation */
+                          /* Second Opinion Mode: Compact Single Consultation */
                           <TouchableOpacity
                             style={[
                               styles.planCard,
+                              { padding: 10, gap: 8 },
                               selectedPlanModel === 'PAY_PER_CONSULTATION' && styles.planCardActive,
                             ]}
                             onPress={() => {
@@ -1302,19 +1307,21 @@ export function CropDoctorAdoptionModal({
                             }}
                           >
                             <View style={styles.planCardLeft}>
-                              <View style={styles.planBadgeAmber}>
-                                <Text style={styles.planBadgeTextAmber}>SECOND OPINION SOS</Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <View style={[styles.planBadgeAmber, { paddingVertical: 1, paddingHorizontal: 5 }]}>
+                                  <Text style={[styles.planBadgeTextAmber, { fontSize: 8.5 }]}>SECOND OPINION SOS</Text>
+                                </View>
+                                <Text style={[styles.planName, { fontSize: 13 }]}>Single Prescription / Second Opinion</Text>
                               </View>
-                              <Text style={styles.planName}>Single Prescription / Second Opinion</Text>
-                              <Text style={styles.planDesc}>
-                                Instant leaf diagnosis, prescription chart, and direct in-app VOIP consultation for this specific issue.
+                              <Text style={[styles.planDesc, { fontSize: 11, lineHeight: 15, marginTop: 2 }]} numberOfLines={2}>
+                                Instant diagnosis, prescription & VOIP call consultation.
                               </Text>
                             </View>
-                            <View style={styles.planPriceBox}>
-                              <Text style={styles.planPriceVal}>
+                            <View style={[styles.planPriceBox, { paddingLeft: 8 }]}>
+                              <Text style={[styles.planPriceVal, { fontSize: 15 }]}>
                                 {isExplicitlyFree(selectedDoctor.feePerConsultation) ? '₹0 (FREE)' : `₹${parsePlanFee(selectedDoctor.feePerConsultation, 99)}`}
                               </Text>
-                              <Text style={styles.planPriceSub}>one-time</Text>
+                              <Text style={[styles.planPriceSub, { fontSize: 9.5 }]}>one-time</Text>
                             </View>
                           </TouchableOpacity>
                         )}

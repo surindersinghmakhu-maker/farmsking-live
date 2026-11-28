@@ -1000,6 +1000,7 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
                 specializedCrops: true,
                 canTakeCalls: true,
                 whatsappGroupEnabled: true,
+                createdAt: true,
             },
         });
         if (!advisor) {
@@ -1018,22 +1019,55 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             enableInAppAudioCall: storedDoctorSettings.enableInAppAudioCall ?? true,
             enableVideoCall: storedDoctorSettings.enableVideoCall ?? true,
             monthlyPlanEnabled: storedDoctorSettings.monthlyPlanEnabled ?? true,
-            monthlyFee: storedDoctorSettings.monthlyFee ?? Number(advisor.feeVipMonthly ?? 299),
+            monthlyFee: storedDoctorSettings.monthlyPlan1Fee ?? storedDoctorSettings.monthlyFee ?? Number(advisor.feeVipMonthly ?? 299),
             monthlyCallLimit: storedDoctorSettings.monthlyCallLimit ?? 5,
             monthlyInAppCallLimit: storedDoctorSettings.monthlyInAppCallLimit ?? 3,
             monthlyVideoCallLimit: storedDoctorSettings.monthlyVideoCallLimit ?? 2,
             monthlyVideoAllowed: storedDoctorSettings.monthlyVideoAllowed ?? true,
             monthlyChatEnabled: storedDoctorSettings.monthlyChatEnabled ?? true,
+            monthlyPlan1Enabled: storedDoctorSettings.monthlyPlan1Enabled ?? true,
+            monthlyPlan1Name: storedDoctorSettings.monthlyPlan1Name ?? 'Basic Starter Care',
+            monthlyPlan1Fee: storedDoctorSettings.monthlyPlan1Fee ?? Number(advisor.feeVipMonthly ?? 299),
+            monthlyPlan1Features: storedDoctorSettings.monthlyPlan1Features ?? '1 Crop Supervised · 3 VoIP Calls / mo · Weekly Advisory · In-App Chat',
+            monthlyPlan1CropsLimit: storedDoctorSettings.monthlyPlan1CropsLimit ?? 1,
+            monthlyPlan1CallLimit: storedDoctorSettings.monthlyPlan1CallLimit ?? 3,
+            monthlyPlan1VideoAllowed: storedDoctorSettings.monthlyPlan1VideoAllowed ?? false,
+            monthlyPlan2Enabled: storedDoctorSettings.monthlyPlan2Enabled ?? true,
+            monthlyPlan2Name: storedDoctorSettings.monthlyPlan2Name ?? 'Standard Pro Care',
+            monthlyPlan2Fee: storedDoctorSettings.monthlyPlan2Fee ?? 599,
+            monthlyPlan2Features: storedDoctorSettings.monthlyPlan2Features ?? 'Up to 3 Crops · 8 VoIP Calls / mo · 2 Video Inspections · Priority Problem Resolution',
+            monthlyPlan2CropsLimit: storedDoctorSettings.monthlyPlan2CropsLimit ?? 3,
+            monthlyPlan2CallLimit: storedDoctorSettings.monthlyPlan2CallLimit ?? 8,
+            monthlyPlan2VideoAllowed: storedDoctorSettings.monthlyPlan2VideoAllowed ?? true,
+            monthlyPlan3Enabled: storedDoctorSettings.monthlyPlan3Enabled ?? true,
+            monthlyPlan3Name: storedDoctorSettings.monthlyPlan3Name ?? 'Complete Farm VIP',
+            monthlyPlan3Fee: storedDoctorSettings.monthlyPlan3Fee ?? 999,
+            monthlyPlan3Features: storedDoctorSettings.monthlyPlan3Features ?? 'All Crops (Up to 5) · 15 VoIP Calls / mo · Unlimited Video Diagnostics · 24/7 Priority Hotline',
+            monthlyPlan3CropsLimit: storedDoctorSettings.monthlyPlan3CropsLimit ?? 5,
+            monthlyPlan3CallLimit: storedDoctorSettings.monthlyPlan3CallLimit ?? 15,
+            monthlyPlan3VideoAllowed: storedDoctorSettings.monthlyPlan3VideoAllowed ?? true,
+            discount3Months: storedDoctorSettings.discount3Months ?? 10,
+            discount6Months: storedDoctorSettings.discount6Months ?? 15,
+            discount12Months: storedDoctorSettings.discount12Months ?? 25,
+            plan1Discount3Months: storedDoctorSettings.plan1Discount3Months ?? storedDoctorSettings.discount3Months ?? 10,
+            plan1Discount6Months: storedDoctorSettings.plan1Discount6Months ?? storedDoctorSettings.discount6Months ?? 15,
+            plan1Discount12Months: storedDoctorSettings.plan1Discount12Months ?? storedDoctorSettings.discount12Months ?? 25,
+            plan2Discount3Months: storedDoctorSettings.plan2Discount3Months ?? storedDoctorSettings.discount3Months ?? 10,
+            plan2Discount6Months: storedDoctorSettings.plan2Discount6Months ?? storedDoctorSettings.discount6Months ?? 15,
+            plan2Discount12Months: storedDoctorSettings.plan2Discount12Months ?? storedDoctorSettings.discount12Months ?? 25,
+            plan3Discount3Months: storedDoctorSettings.plan3Discount3Months ?? storedDoctorSettings.discount3Months ?? 10,
+            plan3Discount6Months: storedDoctorSettings.plan3Discount6Months ?? storedDoctorSettings.discount6Months ?? 15,
+            plan3Discount12Months: storedDoctorSettings.plan3Discount12Months ?? storedDoctorSettings.discount12Months ?? 25,
             plan3MonthsEnabled: storedDoctorSettings.plan3MonthsEnabled ?? true,
-            fee3Months: storedDoctorSettings.fee3Months ?? (Math.round(Number(advisor.feeVipMonthly ?? 299) * 2.7)),
+            fee3Months: storedDoctorSettings.fee3Months ?? (Math.round(Number(storedDoctorSettings.monthlyPlan1Fee ?? advisor.feeVipMonthly ?? 299) * 3 * (1 - (storedDoctorSettings.discount3Months ?? 10) / 100))),
             callLimit3Months: storedDoctorSettings.callLimit3Months ?? 15,
             videoAllowed3Months: storedDoctorSettings.videoAllowed3Months ?? true,
             plan6MonthsEnabled: storedDoctorSettings.plan6MonthsEnabled ?? true,
-            fee6Months: storedDoctorSettings.fee6Months ?? (Math.round(Number(advisor.feeVipMonthly ?? 299) * 5.0)),
+            fee6Months: storedDoctorSettings.fee6Months ?? (Math.round(Number(storedDoctorSettings.monthlyPlan1Fee ?? advisor.feeVipMonthly ?? 299) * 6 * (1 - (storedDoctorSettings.discount6Months ?? 15) / 100))),
             callLimit6Months: storedDoctorSettings.callLimit6Months ?? 30,
             videoAllowed6Months: storedDoctorSettings.videoAllowed6Months ?? true,
             plan12MonthsEnabled: storedDoctorSettings.plan12MonthsEnabled ?? true,
-            fee12Months: storedDoctorSettings.fee12Months ?? (Math.round(Number(advisor.feeVipMonthly ?? 299) * 9.0)),
+            fee12Months: storedDoctorSettings.fee12Months ?? (Math.round(Number(storedDoctorSettings.monthlyPlan1Fee ?? advisor.feeVipMonthly ?? 299) * 12 * (1 - (storedDoctorSettings.discount12Months ?? 25) / 100))),
             callLimit12Months: storedDoctorSettings.callLimit12Months ?? 60,
             videoAllowed12Months: storedDoctorSettings.videoAllowed12Months ?? true,
             cropSeasonPlanEnabled: storedDoctorSettings.cropSeasonPlanEnabled ?? true,
@@ -1053,6 +1087,8 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             icarRegistrationNumber: storedDoctorSettings.icarRegistrationNumber ?? '',
             qualificationTitle: storedDoctorSettings.qualificationTitle ?? advisor.qualification ?? 'Certified Crop Doctor',
             maxFarmerCapacity: storedDoctorSettings.maxFarmerCapacity ?? 100,
+            certifiedAt: storedDoctorSettings.certifiedAt ?? advisor.createdAt.toISOString(),
+            testPassedDate: storedDoctorSettings.testPassedDate ?? storedDoctorSettings.certifiedAt ?? advisor.createdAt.toISOString(),
         };
     }
     async updateDoctorSettings(user, dto, targetAdvisorId) {
@@ -1064,9 +1100,19 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
         const appSetting = await this.appSettingsService.get();
         const existingFlags = appSetting.featureFlags || {};
         const existingDoctorSettings = existingFlags.doctorSettings || {};
+        const baseMonthlyFee = Number(dto.monthlyPlan1Fee ?? dto.monthlyFee ?? existingDoctorSettings[advisorId]?.monthlyPlan1Fee ?? existingDoctorSettings[advisorId]?.monthlyFee ?? advisor.feeVipMonthly ?? 299);
+        const d3 = Number(dto.discount3Months ?? existingDoctorSettings[advisorId]?.discount3Months ?? 10);
+        const d6 = Number(dto.discount6Months ?? existingDoctorSettings[advisorId]?.discount6Months ?? 15);
+        const d12 = Number(dto.discount12Months ?? existingDoctorSettings[advisorId]?.discount12Months ?? 25);
         const updatedSetting = {
             ...(existingDoctorSettings[advisorId] || {}),
             ...dto,
+            certifiedAt: dto.certifiedAt || existingDoctorSettings[advisorId]?.certifiedAt || advisor.createdAt.toISOString(),
+            testPassedDate: dto.testPassedDate || dto.certifiedAt || existingDoctorSettings[advisorId]?.testPassedDate || advisor.createdAt.toISOString(),
+            monthlyFee: dto.monthlyPlan1Fee ?? dto.monthlyFee ?? existingDoctorSettings[advisorId]?.monthlyFee ?? baseMonthlyFee,
+            fee3Months: dto.fee3Months ?? Math.round(baseMonthlyFee * 3 * (1 - d3 / 100)),
+            fee6Months: dto.fee6Months ?? Math.round(baseMonthlyFee * 6 * (1 - d6 / 100)),
+            fee12Months: dto.fee12Months ?? Math.round(baseMonthlyFee * 12 * (1 - d12 / 100)),
             updatedAt: new Date().toISOString(),
         };
         const newFlags = {

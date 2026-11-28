@@ -12,7 +12,8 @@ import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
 import { useUpdateAdvisorProfile } from '@/src/hooks/useAdvisorProfile';
 import { uploadPhoto } from '@/src/api/uploads.api';
-import { resolveMediaUrl } from '@/src/api/client';
+import { apiClient, resolveMediaUrl } from '@/src/api/client';
+import * as SecureStore from '@/src/lib/storage';
 import { lookupPincode } from '@/src/api/pincode.api';
 
 const theme = RoleThemes.FARM_ADVISOR;
@@ -33,6 +34,40 @@ export default function AdvisorProfileScreen() {
       setPhotoUrl(user.photoUrl ?? null);
     }
   }, [user?.photoUrl]);
+
+  // Persistent Accreditation / Test Clearance Date
+  const [certifiedDate, setCertifiedDate] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const localCached = await SecureStore.getItemAsync(`doctorCertifiedAt_${user?.id || 'me'}`);
+        if (localCached && isMounted) {
+          setCertifiedDate(localCached);
+        }
+        const res = await apiClient.get('/advisor-assignment/doctor-settings', {
+          params: user?.id ? { advisorId: user.id } : undefined,
+        });
+        if (res.data?.certifiedAt && isMounted) {
+          setCertifiedDate(res.data.certifiedAt);
+          await SecureStore.setItemAsync(`doctorCertifiedAt_${user?.id || 'me'}`, res.data.certifiedAt);
+        }
+      } catch {}
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
+
+  const eligibilityDate = React.useMemo(() => {
+    const raw = certifiedDate || (user as any)?.certifiedAt || (user as any)?.testPassedAt || user?.createdAt;
+    if (!raw) return '15 August 2026';
+    const d = new Date(raw);
+    return isNaN(d.getTime())
+      ? '15 August 2026'
+      : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  }, [certifiedDate, user]);
 
   const specializationState = useState(user?.specialization ?? '');
   const specialization = specializationState[0];
@@ -222,8 +257,8 @@ export default function AdvisorProfileScreen() {
             </Text>
             <View style={styles.certFooter}>
               <View>
-                <Text style={styles.certFooterVal}>{new Date().toLocaleDateString()}</Text>
-                <Text style={styles.certFooterLabel}>Date</Text>
+                <Text style={styles.certFooterVal}>{eligibilityDate}</Text>
+                <Text style={styles.certFooterLabel}>Accreditation Date</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.certFooterVal}>FarmsKing Team</Text>

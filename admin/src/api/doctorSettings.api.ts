@@ -22,6 +22,45 @@ export interface DoctorSettingsResponse {
   monthlyVideoAllowed: boolean;
   monthlyChatEnabled: boolean;
 
+  // 3 Distinct Monthly Tier Plans
+  monthlyPlan1Enabled?: boolean;
+  monthlyPlan1Name?: string;
+  monthlyPlan1Fee?: number;
+  monthlyPlan1Features?: string;
+  monthlyPlan1CropsLimit?: number;
+  monthlyPlan1CallLimit?: number;
+  monthlyPlan1VideoAllowed?: boolean;
+
+  monthlyPlan2Enabled?: boolean;
+  monthlyPlan2Name?: string;
+  monthlyPlan2Fee?: number;
+  monthlyPlan2Features?: string;
+  monthlyPlan2CropsLimit?: number;
+  monthlyPlan2CallLimit?: number;
+  monthlyPlan2VideoAllowed?: boolean;
+
+  monthlyPlan3Enabled?: boolean;
+  monthlyPlan3Name?: string;
+  monthlyPlan3Fee?: number;
+  monthlyPlan3Features?: string;
+  monthlyPlan3CropsLimit?: number;
+  monthlyPlan3CallLimit?: number;
+  monthlyPlan3VideoAllowed?: boolean;
+
+  // Duration Discounts (%)
+  discount3Months?: number;
+  discount6Months?: number;
+  discount12Months?: number;
+  plan1Discount3Months?: number;
+  plan1Discount6Months?: number;
+  plan1Discount12Months?: number;
+  plan2Discount3Months?: number;
+  plan2Discount6Months?: number;
+  plan2Discount12Months?: number;
+  plan3Discount3Months?: number;
+  plan3Discount6Months?: number;
+  plan3Discount12Months?: number;
+
   // 3-Month Pack
   plan3MonthsEnabled: boolean;
   fee3Months: number;

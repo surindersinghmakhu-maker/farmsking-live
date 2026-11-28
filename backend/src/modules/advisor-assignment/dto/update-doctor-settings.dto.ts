@@ -55,6 +55,161 @@ export class UpdateDoctorSettingsDto {
   @IsBoolean()
   monthlyChatEnabled?: boolean;
 
+  // ── 3 Distinct Monthly Tier Plans ──
+  @IsOptional()
+  @IsBoolean()
+  monthlyPlan1Enabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  monthlyPlan1Name?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  monthlyPlan1Fee?: number;
+
+  @IsOptional()
+  @IsString()
+  monthlyPlan1Features?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  monthlyPlan1CropsLimit?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  monthlyPlan1CallLimit?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  monthlyPlan1VideoAllowed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  monthlyPlan2Enabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  monthlyPlan2Name?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  monthlyPlan2Fee?: number;
+
+  @IsOptional()
+  @IsString()
+  monthlyPlan2Features?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  monthlyPlan2CropsLimit?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  monthlyPlan2CallLimit?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  monthlyPlan2VideoAllowed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  monthlyPlan3Enabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  monthlyPlan3Name?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  monthlyPlan3Fee?: number;
+
+  @IsOptional()
+  @IsString()
+  monthlyPlan3Features?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  monthlyPlan3CropsLimit?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  monthlyPlan3CallLimit?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  monthlyPlan3VideoAllowed?: boolean;
+
+  // ── Duration Discount Percentages (%) for 3, 6, 12 Months ──
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount3Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount6Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount12Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan1Discount3Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan1Discount6Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan1Discount12Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan2Discount3Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan2Discount6Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan2Discount12Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan3Discount3Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan3Discount6Months?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  plan3Discount12Months?: number;
+
   // 3-Month Plan Pack
   @IsOptional()
   @IsBoolean()
@@ -181,6 +336,14 @@ export class UpdateDoctorSettingsDto {
   @IsOptional()
   @IsString()
   qualificationTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  certifiedAt?: string;
+
+  @IsOptional()
+  @IsString()
+  testPassedDate?: string;
 
   @IsOptional()
   @IsNumber()

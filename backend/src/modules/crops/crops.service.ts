@@ -677,7 +677,15 @@ export class CropsService {
   }
 
   /** Doctor completes the crop advisory requirement and notifies the customer to review & confirm. */
-  async completeRequirement(user: AuthUser, id: string, notes?: string, schedule?: string) {
+  async completeRequirement(
+    user: AuthUser,
+    id: string,
+    notes?: string,
+    schedule?: string,
+    solutionTitle?: string,
+    solutionDosage?: string,
+    solutionDate?: string,
+  ) {
     const cropCycle = await this.prisma.cropCycle.findFirst({
       where: { id, deletedAt: null },
       include: { plot: { include: { farm: true } }, assignedAdvisor: true },
@@ -690,7 +698,34 @@ export class CropsService {
     }
 
     const farmerId = cropCycle.plot.farm.ownerId;
-    const completionTag = `\n[REQUIREMENT_COMPLETED: ${new Date().toISOString()} by Dr. ${user.name}${notes ? ` - ${notes}` : ''}]`;
+    let completionTag = `\n[REQUIREMENT_COMPLETED: ${new Date().toISOString()} by Dr. ${user.name}${notes ? ` - ${notes}` : ''}]`;
+    
+    // If doctor provided a specific prescription/solution, log it and lock single consultation
+    if (solutionTitle || solutionDosage) {
+      const cleanTitle = (solutionTitle || 'Doctor Prescription').trim();
+      const cleanDosage = (solutionDosage || '').trim();
+      completionTag += `\n[DOCTOR_SOLUTION: ${new Date().toISOString()} | ${cleanTitle} | ${cleanDosage}]`;
+      
+      // Auto-lock on doctor's side if it is a single consultation
+      if (cropCycle.hiringModel === 'PAY_PER_CONSULTATION') {
+        completionTag += `\n[SINGLE_CONSULTATION_LOCKED: true]`;
+      }
+
+      // Automatically create a PENDING CropActivitySchedule so farmer sees it in pending activities
+      const targetDate = solutionDate && !isNaN(Date.parse(solutionDate)) ? new Date(solutionDate) : new Date();
+      await this.prisma.cropActivitySchedule.create({
+        data: {
+          cropCycleId: id,
+          activityType: 'SPRAY',
+          title: cleanTitle,
+          description: cleanDosage || 'Apply doctor recommended prescription as directed.',
+          scheduledDate: targetDate,
+          status: 'PENDING',
+          createdByAdvisorId: user.id,
+        },
+      });
+    }
+
     const updatedNotes = cropCycle.notes ? `${cropCycle.notes}${completionTag}` : completionTag.trim();
 
     let updatedSchedule = cropCycle.assignedSchedule;
@@ -707,11 +742,15 @@ export class CropsService {
       },
     });
 
+    const notifBody = (solutionTitle || solutionDosage)
+      ? `Dr. ${user.name} has provided a prescription solution for "${cropCycle.cropName}". It has been added to your Crop Activities as Pending. Please review and confirm your experience.`
+      : `Dr. ${user.name} has completed your agronomy requirement for "${cropCycle.cropName}". Your diagnosis and advisory are ready. Please review and confirm your experience.`;
+
     await this.notificationsService.create(
       farmerId,
       NotificationType.SYSTEM,
-      '✅ Requirement Completed!',
-      `Dr. ${user.name} has completed your agronomy requirement for "${cropCycle.cropName}". Your diagnosis and advisory are ready. Please review and confirm your experience.`,
+      '✅ Doctor Solution Ready!',
+      notifBody,
       { cropCycleId: id, advisorId: user.id, action: 'CONFIRM_REVIEW' },
     );
 

@@ -304,6 +304,9 @@ export declare class CropsController {
     completeRequirement(user: AuthUser, id: string, body?: {
         notes?: string;
         schedule?: string;
+        solutionTitle?: string;
+        solutionDosage?: string;
+        solutionDate?: string;
     }): Promise<{
         id: string;
         createdAt: Date;

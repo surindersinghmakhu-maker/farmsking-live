@@ -503,7 +503,7 @@ export declare class CropsService {
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
     }>;
-    completeRequirement(user: AuthUser, id: string, notes?: string, schedule?: string): Promise<{
+    completeRequirement(user: AuthUser, id: string, notes?: string, schedule?: string, solutionTitle?: string, solutionDosage?: string, solutionDate?: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

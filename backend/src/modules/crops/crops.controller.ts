@@ -100,9 +100,24 @@ export class CropsController {
   completeRequirement(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
-    @Body() body?: { notes?: string; schedule?: string },
+    @Body()
+    body?: {
+      notes?: string;
+      schedule?: string;
+      solutionTitle?: string;
+      solutionDosage?: string;
+      solutionDate?: string;
+    },
   ) {
-    return this.cropsService.completeRequirement(user, id, body?.notes, body?.schedule);
+    return this.cropsService.completeRequirement(
+      user,
+      id,
+      body?.notes,
+      body?.schedule,
+      body?.solutionTitle,
+      body?.solutionDosage,
+      body?.solutionDate,
+    );
   }
 
   @Roles(Role.FARMER, Role.CUSTOMER, Role.GARDENER, Role.ADMIN, Role.SUPER_ADMIN)

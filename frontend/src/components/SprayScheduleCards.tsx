@@ -39,14 +39,15 @@ export function pastSprayOutcome(item: SprayScheduleItem, isDark = false): { col
  * Automatically marks items as SKIPPED on the 6th day (after 5 days late).
  * Shared between the farmer's "My Advisor" view and the advisor's "Farmers" roster. */
 export function SprayScheduleCards({
-
   cropCycleId,
   accentColor,
   onViewDetail,
+  onPromptRating,
 }: {
   cropCycleId: string;
   accentColor: string;
   onViewDetail: (item: SprayScheduleItem) => void;
+  onPromptRating?: (cropCycleId: string) => void;
 }) {
   const { colors, isDark } = useExecutiveTheme();
   const { data: itemsRaw } = useSprayScheduleForCrop(cropCycleId);
@@ -144,9 +145,13 @@ export function SprayScheduleCards({
         id: item.id,
         payload: { status: 'COMPLETED' },
       });
-      const note = daysLate > 3 ? '✔️ Marked as Done! (Status: Delayed)' : '✔️ Marked as Done!';
-      if (Platform.OS === 'web') alert(note);
-      else Alert.alert('Status Updated', note);
+      if (onPromptRating) {
+        onPromptRating(cropCycleId);
+      } else {
+        const note = daysLate > 3 ? '✔️ Marked as Done! (Status: Delayed)' : '✔️ Marked as Done!';
+        if (Platform.OS === 'web') alert(note);
+        else Alert.alert('Status Updated', note);
+      }
     } catch {
       if (Platform.OS === 'web') alert('Could not update status. Please try again.');
       else Alert.alert('Error', 'Could not update status. Please try again.');

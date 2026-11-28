@@ -1308,10 +1308,56 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                           })()}
                         </View>
 
+                        {/* Doctor Solution / Prescription History Banner */}
+                        {crop.notes?.includes('[DOCTOR_SOLUTION:') && (() => {
+                          const match = crop.notes.match(/\[DOCTOR_SOLUTION:[^|]+\|\s*([^|]+)\|\s*([^\]]+)\]/);
+                          const solTitle = match ? match[1].trim() : 'Prescribed Advisory Solution';
+                          const solDosage = match ? match[2].trim() : '';
+                          return (
+                            <View style={{
+                              backgroundColor: isDark ? 'rgba(16, 185, 129, 0.1)' : '#f0fdf4',
+                              borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : '#86efac',
+                              borderWidth: 1,
+                              borderRadius: RADIUS.md,
+                              padding: 10,
+                              marginBottom: 8,
+                              gap: 4,
+                            }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                  <Ionicons name="medkit" size={15} color="#16a34a" />
+                                  <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#15803d' }}>
+                                    Doctor Advisory Prescription
+                                  </Text>
+                                </View>
+                                <View style={{ backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#dcfce7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 12 }}>
+                                  <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#16a34a' }}>🔒 RESOLVED & SENT</Text>
+                                </View>
+                              </View>
+                              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: colors.text }}>
+                                💊 {solTitle}
+                              </Text>
+                              {solDosage ? (
+                                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted, lineHeight: 15 }}>
+                                  {solDosage}
+                                </Text>
+                              ) : null}
+                            </View>
+                          );
+                        })()}
+
                         <SprayScheduleCards
                           cropCycleId={crop.id}
                           accentColor={colors.primary}
                           onViewDetail={(item) => openSprayItemDetail(item, `${crop.plot.name} (${crop.cropName})`)}
+                          onPromptRating={(cId) => {
+                            const target = (myCrops ?? []).find((x) => x.id === cId) || crop;
+                            if (target) {
+                              setRatingCrop(target);
+                              setReviewStars(5);
+                              setReviewFeedback('');
+                            }
+                          }}
                         />
 
                         {/* Doctor Badge & Second Opinion Option */}

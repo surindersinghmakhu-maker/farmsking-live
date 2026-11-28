@@ -560,7 +560,7 @@ let CropsService = class CropsService {
         await this.notificationsService.create(cropCycle.plot.farm.ownerId, client_1.NotificationType.SPRAY_REMINDER, '✅ Requirement Completed!', `Dr. ${user.name} has completed your agronomy requirement for "${cropCycle.cropName}" and published your day-wise treatment plan. Please review and confirm your experience.`, { cropCycleId: cropCycle.id, advisorId: user.id, action: 'CONFIRM_REVIEW' });
         return updated;
     }
-    async completeRequirement(user, id, notes, schedule) {
+    async completeRequirement(user, id, notes, schedule, solutionTitle, solutionDosage, solutionDate) {
         const cropCycle = await this.prisma.cropCycle.findFirst({
             where: { id, deletedAt: null },
             include: { plot: { include: { farm: true } }, assignedAdvisor: true },
@@ -572,7 +572,27 @@ let CropsService = class CropsService {
             throw new common_1.ForbiddenException('You are not assigned to this crop.');
         }
         const farmerId = cropCycle.plot.farm.ownerId;
-        const completionTag = `\n[REQUIREMENT_COMPLETED: ${new Date().toISOString()} by Dr. ${user.name}${notes ? ` - ${notes}` : ''}]`;
+        let completionTag = `\n[REQUIREMENT_COMPLETED: ${new Date().toISOString()} by Dr. ${user.name}${notes ? ` - ${notes}` : ''}]`;
+        if (solutionTitle || solutionDosage) {
+            const cleanTitle = (solutionTitle || 'Doctor Prescription').trim();
+            const cleanDosage = (solutionDosage || '').trim();
+            completionTag += `\n[DOCTOR_SOLUTION: ${new Date().toISOString()} | ${cleanTitle} | ${cleanDosage}]`;
+            if (cropCycle.hiringModel === 'PAY_PER_CONSULTATION') {
+                completionTag += `\n[SINGLE_CONSULTATION_LOCKED: true]`;
+            }
+            const targetDate = solutionDate && !isNaN(Date.parse(solutionDate)) ? new Date(solutionDate) : new Date();
+            await this.prisma.cropActivitySchedule.create({
+                data: {
+                    cropCycleId: id,
+                    activityType: 'SPRAY',
+                    title: cleanTitle,
+                    description: cleanDosage || 'Apply doctor recommended prescription as directed.',
+                    scheduledDate: targetDate,
+                    status: 'PENDING',
+                    createdByAdvisorId: user.id,
+                },
+            });
+        }
         const updatedNotes = cropCycle.notes ? `${cropCycle.notes}${completionTag}` : completionTag.trim();
         let updatedSchedule = cropCycle.assignedSchedule;
         if (schedule && schedule.trim()) {
@@ -586,7 +606,10 @@ let CropsService = class CropsService {
                 assignedSchedule: updatedSchedule,
             },
         });
-        await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, '✅ Requirement Completed!', `Dr. ${user.name} has completed your agronomy requirement for "${cropCycle.cropName}". Your diagnosis and advisory are ready. Please review and confirm your experience.`, { cropCycleId: id, advisorId: user.id, action: 'CONFIRM_REVIEW' });
+        const notifBody = (solutionTitle || solutionDosage)
+            ? `Dr. ${user.name} has provided a prescription solution for "${cropCycle.cropName}". It has been added to your Crop Activities as Pending. Please review and confirm your experience.`
+            : `Dr. ${user.name} has completed your agronomy requirement for "${cropCycle.cropName}". Your diagnosis and advisory are ready. Please review and confirm your experience.`;
+        await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, '✅ Doctor Solution Ready!', notifBody, { cropCycleId: id, advisorId: user.id, action: 'CONFIRM_REVIEW' });
         return updated;
     }
     async rateAdvisor(user, id, rating, feedback) {

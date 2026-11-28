@@ -22,6 +22,15 @@ import { INITIAL_CROPS_LIST, CROP_CATEGORIES } from '@/constants/cropCategoriesD
 // All Indian crops available across FarmsKing
 const ALL_SYSTEM_CROPS_DEFAULT = INITIAL_CROPS_LIST.map((c) => c.name);
 
+// Helper to calculate discounted package fees from 1-month base fee & discount %
+export const computeDiscountPrice = (monthlyFee: number, months: number, discountPercent: number) => {
+  const base = Math.max(0, Number(monthlyFee) || 0) * months;
+  const pct = Math.max(0, Math.min(90, Number(discountPercent) || 0));
+  const discounted = Math.round(base * (1 - pct / 100));
+  const savings = Math.max(0, base - discounted);
+  return { base, discounted, savings, discountPercent: pct };
+};
+
 export const DoctorSettingsConsole: React.FC<{ advisorId?: string; initialTab?: 'PROFILE' | 'PLANS' }> = ({ advisorId, initialTab = 'PLANS' }) => {
   const router = useRouter();
   const { isLight, cardBg, cardBorder, textColor, subTextColor } = useExecutiveTheme();
@@ -127,7 +136,20 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string; initialTab?: 
 
   const handleSave = async () => {
     try {
-      await updateMutation.mutateAsync(form);
+      const p1 = Number(form.monthlyPlan1Fee ?? form.monthlyFee ?? 299);
+      const d3 = Number(form.discount3Months ?? 10);
+      const d6 = Number(form.discount6Months ?? 15);
+      const d12 = Number(form.discount12Months ?? 25);
+
+      const payload = {
+        ...form,
+        monthlyFee: p1,
+        fee3Months: Math.round(p1 * 3 * (1 - d3 / 100)),
+        fee6Months: Math.round(p1 * 6 * (1 - d6 / 100)),
+        fee12Months: Math.round(p1 * 12 * (1 - d12 / 100)),
+      };
+
+      await updateMutation.mutateAsync(payload);
       setSavedNotice(true);
       setTimeout(() => setSavedNotice(false), 3000);
       if (Platform.OS === 'web') {
@@ -571,255 +593,628 @@ export const DoctorSettingsConsole: React.FC<{ advisorId?: string; initialTab?: 
               </View>
             </View>
 
-            {/* 6 Comprehensive Tier Pricing Cards */}
-            <View style={styles.pricingGrid}>
-              {/* 1. Monthly Retainer */}
-              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.monthlyPlanEnabled !== false ? (isLight ? '#93c5fd' : '#1e3a8a') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[styles.planBoxTitle, { color: textColor }]}>1. Monthly Retainer</Text>
-                  <View style={styles.planDurationBadge}>
-                    <Text style={styles.planDurationText}>30 Days</Text>
-                  </View>
-                </View>
-
-                {/* Plan Master ON/OFF Switch */}
-                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.monthlyPlanEnabled !== false ? (isLight ? '#eff6ff' : 'rgba(59, 130, 246, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
-                  <Text style={[styles.planMasterSwitchText, { color: form.monthlyPlanEnabled !== false ? '#2563eb' : subTextColor }]}>
-                    {form.monthlyPlanEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
+            {/* 1. Monthly Retainer Consultation (3 Distinct Tier Plans) */}
+            <View style={{ gap: 10, marginTop: 4 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                <View>
+                  <Text style={[styles.planBoxTitle, { color: textColor, fontSize: 14 }]}>
+                    1. Monthly Retainer Plans (3 Customizable Tiers)
                   </Text>
-                  <Switch
-                    value={form.monthlyPlanEnabled !== false}
-                    onValueChange={() => handleToggle('monthlyPlanEnabled')}
-                    trackColor={{ false: '#64748b', true: '#3b82f6' }}
-                    thumbColor="#ffffff"
-                  />
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                    Configure 3 distinct tiers. Set the 1-month fee, crop supervision quota, and features for each.
+                  </Text>
                 </View>
+                <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(59, 130, 246, 0.12)' }]}>
+                  <Text style={[styles.planDurationText, { color: '#3b82f6' }]}>30-Day Base Cycle</Text>
+                </View>
+              </View>
 
-                {form.monthlyPlanEnabled !== false && (
-                  <>
-                    <View style={styles.inputGroup}>
-                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Monthly Advisory Fee (₹)</Text>
-                      <TextInput
-                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                        keyboardType="numeric"
-                        value={String(form.monthlyFee ?? 299)}
-                        onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyFee: Number(v) || 0 }))}
-                      />
-                    </View>
+              {/* Master Monthly Switch */}
+              <View style={[styles.planMasterSwitchRow, { backgroundColor: form.monthlyPlanEnabled !== false ? (isLight ? '#eff6ff' : 'rgba(59, 130, 246, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                <Text style={[styles.planMasterSwitchText, { color: form.monthlyPlanEnabled !== false ? '#2563eb' : subTextColor }]}>
+                  {form.monthlyPlanEnabled !== false ? '🟢 Monthly Retainer Service Active (Farmers Can Subscribe)' : '⚪ Monthly Retainer Service Disabled'}
+                </Text>
+                <Switch
+                  value={form.monthlyPlanEnabled !== false}
+                  onValueChange={() => handleToggle('monthlyPlanEnabled')}
+                  trackColor={{ false: '#64748b', true: '#3b82f6' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
 
-                    <View style={styles.quotaRow}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Call Quota / mo</Text>
-                        <TextInput
-                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                          keyboardType="numeric"
-                          value={String(form.monthlyCallLimit ?? 5)}
-                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyCallLimit: Number(v) || 0 }))}
-                        />
+              {form.monthlyPlanEnabled !== false && (
+                <View style={{ gap: 12 }}>
+                  {/* Tier 1 Card */}
+                  <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.monthlyPlan1Enabled !== false ? (isLight ? '#93c5fd' : '#1e3a8a') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+                          <Text style={[styles.planDurationText, { color: '#2563eb' }]}>TIER 1 · BASIC</Text>
+                        </View>
+                        <Text style={[styles.planBoxTitle, { color: textColor }]}>Starter / Basic Care</Text>
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>In-App VoIP Calls</Text>
-                        <TextInput
-                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                          keyboardType="numeric"
-                          value={String(form.monthlyInAppCallLimit ?? 3)}
-                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyInAppCallLimit: Number(v) || 0 }))}
-                        />
-                      </View>
-                    </View>
-
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-                      <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Calls Allowed</Text>
                       <Switch
-                        value={Boolean(form.monthlyVideoAllowed)}
-                        onValueChange={() => handleToggle('monthlyVideoAllowed')}
-                        trackColor={{ false: '#64748b', true: '#10b981' }}
+                        value={form.monthlyPlan1Enabled !== false}
+                        onValueChange={() => handleToggle('monthlyPlan1Enabled')}
+                        trackColor={{ false: '#64748b', true: '#3b82f6' }}
                         thumbColor="#ffffff"
                       />
                     </View>
-                  </>
-                )}
-              </View>
 
-              {/* 2. 3-Month Care Pack */}
-              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan3MonthsEnabled !== false ? (isLight ? '#a7f3d0' : '#065f46') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[styles.planBoxTitle, { color: textColor }]}>2. 3-Month Care Pack</Text>
-                  <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
-                    <Text style={[styles.planDurationText, { color: '#10b981' }]}>90 Days</Text>
-                  </View>
-                </View>
-
-                {/* Plan Master ON/OFF Switch */}
-                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan3MonthsEnabled !== false ? (isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
-                  <Text style={[styles.planMasterSwitchText, { color: form.plan3MonthsEnabled !== false ? '#059669' : subTextColor }]}>
-                    {form.plan3MonthsEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
-                  </Text>
-                  <Switch
-                    value={form.plan3MonthsEnabled !== false}
-                    onValueChange={() => handleToggle('plan3MonthsEnabled')}
-                    trackColor={{ false: '#64748b', true: '#10b981' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
-
-                {form.plan3MonthsEnabled !== false && (
-                  <>
-                    <View style={styles.inputGroup}>
-                      <Text style={[styles.inputLabel, { color: subTextColor }]}>3-Month Total Fee (₹)</Text>
-                      <TextInput
-                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                        keyboardType="numeric"
-                        value={String(form.fee3Months ?? 799)}
-                        onChangeText={(v) => setForm((prev) => ({ ...prev, fee3Months: Number(v) || 0 }))}
-                      />
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                      <View style={{ flex: 2, minWidth: 160 }}>
+                        <Text style={[styles.inputLabel, { color: subTextColor }]}>Plan Name</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          value={form.monthlyPlan1Name ?? 'Basic Starter Care'}
+                          placeholder="e.g. Basic Starter Care"
+                          placeholderTextColor={subTextColor}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan1Name: v }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 120 }}>
+                        <Text style={[styles.inputLabel, { color: subTextColor }]}>1-Month Fee (₹)</Text>
+                        <TextInput
+                          style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.monthlyPlan1Fee ?? form.monthlyFee ?? 299)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan1Fee: Number(v) || 0, monthlyFee: Number(v) || 0 }))}
+                        />
+                      </View>
                     </View>
 
                     <View style={styles.quotaRow}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Total Calls (90 Days)</Text>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Max Crops Supervised</Text>
                         <TextInput
                           style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
                           keyboardType="numeric"
-                          value={String(form.callLimit3Months ?? 15)}
-                          onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit3Months: Number(v) || 0 }))}
+                          value={String(form.monthlyPlan1CropsLimit ?? 1)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan1CropsLimit: Number(v) || 1 }))}
                         />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Calls Quota / mo</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.monthlyPlan1CallLimit ?? 3)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan1CallLimit: Number(v) || 0 }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Calls Allowed</Text>
                         <View style={{ height: 38, justifyContent: 'center' }}>
                           <Switch
-                            value={form.videoAllowed3Months !== false}
-                            onValueChange={() => handleToggle('videoAllowed3Months')}
+                            value={Boolean(form.monthlyPlan1VideoAllowed)}
+                            onValueChange={() => handleToggle('monthlyPlan1VideoAllowed')}
                             trackColor={{ false: '#64748b', true: '#10b981' }}
                             thumbColor="#ffffff"
                           />
                         </View>
                       </View>
                     </View>
-                  </>
-                )}
-              </View>
 
-              {/* 3. 6-Month Care Pack */}
-              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan6MonthsEnabled !== false ? (isLight ? '#fbcfe8' : '#831843') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[styles.planBoxTitle, { color: textColor }]}>3. 6-Month Care Pack</Text>
-                  <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(236, 72, 153, 0.12)' }]}>
-                    <Text style={[styles.planDurationText, { color: '#ec4899' }]}>180 Days</Text>
-                  </View>
-                </View>
-
-                {/* Plan Master ON/OFF Switch */}
-                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan6MonthsEnabled !== false ? (isLight ? '#fdf2f8' : 'rgba(236, 72, 153, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
-                  <Text style={[styles.planMasterSwitchText, { color: form.plan6MonthsEnabled !== false ? '#db2777' : subTextColor }]}>
-                    {form.plan6MonthsEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
-                  </Text>
-                  <Switch
-                    value={form.plan6MonthsEnabled !== false}
-                    onValueChange={() => handleToggle('plan6MonthsEnabled')}
-                    trackColor={{ false: '#64748b', true: '#ec4899' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
-
-                {form.plan6MonthsEnabled !== false && (
-                  <>
-                    <View style={styles.inputGroup}>
-                      <Text style={[styles.inputLabel, { color: subTextColor }]}>6-Month Total Fee (₹)</Text>
+                    <View style={{ marginTop: 4 }}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Features & Benefits (Comma separated or bullet points)</Text>
                       <TextInput
-                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                        keyboardType="numeric"
-                        value={String(form.fee6Months ?? 1499)}
-                        onChangeText={(v) => setForm((prev) => ({ ...prev, fee6Months: Number(v) || 0 }))}
+                        style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        value={form.monthlyPlan1Features ?? '1 Crop Supervised · 3 VoIP Calls · Weekly Advisory · In-App Chat'}
+                        placeholder="e.g. 1 Crop Supervised · 3 VoIP Calls · Weekly Advisory · In-App Chat"
+                        placeholderTextColor={subTextColor}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan1Features: v }))}
                       />
+                    </View>
+                  </View>
+
+                  {/* Tier 2 Card */}
+                  <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.monthlyPlan2Enabled !== false ? (isLight ? '#a7f3d0' : '#065f46') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
+                          <Text style={[styles.planDurationText, { color: '#059669' }]}>TIER 2 · PRO</Text>
+                        </View>
+                        <Text style={[styles.planBoxTitle, { color: textColor }]}>Standard Pro Care</Text>
+                      </View>
+                      <Switch
+                        value={form.monthlyPlan2Enabled !== false}
+                        onValueChange={() => handleToggle('monthlyPlan2Enabled')}
+                        trackColor={{ false: '#64748b', true: '#10b981' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                      <View style={{ flex: 2, minWidth: 160 }}>
+                        <Text style={[styles.inputLabel, { color: subTextColor }]}>Plan Name</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          value={form.monthlyPlan2Name ?? 'Standard Pro Care'}
+                          placeholder="e.g. Standard Pro Care"
+                          placeholderTextColor={subTextColor}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan2Name: v }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 120 }}>
+                        <Text style={[styles.inputLabel, { color: subTextColor }]}>1-Month Fee (₹)</Text>
+                        <TextInput
+                          style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.monthlyPlan2Fee ?? 599)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan2Fee: Number(v) || 0 }))}
+                        />
+                      </View>
                     </View>
 
                     <View style={styles.quotaRow}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Total Calls (180 Days)</Text>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Max Crops Supervised</Text>
                         <TextInput
                           style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
                           keyboardType="numeric"
-                          value={String(form.callLimit6Months ?? 30)}
-                          onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit6Months: Number(v) || 0 }))}
+                          value={String(form.monthlyPlan2CropsLimit ?? 3)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan2CropsLimit: Number(v) || 1 }))}
                         />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Calls Quota / mo</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.monthlyPlan2CallLimit ?? 8)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan2CallLimit: Number(v) || 0 }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Calls Allowed</Text>
                         <View style={{ height: 38, justifyContent: 'center' }}>
                           <Switch
-                            value={form.videoAllowed6Months !== false}
-                            onValueChange={() => handleToggle('videoAllowed6Months')}
-                            trackColor={{ false: '#64748b', true: '#ec4899' }}
+                            value={form.monthlyPlan2VideoAllowed !== false}
+                            onValueChange={() => handleToggle('monthlyPlan2VideoAllowed')}
+                            trackColor={{ false: '#64748b', true: '#10b981' }}
                             thumbColor="#ffffff"
                           />
                         </View>
                       </View>
                     </View>
-                  </>
-                )}
-              </View>
 
-              {/* 4. 12-Month Annual Pack */}
-              <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan12MonthsEnabled !== false ? (isLight ? '#fed7aa' : '#7c2d12') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={[styles.planBoxTitle, { color: textColor }]}>4. 12-Month Annual Pack</Text>
-                  <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(249, 115, 22, 0.12)' }]}>
-                    <Text style={[styles.planDurationText, { color: '#f97316' }]}>365 Days (Full Year)</Text>
-                  </View>
-                </View>
-
-                {/* Plan Master ON/OFF Switch */}
-                <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan12MonthsEnabled !== false ? (isLight ? '#fff7ed' : 'rgba(249, 115, 22, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
-                  <Text style={[styles.planMasterSwitchText, { color: form.plan12MonthsEnabled !== false ? '#ea580c' : subTextColor }]}>
-                    {form.plan12MonthsEnabled !== false ? '🟢 Plan Active (Farmers Can Buy)' : '⚪ Plan Inactive (Disabled)'}
-                  </Text>
-                  <Switch
-                    value={form.plan12MonthsEnabled !== false}
-                    onValueChange={() => handleToggle('plan12MonthsEnabled')}
-                    trackColor={{ false: '#64748b', true: '#f97316' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
-
-                {form.plan12MonthsEnabled !== false && (
-                  <>
-                    <View style={styles.inputGroup}>
-                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Annual Advisory Fee (₹)</Text>
+                    <View style={{ marginTop: 4 }}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Features & Benefits (Comma separated or bullet points)</Text>
                       <TextInput
-                        style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
-                        keyboardType="numeric"
-                        value={String(form.fee12Months ?? 2699)}
-                        onChangeText={(v) => setForm((prev) => ({ ...prev, fee12Months: Number(v) || 0 }))}
+                        style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        value={form.monthlyPlan2Features ?? 'Up to 3 Crops · 8 VoIP Calls · 2 Video Inspections · Priority Problem Resolution'}
+                        placeholder="e.g. Up to 3 Crops · 8 VoIP Calls · 2 Video Inspections · Priority Problem Resolution"
+                        placeholderTextColor={subTextColor}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan2Features: v }))}
                       />
+                    </View>
+                  </View>
+
+                  {/* Tier 3 Card */}
+                  <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.monthlyPlan3Enabled !== false ? (isLight ? '#fed7aa' : '#7c2d12') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(249, 115, 22, 0.15)' }]}>
+                          <Text style={[styles.planDurationText, { color: '#ea580c' }]}>TIER 3 · VIP</Text>
+                        </View>
+                        <Text style={[styles.planBoxTitle, { color: textColor }]}>Complete Farm VIP Care</Text>
+                      </View>
+                      <Switch
+                        value={form.monthlyPlan3Enabled !== false}
+                        onValueChange={() => handleToggle('monthlyPlan3Enabled')}
+                        trackColor={{ false: '#64748b', true: '#f97316' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                      <View style={{ flex: 2, minWidth: 160 }}>
+                        <Text style={[styles.inputLabel, { color: subTextColor }]}>Plan Name</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          value={form.monthlyPlan3Name ?? 'Complete Farm VIP'}
+                          placeholder="e.g. Complete Farm VIP"
+                          placeholderTextColor={subTextColor}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan3Name: v }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 120 }}>
+                        <Text style={[styles.inputLabel, { color: subTextColor }]}>1-Month Fee (₹)</Text>
+                        <TextInput
+                          style={[styles.priceInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.monthlyPlan3Fee ?? 999)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan3Fee: Number(v) || 0 }))}
+                        />
+                      </View>
                     </View>
 
                     <View style={styles.quotaRow}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Total Calls (1 Year)</Text>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Max Crops Supervised</Text>
                         <TextInput
                           style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
                           keyboardType="numeric"
-                          value={String(form.callLimit12Months ?? 60)}
-                          onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit12Months: Number(v) || 0 }))}
+                          value={String(form.monthlyPlan3CropsLimit ?? 5)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan3CropsLimit: Number(v) || 1 }))}
                         />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Calls Quota / mo</Text>
+                        <TextInput
+                          style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                          keyboardType="numeric"
+                          value={String(form.monthlyPlan3CallLimit ?? 15)}
+                          onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan3CallLimit: Number(v) || 0 }))}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Calls Allowed</Text>
                         <View style={{ height: 38, justifyContent: 'center' }}>
                           <Switch
-                            value={form.videoAllowed12Months !== false}
-                            onValueChange={() => handleToggle('videoAllowed12Months')}
+                            value={form.monthlyPlan3VideoAllowed !== false}
+                            onValueChange={() => handleToggle('monthlyPlan3VideoAllowed')}
                             trackColor={{ false: '#64748b', true: '#f97316' }}
                             thumbColor="#ffffff"
                           />
                         </View>
                       </View>
                     </View>
-                  </>
-                )}
-              </View>
+
+                    <View style={{ marginTop: 4 }}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Features & Benefits (Comma separated or bullet points)</Text>
+                      <TextInput
+                        style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                        value={form.monthlyPlan3Features ?? 'All Crops (Up to 5) · 15 VoIP Calls · Unlimited Video Diagnostics · 24/7 Priority Hotline'}
+                        placeholder="e.g. All Crops (Up to 5) · 15 VoIP Calls · Unlimited Video Diagnostics · 24/7 Priority Hotline"
+                        placeholderTextColor={subTextColor}
+                        onChangeText={(v) => setForm((prev) => ({ ...prev, monthlyPlan3Features: v }))}
+                      />
+                    </View>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* 2. Long-Term Pack Discounts (3, 6 & 12 Months Settings) */}
+            {(() => {
+              const p1 = Number(form.monthlyPlan1Fee ?? form.monthlyFee ?? 299);
+              const p2 = Number(form.monthlyPlan2Fee ?? 599);
+              const p3 = Number(form.monthlyPlan3Fee ?? 999);
+              const name1 = form.monthlyPlan1Name || 'Basic';
+              const name2 = form.monthlyPlan2Name || 'Standard';
+              const name3 = form.monthlyPlan3Name || 'VIP';
+
+              const d3 = Number(form.discount3Months ?? 10);
+              const d6 = Number(form.discount6Months ?? 15);
+              const d12 = Number(form.discount12Months ?? 25);
+
+              const c3_1 = computeDiscountPrice(p1, 3, d3);
+              const c3_2 = computeDiscountPrice(p2, 3, d3);
+              const c3_3 = computeDiscountPrice(p3, 3, d3);
+
+              const c6_1 = computeDiscountPrice(p1, 6, d6);
+              const c6_2 = computeDiscountPrice(p2, 6, d6);
+              const c6_3 = computeDiscountPrice(p3, 6, d6);
+
+              const c12_1 = computeDiscountPrice(p1, 12, d12);
+              const c12_2 = computeDiscountPrice(p2, 12, d12);
+              const c12_3 = computeDiscountPrice(p3, 12, d12);
+
+              return (
+                <View style={{ gap: 10, marginTop: 14 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                    <View>
+                      <Text style={[styles.planBoxTitle, { color: textColor, fontSize: 14 }]}>
+                        2. Long-Term Package Discounts (3, 6 & 12 Months)
+                      </Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                        Set only the discount percentage (%) for each package duration. Farmer fees are auto-calculated from your 1-month prices.
+                      </Text>
+                    </View>
+                    <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                      <Text style={[styles.planDurationText, { color: '#10b981' }]}>Automated Price Formula</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.pricingGrid}>
+                    {/* 3-Month Pack */}
+                    <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan3MonthsEnabled !== false ? (isLight ? '#a7f3d0' : '#065f46') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={[styles.planBoxTitle, { color: textColor }]}>A. 3-Month Care Pack</Text>
+                        <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                          <Text style={[styles.planDurationText, { color: '#10b981' }]}>90 Days</Text>
+                        </View>
+                      </View>
+
+                      <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan3MonthsEnabled !== false ? (isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                        <Text style={[styles.planMasterSwitchText, { color: form.plan3MonthsEnabled !== false ? '#059669' : subTextColor }]}>
+                          {form.plan3MonthsEnabled !== false ? '🟢 3-Month Pack Active' : '⚪ Pack Disabled'}
+                        </Text>
+                        <Switch
+                          value={form.plan3MonthsEnabled !== false}
+                          onValueChange={() => handleToggle('plan3MonthsEnabled')}
+                          trackColor={{ false: '#64748b', true: '#10b981' }}
+                          thumbColor="#ffffff"
+                        />
+                      </View>
+
+                      {form.plan3MonthsEnabled !== false && (
+                        <>
+                          <View style={styles.inputGroup}>
+                            <Text style={[styles.inputLabel, { color: subTextColor }]}>
+                              Duration Discount Percentage (%)
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <TextInput
+                                style={[styles.priceInput, { flex: 1, color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                                keyboardType="numeric"
+                                value={String(form.discount3Months ?? 10)}
+                                onChangeText={(v) => {
+                                  const num = Number(v) || 0;
+                                  setForm((prev) => ({ ...prev, discount3Months: num }));
+                                }}
+                              />
+                              <View style={{ backgroundColor: isLight ? '#e2e8f0' : '#1e293b', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 6 }}>
+                                <Text style={{ fontFamily: FONT.extraBold, fontSize: 13, color: '#10b981' }}>% OFF</Text>
+                              </View>
+                            </View>
+                          </View>
+
+                          {/* Live Calculated Prices for all 3 Tiers */}
+                          <View style={{ backgroundColor: isLight ? '#f1f5f9' : '#0b1622', borderRadius: 8, padding: 8, gap: 5, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : '#1e293b' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isLight ? '#334155' : '#cbd5e1' }}>
+                              Auto-Calculated Farmer Prices (3 Months):
+                            </Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name1}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c3_1.discounted} <Text style={{ fontSize: 10, color: '#10b981' }}>(Save ₹{c3_1.savings})</Text>
+                              </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name2}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c3_2.discounted} <Text style={{ fontSize: 10, color: '#10b981' }}>(Save ₹{c3_2.savings})</Text>
+                              </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name3}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c3_3.discounted} <Text style={{ fontSize: 10, color: '#10b981' }}>(Save ₹{c3_3.savings})</Text>
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.quotaRow}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.quotaLabel, { color: subTextColor }]}>Calls (90 Days)</Text>
+                              <TextInput
+                                style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                                keyboardType="numeric"
+                                value={String(form.callLimit3Months ?? 15)}
+                                onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit3Months: Number(v) || 0 }))}
+                              />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                              <View style={{ height: 38, justifyContent: 'center' }}>
+                                <Switch
+                                  value={form.videoAllowed3Months !== false}
+                                  onValueChange={() => handleToggle('videoAllowed3Months')}
+                                  trackColor={{ false: '#64748b', true: '#10b981' }}
+                                  thumbColor="#ffffff"
+                                />
+                              </View>
+                            </View>
+                          </View>
+                        </>
+                      )}
+                    </View>
+
+                    {/* 6-Month Pack */}
+                    <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan6MonthsEnabled !== false ? (isLight ? '#fbcfe8' : '#831843') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={[styles.planBoxTitle, { color: textColor }]}>B. 6-Month Care Pack</Text>
+                        <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(236, 72, 153, 0.12)' }]}>
+                          <Text style={[styles.planDurationText, { color: '#ec4899' }]}>180 Days</Text>
+                        </View>
+                      </View>
+
+                      <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan6MonthsEnabled !== false ? (isLight ? '#fdf2f8' : 'rgba(236, 72, 153, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                        <Text style={[styles.planMasterSwitchText, { color: form.plan6MonthsEnabled !== false ? '#db2777' : subTextColor }]}>
+                          {form.plan6MonthsEnabled !== false ? '🟢 6-Month Pack Active' : '⚪ Pack Disabled'}
+                        </Text>
+                        <Switch
+                          value={form.plan6MonthsEnabled !== false}
+                          onValueChange={() => handleToggle('plan6MonthsEnabled')}
+                          trackColor={{ false: '#64748b', true: '#ec4899' }}
+                          thumbColor="#ffffff"
+                        />
+                      </View>
+
+                      {form.plan6MonthsEnabled !== false && (
+                        <>
+                          <View style={styles.inputGroup}>
+                            <Text style={[styles.inputLabel, { color: subTextColor }]}>
+                              Duration Discount Percentage (%)
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <TextInput
+                                style={[styles.priceInput, { flex: 1, color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                                keyboardType="numeric"
+                                value={String(form.discount6Months ?? 15)}
+                                onChangeText={(v) => {
+                                  const num = Number(v) || 0;
+                                  setForm((prev) => ({ ...prev, discount6Months: num }));
+                                }}
+                              />
+                              <View style={{ backgroundColor: isLight ? '#e2e8f0' : '#1e293b', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 6 }}>
+                                <Text style={{ fontFamily: FONT.extraBold, fontSize: 13, color: '#ec4899' }}>% OFF</Text>
+                              </View>
+                            </View>
+                          </View>
+
+                          {/* Live Calculated Prices for all 3 Tiers */}
+                          <View style={{ backgroundColor: isLight ? '#f1f5f9' : '#0b1622', borderRadius: 8, padding: 8, gap: 5, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : '#1e293b' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isLight ? '#334155' : '#cbd5e1' }}>
+                              Auto-Calculated Farmer Prices (6 Months):
+                            </Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name1}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c6_1.discounted} <Text style={{ fontSize: 10, color: '#ec4899' }}>(Save ₹{c6_1.savings})</Text>
+                              </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name2}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c6_2.discounted} <Text style={{ fontSize: 10, color: '#ec4899' }}>(Save ₹{c6_2.savings})</Text>
+                              </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name3}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c6_3.discounted} <Text style={{ fontSize: 10, color: '#ec4899' }}>(Save ₹{c6_3.savings})</Text>
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.quotaRow}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.quotaLabel, { color: subTextColor }]}>Calls (180 Days)</Text>
+                              <TextInput
+                                style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                                keyboardType="numeric"
+                                value={String(form.callLimit6Months ?? 30)}
+                                onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit6Months: Number(v) || 0 }))}
+                              />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                              <View style={{ height: 38, justifyContent: 'center' }}>
+                                <Switch
+                                  value={form.videoAllowed6Months !== false}
+                                  onValueChange={() => handleToggle('videoAllowed6Months')}
+                                  trackColor={{ false: '#64748b', true: '#ec4899' }}
+                                  thumbColor="#ffffff"
+                                />
+                              </View>
+                            </View>
+                          </View>
+                        </>
+                      )}
+                    </View>
+
+                    {/* 12-Month Annual Pack */}
+                    <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.plan12MonthsEnabled !== false ? (isLight ? '#fed7aa' : '#7c2d12') : (isLight ? '#e2e8f0' : '#1e293b') }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={[styles.planBoxTitle, { color: textColor }]}>C. 12-Month Annual Pack</Text>
+                        <View style={[styles.planDurationBadge, { backgroundColor: 'rgba(249, 115, 22, 0.12)' }]}>
+                          <Text style={[styles.planDurationText, { color: '#f97316' }]}>365 Days</Text>
+                        </View>
+                      </View>
+
+                      <View style={[styles.planMasterSwitchRow, { backgroundColor: form.plan12MonthsEnabled !== false ? (isLight ? '#fff7ed' : 'rgba(249, 115, 22, 0.15)') : (isLight ? '#f1f5f9' : '#0f172a') }]}>
+                        <Text style={[styles.planMasterSwitchText, { color: form.plan12MonthsEnabled !== false ? '#ea580c' : subTextColor }]}>
+                          {form.plan12MonthsEnabled !== false ? '🟢 12-Month Annual Active' : '⚪ Pack Disabled'}
+                        </Text>
+                        <Switch
+                          value={form.plan12MonthsEnabled !== false}
+                          onValueChange={() => handleToggle('plan12MonthsEnabled')}
+                          trackColor={{ false: '#64748b', true: '#f97316' }}
+                          thumbColor="#ffffff"
+                        />
+                      </View>
+
+                      {form.plan12MonthsEnabled !== false && (
+                        <>
+                          <View style={styles.inputGroup}>
+                            <Text style={[styles.inputLabel, { color: subTextColor }]}>
+                              Duration Discount Percentage (%)
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <TextInput
+                                style={[styles.priceInput, { flex: 1, color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                                keyboardType="numeric"
+                                value={String(form.discount12Months ?? 25)}
+                                onChangeText={(v) => {
+                                  const num = Number(v) || 0;
+                                  setForm((prev) => ({ ...prev, discount12Months: num }));
+                                }}
+                              />
+                              <View style={{ backgroundColor: isLight ? '#e2e8f0' : '#1e293b', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 6 }}>
+                                <Text style={{ fontFamily: FONT.extraBold, fontSize: 13, color: '#f97316' }}>% OFF</Text>
+                              </View>
+                            </View>
+                          </View>
+
+                          {/* Live Calculated Prices for all 3 Tiers */}
+                          <View style={{ backgroundColor: isLight ? '#f1f5f9' : '#0b1622', borderRadius: 8, padding: 8, gap: 5, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : '#1e293b' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isLight ? '#334155' : '#cbd5e1' }}>
+                              Auto-Calculated Farmer Prices (1 Year):
+                            </Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name1}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c12_1.discounted} <Text style={{ fontSize: 10, color: '#f97316' }}>(Save ₹{c12_1.savings})</Text>
+                              </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name2}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c12_2.discounted} <Text style={{ fontSize: 10, color: '#f97316' }}>(Save ₹{c12_2.savings})</Text>
+                              </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>{name3}:</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }}>
+                                ₹{c12_3.discounted} <Text style={{ fontSize: 10, color: '#f97316' }}>(Save ₹{c12_3.savings})</Text>
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.quotaRow}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.quotaLabel, { color: subTextColor }]}>Calls (1 Year)</Text>
+                              <TextInput
+                                style={[styles.smallInput, { color: textColor, borderColor: isLight ? '#cbd5e1' : '#334155' }]}
+                                keyboardType="numeric"
+                                value={String(form.callLimit12Months ?? 60)}
+                                onChangeText={(v) => setForm((prev) => ({ ...prev, callLimit12Months: Number(v) || 0 }))}
+                              />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.quotaLabel, { color: subTextColor }]}>Video Inspections</Text>
+                              <View style={{ height: 38, justifyContent: 'center' }}>
+                                <Switch
+                                  value={form.videoAllowed12Months !== false}
+                                  onValueChange={() => handleToggle('videoAllowed12Months')}
+                                  trackColor={{ false: '#64748b', true: '#f97316' }}
+                                  thumbColor="#ffffff"
+                                />
+                              </View>
+                            </View>
+                          </View>
+                        </>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              );
+            })()}
+
+            {/* 3. Crop Season & Single Consultation Header */}
+            <View style={{ marginTop: 14 }}>
+              <Text style={[styles.planBoxTitle, { color: textColor, fontSize: 14 }]}>
+                3. Crop Season & Single SOS Consultations
+              </Text>
+              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                Full-cycle single crop care and one-time emergency prescriptions.
+              </Text>
+            </View>
+
+            <View style={styles.pricingGrid}>
 
               {/* 5. Full Season Crop Care */}
               <View style={[styles.planBox, { backgroundColor: isLight ? '#f8fafc' : '#070f1a', borderColor: form.cropSeasonPlanEnabled !== false ? (isLight ? '#fed7aa' : '#7c2d12') : (isLight ? '#e2e8f0' : '#1e293b') }]}>

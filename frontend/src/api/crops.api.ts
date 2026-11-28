@@ -133,8 +133,21 @@ export async function updateCropSchedule(id: string, assignedSchedule: string): 
   return data;
 }
 
-export async function completeCropRequirement(id: string, notes?: string, schedule?: string): Promise<CropCycle> {
-  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/complete-requirement`, { notes, schedule });
+export async function completeCropRequirement(
+  id: string,
+  notes?: string,
+  schedule?: string,
+  solutionTitle?: string,
+  solutionDosage?: string,
+  solutionDate?: string,
+): Promise<CropCycle> {
+  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/complete-requirement`, {
+    notes,
+    schedule,
+    solutionTitle,
+    solutionDosage,
+    solutionDate,
+  });
   return data;
 }
 

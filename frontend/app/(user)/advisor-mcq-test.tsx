@@ -67,7 +67,7 @@ function CertificateView({
 
             <View style={cert.footerRow}>
               <View style={cert.footerItem}>
-                <Text style={cert.footerLabel}>Issue Date</Text>
+                <Text style={cert.footerLabel}>Accreditation Date</Text>
                 <Text style={cert.footerValue}>{date}</Text>
               </View>
               <View style={cert.footerItem}>
@@ -121,11 +121,24 @@ export default function AdvisorMCQTestScreen() {
   const [downloading, setDownloading] = useState(false);
 
   const certRef = useRef<any>(null);
-  const issueDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+  const [issueDate, setIssueDate] = useState(() =>
+    new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+  );
 
   useEffect(() => {
     setQuestions(getRandomQuestions(25));
-  }, []);
+    (async () => {
+      try {
+        const cached = await SecureStore.getItemAsync(`doctorCertifiedAt_${user?.id || 'me'}`);
+        if (cached) {
+          const d = new Date(cached);
+          if (!isNaN(d.getTime())) {
+            setIssueDate(d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }));
+          }
+        }
+      } catch {}
+    })();
+  }, [user?.id]);
 
   const handleSelectOption = (optionIndex: number) => {
     setSelectedAnswers(prev => ({ ...prev, [currentIndex]: optionIndex }));
@@ -160,6 +173,19 @@ export default function AdvisorMCQTestScreen() {
     setPassed(isPass);
 
     if (isPass) {
+      const now = new Date();
+      const testPassedFormatted = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+      const testPassedIso = now.toISOString();
+      setIssueDate(testPassedFormatted);
+      try {
+        await SecureStore.setItemAsync(`doctorCertifiedAt_${user?.id || 'me'}`, testPassedIso);
+      } catch {}
+      try {
+        await apiClient.patch('/advisor-assignment/doctor-settings', {
+          certifiedAt: testPassedIso,
+          testPassedDate: testPassedIso,
+        });
+      } catch {}
       try {
         await apiClient.post('/users/upgrade-role', { role: 'GARDEN_ADVISOR' });
         await refreshUser();

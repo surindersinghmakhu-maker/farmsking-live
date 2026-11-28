@@ -55,7 +55,7 @@ let CropsController = class CropsController {
         return this.cropsService.updateAssignedSchedule(user, id, dto.assignedSchedule);
     }
     completeRequirement(user, id, body) {
-        return this.cropsService.completeRequirement(user, id, body?.notes, body?.schedule);
+        return this.cropsService.completeRequirement(user, id, body?.notes, body?.schedule, body?.solutionTitle, body?.solutionDosage, body?.solutionDate);
     }
     rateAdvisor(user, id, body) {
         return this.cropsService.rateAdvisor(user, id, body.rating, body?.feedback);

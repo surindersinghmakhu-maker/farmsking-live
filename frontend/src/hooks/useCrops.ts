@@ -157,11 +157,26 @@ export function useUpdateCropSchedule() {
 export function useCompleteCropRequirement() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, notes, schedule }: { id: string; notes?: string; schedule?: string }) =>
-      cropsApi.completeCropRequirement(id, notes, schedule),
+    mutationFn: ({
+      id,
+      notes,
+      schedule,
+      solutionTitle,
+      solutionDosage,
+      solutionDate,
+    }: {
+      id: string;
+      notes?: string;
+      schedule?: string;
+      solutionTitle?: string;
+      solutionDosage?: string;
+      solutionDate?: string;
+    }) =>
+      cropsApi.completeCropRequirement(id, notes, schedule, solutionTitle, solutionDosage, solutionDate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crops', 'advisor', 'accepted'] });
       queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['crop-activity-schedules'] });
     },
   });
 }

@@ -40,6 +40,7 @@ import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyWallet } from '@/src/hooks/useWallet';
 import { useDoctorSettings } from '@/src/hooks/useDoctorSettings';
+import { AdvisorScheduleTimeline } from '@/src/components/AdvisorScheduleTimeline';
 
 type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS';
 
@@ -272,6 +273,12 @@ export const AdvisorDashboardView: React.FC = () => {
   const [cropToAcceptConfirm, setCropToAcceptConfirm] = useState<AdvisorReviewCropCycle | null>(null);
   const [acceptPlantCount, setAcceptPlantCount] = useState<string>('');
   const [acceptStage, setAcceptStage] = useState<string>('VEGETATIVE');
+
+  // Single Consultation solution dispatch state
+  const [solutionModalCrop, setSolutionModalCrop] = useState<AdvisorReviewCropCycle | null>(null);
+  const [solutionTitle, setSolutionTitle] = useState('');
+  const [solutionDosage, setSolutionDosage] = useState('');
+  const [solutionDate, setSolutionDate] = useState(new Date().toISOString().slice(0, 10));
 
   const handleInitiateAcceptCrop = (crop: AdvisorReviewCropCycle) => {
     // If it's one-time consultation, accept directly without modification prompt ("one time wale nu shad ke")
@@ -805,25 +812,25 @@ export const AdvisorDashboardView: React.FC = () => {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingTop: 2 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.monthlyPlanEnabled !== false ? (isLight ? '#eff6ff' : 'rgba(59, 130, 246, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#bfdbfe' : '#1e3a8a' }}>
                 <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.monthlyPlanEnabled !== false ? '#2563eb' : subTextColor }}>
-                  {doctorSettings?.monthlyPlanEnabled !== false ? '🟢' : '⚪'} Monthly: ₹{doctorSettings?.monthlyFee ?? 299}
+                  {doctorSettings?.monthlyPlanEnabled !== false ? '🟢' : '⚪'} Monthly (3 Tiers): ₹{doctorSettings?.monthlyPlan1Fee ?? doctorSettings?.monthlyFee ?? 299} / ₹{doctorSettings?.monthlyPlan2Fee ?? 599} / ₹{doctorSettings?.monthlyPlan3Fee ?? 999}
                 </Text>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.plan3MonthsEnabled !== false ? (isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#a7f3d0' : '#065f46' }}>
                 <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.plan3MonthsEnabled !== false ? '#10b981' : subTextColor }}>
-                  {doctorSettings?.plan3MonthsEnabled !== false ? '🟢' : '⚪'} 3-Mo Pack: ₹{doctorSettings?.fee3Months ?? 799}
+                  {doctorSettings?.plan3MonthsEnabled !== false ? '🟢' : '⚪'} 3-Mo: {doctorSettings?.discount3Months ?? 10}% OFF (From ₹{doctorSettings?.fee3Months ?? 799})
                 </Text>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.plan6MonthsEnabled !== false ? (isLight ? '#fdf2f8' : 'rgba(236, 72, 153, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#fbcfe8' : '#831843' }}>
                 <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.plan6MonthsEnabled !== false ? '#ec4899' : subTextColor }}>
-                  {doctorSettings?.plan6MonthsEnabled !== false ? '🟢' : '⚪'} 6-Mo Pack: ₹{doctorSettings?.fee6Months ?? 1499}
+                  {doctorSettings?.plan6MonthsEnabled !== false ? '🟢' : '⚪'} 6-Mo: {doctorSettings?.discount6Months ?? 15}% OFF (From ₹{doctorSettings?.fee6Months ?? 1499})
                 </Text>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: doctorSettings?.plan12MonthsEnabled !== false ? (isLight ? '#fff7ed' : 'rgba(249, 115, 22, 0.12)') : (isLight ? '#f1f5f9' : '#0f172a'), borderWidth: 1, borderColor: isLight ? '#fed7aa' : '#7c2d12' }}>
                 <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: doctorSettings?.plan12MonthsEnabled !== false ? '#f97316' : subTextColor }}>
-                  {doctorSettings?.plan12MonthsEnabled !== false ? '🟢' : '⚪'} 12-Mo Annual: ₹{doctorSettings?.fee12Months ?? 2699}
+                  {doctorSettings?.plan12MonthsEnabled !== false ? '🟢' : '⚪'} 12-Mo: {doctorSettings?.discount12Months ?? 25}% OFF (From ₹{doctorSettings?.fee12Months ?? 2699})
                 </Text>
               </View>
 
@@ -1956,51 +1963,114 @@ export const AdvisorDashboardView: React.FC = () => {
                   </View>
                 </View>
 
+                {/* Section 4: Crop Activities Detail (Sprays, Fertilizers, Irrigation & Field Tasks - Strictly Agronomy Only) */}
+                <View style={[styles.proCardSection, { backgroundColor: isLight ? '#f8fafc' : '#072414', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)', padding: 12 }]}>
+                  <AdvisorScheduleTimeline
+                    cropCycleId={selectedReviewCrop.id}
+                    cropName={selectedReviewCrop.cropName}
+                    farmerName={selectedReviewCrop.plot?.farm?.owner?.name}
+                    sowingDate={selectedReviewCrop.sowingDate}
+                  />
+                </View>
+
                 {/* Professional Footer Buttons */}
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
                   {selectedReviewCrop.advisorReviewStatus === 'ACCEPTED' ? (
-                    <>
-                      <TouchableOpacity
-                        style={[styles.proRejectBtn, { borderColor: '#0284c7', backgroundColor: isLight ? '#f0f9ff' : 'rgba(2, 132, 199, 0.15)' }]}
-                        activeOpacity={0.85}
-                        onPress={() => {
-                          setSelectedReviewCrop(null);
-                          router.push('/(partner)/(tabs)/schedule' as never);
-                        }}
-                      >
-                        <Ionicons name="calendar" size={16} color="#0284c7" />
-                        <Text style={[styles.proRejectBtnText, { color: '#0284c7' }]}>Update Schedule</Text>
-                      </TouchableOpacity>
+                    (() => {
+                      const isSingle = (selectedReviewCrop as any).hiringModel === 'PAY_PER_CONSULTATION';
+                      const isLocked = isSingle && (
+                        selectedReviewCrop.notes?.includes('[SINGLE_CONSULTATION_LOCKED: true]') ||
+                        selectedReviewCrop.notes?.includes('[DOCTOR_SOLUTION:')
+                      );
 
-                      <TouchableOpacity
-                        style={[styles.proAcceptBtn, { backgroundColor: '#10b981' }]}
-                        activeOpacity={0.85}
-                        disabled={completeCropReq.isPending}
-                        onPress={() => {
-                          const id = selectedReviewCrop.id;
-                          const name = selectedReviewCrop.cropName;
-                          completeCropReq.mutate(
-                            { id, notes: 'Agronomy advisory & treatment finalized.' },
-                            {
-                              onSuccess: () => {
-                                setSelectedReviewCrop(null);
-                                const msg = `✅ Requirement Completed!\nConfirmation message and review request have been sent to the farmer for "${name}".`;
-                                Platform.OS === 'web' ? alert(msg) : Alert.alert('Requirement Completed', msg);
-                              },
-                            }
-                          );
-                        }}
-                      >
-                        {completeCropReq.isPending ? (
-                          <ActivityIndicator color="#ffffff" size="small" />
-                        ) : (
-                          <>
-                            <Ionicons name="checkmark-done-circle" size={18} color="#ffffff" />
-                            <Text style={styles.proAcceptBtnText}>Complete Requirement ✅</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                    </>
+                      if (isLocked) {
+                        return (
+                          <View style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.12)',
+                            paddingVertical: 12,
+                            paddingHorizontal: 14,
+                            borderRadius: RADIUS.md,
+                            borderWidth: 1.5,
+                            borderColor: '#10b981',
+                          }}>
+                            <Ionicons name="lock-closed" size={16} color="#10b981" />
+                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#10b981' }}>
+                              🔒 Single Consultation Resolved & Locked (Advisory Dispatched)
+                            </Text>
+                          </View>
+                        );
+                      }
+
+                      if (isSingle) {
+                        return (
+                          <View style={{ flex: 1, flexDirection: 'row', gap: 10 }}>
+                            <TouchableOpacity
+                              style={[styles.proAcceptBtn, { backgroundColor: '#10b981', flex: 1 }]}
+                              activeOpacity={0.85}
+                              onPress={() => {
+                                setSolutionTitle(`Prescription: ${selectedReviewCrop.cropName} Care`);
+                                setSolutionDosage('');
+                                setSolutionDate(new Date().toISOString().slice(0, 10));
+                                setSolutionModalCrop(selectedReviewCrop);
+                              }}
+                            >
+                              <Ionicons name="medkit" size={17} color="#ffffff" />
+                              <Text style={styles.proAcceptBtnText}>Provide Solution & Lock Consultation 🩺</Text>
+                            </TouchableOpacity>
+                          </View>
+                        );
+                      }
+
+                      return (
+                        <>
+                          <TouchableOpacity
+                            style={[styles.proRejectBtn, { borderColor: '#0284c7', backgroundColor: isLight ? '#f0f9ff' : 'rgba(2, 132, 199, 0.15)' }]}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              setSelectedReviewCrop(null);
+                              router.push('/(partner)/(tabs)/schedule' as never);
+                            }}
+                          >
+                            <Ionicons name="calendar" size={16} color="#0284c7" />
+                            <Text style={[styles.proRejectBtnText, { color: '#0284c7' }]}>Update Schedule</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={[styles.proAcceptBtn, { backgroundColor: '#10b981' }]}
+                            activeOpacity={0.85}
+                            disabled={completeCropReq.isPending}
+                            onPress={() => {
+                              const id = selectedReviewCrop.id;
+                              const name = selectedReviewCrop.cropName;
+                              completeCropReq.mutate(
+                                { id, notes: 'Agronomy advisory & treatment finalized.' },
+                                {
+                                  onSuccess: () => {
+                                    setSelectedReviewCrop(null);
+                                    const msg = `✅ Requirement Completed!\nConfirmation message and review request have been sent to the farmer for "${name}".`;
+                                    Platform.OS === 'web' ? alert(msg) : Alert.alert('Requirement Completed', msg);
+                                  },
+                                }
+                              );
+                            }}
+                          >
+                            {completeCropReq.isPending ? (
+                              <ActivityIndicator color="#ffffff" size="small" />
+                            ) : (
+                              <>
+                                <Ionicons name="checkmark-done-circle" size={18} color="#ffffff" />
+                                <Text style={styles.proAcceptBtnText}>Complete Requirement ✅</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        </>
+                      );
+                    })()
                   ) : (
                     <>
                       <TouchableOpacity
@@ -2169,6 +2239,151 @@ export const AdvisorDashboardView: React.FC = () => {
                     <>
                       <Ionicons name="checkmark-done-circle" size={16} color="#ffffff" />
                       <Text style={styles.proAcceptBtnText}>Confirm & Lock Adoption</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* DOCTOR SINGLE CONSULTATION SOLUTION DISPATCH MODAL */}
+      <Modal visible={!!solutionModalCrop} transparent animationType="fade" onRequestClose={() => setSolutionModalCrop(null)}>
+        <View style={styles.proModalBackdrop}>
+          <View style={[styles.proModalCard, { backgroundColor: isLight ? '#ffffff' : '#071f13', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.25)', maxWidth: 500 }]}>
+            <LinearGradient colors={['#062817', '#0f172a']} style={styles.proModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                <Ionicons name="medkit" size={18} color="#00ff87" />
+                <View>
+                  <Text style={styles.proModalTitle}>Provide Prescription & Solution</Text>
+                  <Text style={styles.proModalSubtitle}>
+                    {solutionModalCrop?.cropName} · {solutionModalCrop?.plot?.farm?.owner?.name || 'Farmer'}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity style={styles.proModalCloseBtn} onPress={() => setSolutionModalCrop(null)}>
+                <Ionicons name="close" size={16} color="#ffffff" />
+              </TouchableOpacity>
+            </LinearGradient>
+
+            <View style={{ padding: 18, gap: 14 }}>
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
+                  Prescription / Treatment Title *
+                </Text>
+                <TextInput
+                  style={[
+                    styles.proModalInput,
+                    {
+                      backgroundColor: isLight ? '#f8fafc' : '#04180d',
+                      borderColor: isLight ? '#cbd5e1' : 'rgba(255, 255, 255, 0.15)',
+                      color: textColor,
+                    },
+                  ]}
+                  value={solutionTitle}
+                  onChangeText={setSolutionTitle}
+                  placeholder="e.g. Chlorpyrifos 20% EC + Mancozeb Spray"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
+                  Dosage, Water Ratio & Application Instructions *
+                </Text>
+                <TextInput
+                  style={[
+                    styles.proModalInput,
+                    {
+                      backgroundColor: isLight ? '#f8fafc' : '#04180d',
+                      borderColor: isLight ? '#cbd5e1' : 'rgba(255, 255, 255, 0.15)',
+                      color: textColor,
+                      minHeight: 75,
+                      textAlignVertical: 'top',
+                    },
+                  ]}
+                  value={solutionDosage}
+                  onChangeText={setSolutionDosage}
+                  multiline
+                  placeholder="e.g. Mix 2.5ml per liter of water. Spray during cool evening hours. Repeat spray after 7 days if pest density exceeds threshold."
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+
+              <View style={{ gap: 4 }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
+                  Scheduled Application Date
+                </Text>
+                <TextInput
+                  style={[
+                    styles.proModalInput,
+                    {
+                      backgroundColor: isLight ? '#f8fafc' : '#04180d',
+                      borderColor: isLight ? '#cbd5e1' : 'rgba(255, 255, 255, 0.15)',
+                      color: textColor,
+                    },
+                  ]}
+                  value={solutionDate}
+                  onChangeText={setSolutionDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+
+              <View style={{ backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.08)', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: isLight ? '#bbf7d0' : 'rgba(16, 185, 129, 0.2)' }}>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isLight ? '#15803d' : '#4ade80', lineHeight: 16 }}>
+                  ℹ️ Once submitted, this prescription will appear as a Pending Activity in the farmer's calendar. The Single Consultation adoption will be permanently locked on your side.
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                <TouchableOpacity
+                  style={[styles.proRejectBtn, { flex: 1 }]}
+                  onPress={() => setSolutionModalCrop(null)}
+                >
+                  <Text style={styles.proRejectBtnText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.proAcceptBtn, { flex: 2 }]}
+                  disabled={completeCropReq.isPending}
+                  onPress={() => {
+                    if (!solutionTitle.trim()) {
+                      const msg = 'Please enter a prescription / treatment title.';
+                      Platform.OS === 'web' ? alert(msg) : Alert.alert('Required', msg);
+                      return;
+                    }
+                    if (!solutionModalCrop) return;
+                    completeCropReq.mutate(
+                      {
+                        id: solutionModalCrop.id,
+                        solutionTitle: solutionTitle.trim(),
+                        solutionDosage: solutionDosage.trim(),
+                        solutionDate: solutionDate.trim(),
+                        notes: `Single consultation completed: ${solutionTitle.trim()}`,
+                      },
+                      {
+                        onSuccess: () => {
+                          setSolutionModalCrop(null);
+                          setSelectedReviewCrop(null);
+                          const msg = '✅ Solution Dispatched & Consultation Locked!\nThe prescription has been scheduled as a Pending activity for the farmer. Your consultation session is now locked.';
+                          Platform.OS === 'web' ? alert(msg) : Alert.alert('Solution Dispatched', msg);
+                        },
+                        onError: (err: any) => {
+                          const msg = err?.response?.data?.message || err?.message || 'Could not dispatch solution.';
+                          Platform.OS === 'web' ? alert(msg) : Alert.alert('Error', msg);
+                        },
+                      }
+                    );
+                  }}
+                >
+                  {completeCropReq.isPending ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="send" size={15} color="#ffffff" />
+                      <Text style={styles.proAcceptBtnText}>Dispatch & Lock Session 🔒</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -3245,6 +3460,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 4,
+  },
+  proModalInput: {
+    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    fontFamily: FONT.medium,
   },
   proFarmerStrip: {
     flexDirection: 'row',
